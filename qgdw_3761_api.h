@@ -14758,12 +14758,12 @@ typedef struct
 // 帧侧
 typedef struct
 {
-    UINT8  bcd_DD_0:4;  // 日
-    UINT8  bcd_DD_1:4;
-    UINT8  bcd_MM_0:4;  // 月
-    UINT8  bcd_MM_1:4;
     UINT8  bcd_YY_0:4;  // 年
     UINT8  bcd_YY_1:4;
+    UINT8  bcd_MM_0:4;  // 月
+    UINT8  bcd_MM_1:4;
+    UINT8  bcd_DD_0:4;  // 日
+    UINT8  bcd_DD_1:4;
     UINT8  bcd_ww;      //周
 }sMtFmt11F2Time_f;
 
@@ -14804,7 +14804,7 @@ typedef struct
     sMtFmt11F2Time  sT;          //日月年周
     UINT8       LastTime;        //持续时间
     UINT8       ucTimeNum;       //时段控制块数
-    sMtTime     Time[20];             //时段控制块
+    sMtTime     Time[30];             //时段控制块
     UINT16      ucDataNum;       //控制参数块数
     sMtPara1    Data[36];            //控制参数块
     
@@ -14832,7 +14832,7 @@ typedef struct
     sMtFmt11F2Time_f      sT;             //日月年周
     UINT8           LastTime;       //持续时间
     UINT8           ucTimeNum;      //时段控制块数
-    sMtTime_f       Time[4];        //时段控制块
+    sMtTime_f       Time[30];        //时段控制块
     UINT16          ucDataNum;      //控制参数块数
     sMtPara1_f      Data[36];       //控制参数块
  

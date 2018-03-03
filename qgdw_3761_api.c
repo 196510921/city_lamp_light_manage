@@ -4265,6 +4265,9 @@ eMtErr emtTrans_afn11hf2_m2s(eMtTrans eTrans, void* psUser, void* psFrame, UINT1
      psAfn11f2->sT.ucWW      = psAfn11f2_f_head->sT.bcd_ww;
     
     
+    if(psAfn11f2_f_head->ucTimeNum >30)
+        psAfn11f2_f_head->ucTimeNum = 30;
+
      for(i=0; i<psAfn11f2_f_head->ucTimeNum; i++)
      {
         psAfn11f2->Time[i].Min = BCD2HEX(*Frame);

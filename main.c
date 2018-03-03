@@ -3528,17 +3528,17 @@ eMtErr test_pack_afn04f3()
     pscmPacket->sData[0].uApp.sTmIpPort.ulBackIP = 0x11223344;
     pscmPacket->sData[0].uApp.sTmIpPort.usBackPort = 0x0010;
 
-    UINT8 apn[16] = {0x02,0x00,0x00,0x00,0x01,0x00,0x00,0x00,\
+    UINT8 apn[16] = {0x02,0x01,0x00,0x00,0x01,0x00,0x00,0x00,\
                     0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
     memcpy(pscmPacket->sData[0].uApp.sTmIpPort.ucascAPN,apn,16);
-    UINT8 Pn_1[32] = {0xE0,0x00,0x00,0x00,0x00,0x00,0x00,0x00,\
-                     0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,\
+    UINT8 Pn_1[32] = {0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,\
+                     0x00,0x00,0x00,0x00,0x30,0x00,0x00,0x00,\
                     0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,\
                     0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
     UINT8 Pn_2[32] = {0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,\
                      0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,\
                     0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,\
-                    0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x0F};
+                    0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
     memcpy(pscmPacket->sData[0].uApp.sTmIpPort.virUserName,Pn_1,32);
     memcpy(pscmPacket->sData[0].uApp.sTmIpPort.virUserPw,Pn_2,32);
 
@@ -12540,34 +12540,34 @@ eMtErr test_pack_afn11df2_m2s()
 
 
     pscmPacket->sData[0].uApp.std_11f2.ucTaskFormat = 0x1105;
-    pscmPacket->sData[0].uApp.std_11f2.ucTaskType = 0x35;
-    pscmPacket->sData[0].uApp.std_11f2.ucTaskLen = 0x1207;
-    pscmPacket->sData[0].uApp.std_11f2.sT.ucYY = 00;
-    pscmPacket->sData[0].uApp.std_11f2.sT.ucMM = 00;
-    pscmPacket->sData[0].uApp.std_11f2.sT.ucDD = 10;
-    pscmPacket->sData[0].uApp.std_11f2.sT.ucWW = 2;
-    pscmPacket->sData[0].uApp.std_11f2.LastTime = 0x12;
-    pscmPacket->sData[0].uApp.std_11f2.ucTimeNum = 0x2;
+    pscmPacket->sData[0].uApp.std_11f2.ucTaskType = 0x06;
+    pscmPacket->sData[0].uApp.std_11f2.ucTaskLen = 0xFFFF;
+    pscmPacket->sData[0].uApp.std_11f2.sT.ucYY = 0;
+    pscmPacket->sData[0].uApp.std_11f2.sT.ucMM = 0;
+    pscmPacket->sData[0].uApp.std_11f2.sT.ucDD = 0;
+    pscmPacket->sData[0].uApp.std_11f2.sT.ucWW =0;
+    pscmPacket->sData[0].uApp.std_11f2.LastTime = 0x01;
+    pscmPacket->sData[0].uApp.std_11f2.ucTimeNum = 0x01;
 
-    pscmPacket->sData[0].uApp.std_11f2.Time[0].Min = 1;
-    pscmPacket->sData[0].uApp.std_11f2.Time[0].Hour = 13;
-    pscmPacket->sData[0].uApp.std_11f2.Time[0].Status = 0x03;
-    pscmPacket->sData[0].uApp.std_11f2.Time[0].Light = 0x04;
+    pscmPacket->sData[0].uApp.std_11f2.Time[0].Min = 15;
+    pscmPacket->sData[0].uApp.std_11f2.Time[0].Hour = 00;
+    pscmPacket->sData[0].uApp.std_11f2.Time[0].Status = 0x99;
+    pscmPacket->sData[0].uApp.std_11f2.Time[0].Light = 0x99;
 
-    pscmPacket->sData[0].uApp.std_11f2.Time[1].Min = 2;
-    pscmPacket->sData[0].uApp.std_11f2.Time[1].Hour = 13;
-    pscmPacket->sData[0].uApp.std_11f2.Time[1].Status = 0x03;
-    pscmPacket->sData[0].uApp.std_11f2.Time[1].Light = 0x04;
+    pscmPacket->sData[0].uApp.std_11f2.Time[1].Min = 15;
+    pscmPacket->sData[0].uApp.std_11f2.Time[1].Hour = 00;
+    pscmPacket->sData[0].uApp.std_11f2.Time[1].Status = 0x99;
+    pscmPacket->sData[0].uApp.std_11f2.Time[1].Light = 0x99;
 
     pscmPacket->sData[0].uApp.std_11f2.ucDataNum = 0x01;
 
-    pscmPacket->sData[0].uApp.std_11f2.Data[0].ucOperate =0x09;
+    pscmPacket->sData[0].uApp.std_11f2.Data[0].ucOperate =0x01;
     memcpy(pscmPacket->sData[0].uApp.std_11f2.Data[0].ucAddress,"12345678",7);
     memcpy(pscmPacket->sData[0].uApp.std_11f2.Data[0].ucKey,"12345678912345678912345678998761234556",32);
 
-    pscmPacket->sData[0].uApp.std_11f2.Data[1].ucOperate =0x09;
-    memcpy(pscmPacket->sData[0].uApp.std_11f2.Data[1].ucAddress,"12345678",7);
-    memcpy(pscmPacket->sData[0].uApp.std_11f2.Data[1].ucKey,"12345678912345678912345678998761234556",32);
+    // pscmPacket->sData[0].uApp.std_11f2.Data[1].ucOperate =0x09;
+    // memcpy(pscmPacket->sData[0].uApp.std_11f2.Data[1].ucAddress,"12345678",7);
+    // memcpy(pscmPacket->sData[0].uApp.std_11f2.Data[1].ucKey,"12345678912345678912345678998761234556",32);
 
 
 
@@ -16131,7 +16131,7 @@ void heartbeat_timeout(void)
     }
 }
 
-#if 0
+#if 1
 extern int tcp_client_connect(void);
 extern void socket_client_poll(void);
 extern void app_test_step(int step, void* data);
