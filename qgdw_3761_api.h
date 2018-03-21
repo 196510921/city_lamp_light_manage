@@ -2776,6 +2776,31 @@ BOOL   bmt_have_tp(eMtAFN eAFN, eMtDir eDir);  // 此类报文中是否应该有
 BOOL   bmt_need_con(eMtAFN eAFN, eMtDir eDir); // 此类报文是否需要确认
 ///*}
 
+
+//huyuxiang
+//逐个确认与否认
+// 用户侧数据
+typedef struct
+{
+    eMtAFN      eAFN;          // 需要确认的AFN
+}sMtSure;                  // 确认与否认 (用户侧数据结构)
+
+
+
+// 帧侧数据
+#pragma pack(1)   
+
+typedef struct
+{
+    UINT8       ucAFN;
+}sMtSure_f;
+#pragma pack()
+// 转换函数
+eMtErr emtTrans_Sure(eMtTrans eTrans,void* psUser, void* psFrame, UINT16* pusfLen);
+
+
+
+
 /*******************************************
  * 逐个确认与否认
  *
@@ -4566,8 +4591,7 @@ typedef struct
     sMtCascOne_f sOne[1];    // 
 
 }sMtTmlCascCfg_f, sMtAfn04f37_f;
-#pragma pack() 
-
+#pragma pack() 
 
 // 转换函数
 eMtErr emtTrans_afn04f37(eMtTrans eTrans,void* psUser, void* psFrame, UINT16* pusfLen);
@@ -14416,6 +14440,7 @@ typedef union
      *  主站到从站 和 从站到主站
      *  双向同样的数据结构
     {*///
+    sMtSure	     sSure;             //确认或否认
     sMtOnebyOne      sOneByOne;        // 逐个确认或否认                  CMD_AFN_0_F3_ONE_BY_ONE
     sMtTmlUpCfg      sTmlUpCfg;        // 终端上行通信口通信参数设置      CMD_AFN_4_F1_TML_UP_CFG          CMD_AFN_A_F1_TML_UP_CFG
     //huyuxiang

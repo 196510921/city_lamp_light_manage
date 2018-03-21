@@ -220,10 +220,14 @@ const sMtCmdInfor gmt_cmdinfor[] =
      *  加密: 不需要
      *
     {*///
-    {CMD_AFN_0_F1_ALL_OK,            MT_DIR_M2S, MT_PN_P0,  NULL,                  "全部确认：对收到报文中的全部数据单元标识进行确认"},
-    {CMD_AFN_0_F1_ALL_OK,            MT_DIR_S2M, MT_PN_P0,  NULL,                  "全部确认：对收到报文中的全部数据单元标识进行确认"},
-    {CMD_AFN_0_F2_ALL_DENY,          MT_DIR_M2S, MT_PN_P0,  NULL,                  "全部否认：对收到报文中的全部数据单元标识进行否认"},
-    {CMD_AFN_0_F2_ALL_DENY,          MT_DIR_S2M, MT_PN_P0,  NULL,                  "全部否认：对收到报文中的全部数据单元标识进行否认"},
+    //{CMD_AFN_0_F1_ALL_OK,            MT_DIR_M2S, MT_PN_P0,  NULL,                  "全部确认：对收到报文中的全部数据单元标识进行确认"},
+    //{CMD_AFN_0_F1_ALL_OK,            MT_DIR_S2M, MT_PN_P0,  NULL,                  "全部确认：对收到报文中的全部数据单元标识进行确认"},
+    //{CMD_AFN_0_F2_ALL_DENY,          MT_DIR_M2S, MT_PN_P0,  NULL,                  "全部否认：对收到报文中的全部数据单元标识进行否认"},
+    //{CMD_AFN_0_F2_ALL_DENY,          MT_DIR_S2M, MT_PN_P0,  NULL,                  "全部否认：对收到报文中的全部数据单元标识进行否认"},
+    {CMD_AFN_0_F1_ALL_OK,            MT_DIR_M2S, MT_PN_P0,  emtTrans_Sure,                  "全部确认：对收到报文中的全部数据单元标识进行确认"},
+    {CMD_AFN_0_F1_ALL_OK,            MT_DIR_S2M, MT_PN_P0,  emtTrans_Sure,                  "全部确认：对收到报文中的全部数据单元标识进行确认"},
+    {CMD_AFN_0_F2_ALL_DENY,          MT_DIR_M2S, MT_PN_P0,  emtTrans_Sure,                  "全部否认：对收到报文中的全部数据单元标识进行否认"},
+    {CMD_AFN_0_F2_ALL_DENY,          MT_DIR_S2M, MT_PN_P0,  emtTrans_Sure,                  "全部否认：对收到报文中的全部数据单元标识进行否认"},
     {CMD_AFN_0_F3_ONE_BY_ONE,        MT_DIR_M2S, MT_PN_P0,  emtTrans_OneByOne,     "按数据单元标识确认和否认：对收到报文中的全部数据单元标识进行逐个确认/否认"},
     {CMD_AFN_0_F3_ONE_BY_ONE,        MT_DIR_S2M, MT_PN_P0,  emtTrans_OneByOne,     "按数据单元标识确认和否认：对收到报文中的全部数据单元标识进行逐个确认/否认"},
     ///*}
@@ -1531,8 +1535,7 @@ const sMtCmdInfor gmt_cmdinfor[] =
     {CMD_AFN_10_F11_TRANS_POWER,        MT_DIR_M2S, MT_PN_P0,  NULL,                  "转发主站直接对终端的遥控送电命令"},
     ///*}
 
-
-   /*******************************
+   /*******************************
      *  (15) 数据转发(AFN=11H）
      *
      *  上行: 本类型
@@ -1760,8 +1763,8 @@ eMtErr eMtGetCmdInfor(eMtCmd eCmd, eMtDir eDir, sMtCmdInfor *psInfor)
     }
 
     #ifdef MT_DBG
-     DEBUG("[in]eMtGetCmdInfor() eCmd = 0x%X", eCmd);
-     DEBUG("[in]eMtGetCmdInfor() eDir = %s", eDir == MT_DIR_M2S ? "MT_DIR_M2S" : "MT_DIR_S2M");
+    // DEBUG("[in]eMtGetCmdInfor() eCmd = 0x%X", eCmd);
+    // DEBUG("[in]eMtGetCmdInfor() eDir = %s", eDir == MT_DIR_M2S ? "MT_DIR_M2S" : "MT_DIR_S2M");
     #endif
     
     Num = sizeof(gmt_cmdinfor) / sizeof(sMtCmdInfor);
@@ -2022,7 +2025,7 @@ eMtErr emtIsValidPack(const UINT8* pOutBuf, UINT16 usLen)
    
     // 计算出来的校验和
     ucCheckSumC = ucmt_get_check_sum((UINT8*)&(pfComHead->C), usUserLen);
-#if 0   
+    
     if(ucCheckSumC != ucCheckSumP)
     {
         #ifdef MT_DBG
@@ -2030,7 +2033,7 @@ eMtErr emtIsValidPack(const UINT8* pOutBuf, UINT16 usLen)
         #endif
         return MT_ERR_CS;
     }
-#endif
+
     // 协议应该的数据长度
     usProtoLen = usUserLen + MT_UN_USER_LEN;
     if(usLen < usProtoLen)
@@ -2341,17 +2344,24 @@ BOOL  bmt_have_tp(eMtAFN eAFN, eMtDir eDir)
 *****************************************************************************/
 BOOL   bmt_need_con(eMtAFN eAFN, eMtDir eDir)
 {
-  // 该报文是否需要从动站确认    
- if((MT_DIR_M2S == eDir) && (AFN_01_RSET == eAFN || AFN_02_LINK == eAFN || AFN_04_SETP == eAFN ||AFN_05_CTRL == eAFN))
- {
-    return TRUE;
- }
- else if(MT_DIR_S2M == eDir && AFN_02_LINK == eAFN)
- {
-    return TRUE;
- }
- 
- return FALSE;
+  // 该报文是否需要从动站确认
+    if((MT_DIR_M2S == eDir) &&
+       (AFN_01_RSET == eAFN || 
+        AFN_02_LINK == eAFN || 
+        AFN_04_SETP == eAFN ||
+        AFN_05_CTRL == eAFN))
+    {
+        return TRUE;
+    }
+    else if((MT_DIR_S2M == eDir) &&
+       (AFN_02_LINK == eAFN))
+    {
+	return TRUE;
+    }
+    else
+    {
+        return FALSE;
+    }  
 }
 
 /*****************************************************************************
@@ -3270,8 +3280,8 @@ eMtErr emt_pnfn_to_cmdpn(eMtAFN eAfn, sMtPnFn* psPnFn, UINT8 ucNumPnFn,   sMtCmd
         case AFN_0D_ASK2:  
         case AFN_0E_ASK3:              
         case AFN_0F_FILE:              
-        case AFN_10_DATA:    
-        case AFN_11_LED:       
+        case AFN_10_DATA:              
+        case AFN_11_LED:              
 
             ucAFN = (UINT8)eAfn;
             break;
@@ -3530,8 +3540,8 @@ eMtErr emt_dadt_to_cmdpn(eMtAFN eAfn, sMtDaDt* psDaDt, UINT8 ucNumDaDt, sMtCmdPn
         case AFN_0D_ASK2:  
         case AFN_0E_ASK3:              
         case AFN_0F_FILE:              
-        case AFN_10_DATA:  
-        case AFN_11_LED:            
+        case AFN_10_DATA:              
+        case AFN_11_LED:
 
             ucAFN = (UINT8)eAfn;
             break;
@@ -3797,6 +3807,64 @@ void   vMtSetDoubleSign(double *pdVal, int sign)
         pdoubleFmt->s.sign = 1;
     }
 }
+
+
+/*****************************************************************************
+ *  函 数 名  : emtTrans_Sure
+ *  功能描述  :确认/否认转换函数
+ *  输入参数  : eMTTransDir eDir  
+ *  void *psUser      
+ *  void *psFrame     
+ *  UINT16 *pusfLen   
+ *  输出参数  : 无
+ *  返 回 值  : 
+ *  调用函数  : 
+ *  被调函数  : 
+ *    
+ *  修改历史      :
+ *  1.日    期   : 2013年6月9日
+ *  作    者   : 李明
+ *  修改内容   : 新生成函数
+ *
+ ******************************************************************************/
+
+
+eMtErr emtTrans_Sure(eMtTrans eTrans,void* psUser, void* psFrame, UINT16* pusfLen)
+{
+     eMtAFN      eAFN      = AFN_NULL;
+     sMtSure_f *psSure_f = (sMtSure_f *)psFrame;
+     sMtSure   *psSure_u = (sMtSure   *)psUser;
+	// 帧侧转为用户侧
+	
+
+     if(MT_TRANS_F2U == eTrans)
+     {
+    	 eAFN = (eMtAFN)psSure_f->ucAFN;
+    	 psSure_u->eAFN = eAFN;
+     }
+    else if(MT_TRANS_U2F == eTrans)
+    {
+       eAFN = psSure_u->eAFN;
+       psSure_f->ucAFN  = (UINT8)psSure_u->eAFN;
+    }
+    else
+    {
+	return MT_ERR_PARA;
+    }
+
+
+   //*pusfLen = sizeof(sMtSure_f);
+   printf("sizeof smtsure_f is %d\n",sizeof(sMtSure_f));
+   printf("eAFN is %d\n",psSure_u->eAFN);
+   *pusfLen = 1;
+ 
+    return MT_OK;
+
+
+}
+
+
+
 
 /*****************************************************************************
  函 数 名  : emcTrans_OneByOne
@@ -4160,6 +4228,7 @@ eMtErr emtTrans_afn11hf3_m2s(eMtTrans eTrans, void* psUser, void* psFrame, UINT1
 	memcpy(psAfn11f3->ucPara,psAfn11f3_f->ucPara,sizeof(psAfn11f3_f->ucPara));
 
 
+
         #if 0
         psAfn04F1->ucRTS            = psAfn04F1_f->ucRTS;
         psAfn04F1->ucRTM            = psAfn04F1_f->ucRTM;
@@ -4223,8 +4292,7 @@ eMtErr emtTrans_afn11hf4_s2m(eMtTrans eTrans, void* psUser, void* psFrame, UINT1
         #endif
         return MT_ERR_NULL;
     }
-
-  sMt_s2m_11hf4    *psAfn11f4   = (sMt_s2m_11hf4*)psUser;
+  sMt_s2m_11hf4    *psAfn11f4   = (sMt_s2m_11hf4*)psUser;
     sMt_s2m_11hf4_f *psAfn11f4_f  = (sMt_s2m_11hf4_f*)psFrame;
      
     UINT8 bs8Con = 0;
@@ -4293,8 +4361,7 @@ eMtErr emtTrans_afn11hf4_m2s(eMtTrans eTrans, void* psUser, void* psFrame, UINT1
         #endif
         return MT_ERR_NULL;
     }
-
-  sMt_m2s_11hf4    *psAfn11f4   = (sMt_m2s_11hf4*)psUser;
+  sMt_m2s_11hf4    *psAfn11f4   = (sMt_m2s_11hf4*)psUser;
     sMt_m2s_11hf4_f *psAfn11f4_f = (sMt_m2s_11hf4_f*)psFrame;
      
     UINT8 bs8Con = 0;
@@ -32859,8 +32926,7 @@ eMtErr emtTrans_rec_27(eMtTrans eTrans, void* psUser, void* psFrame, UINT16* pus
             DEBUG("emtTrans_rec_27() emt_trans_YYMMDDhhmm error code = %d", eRet);
             #endif
             return eRet;
-        }
-
+        }
         
         // Pn
         usPn = psF->usPnFlag & 0xFFF;

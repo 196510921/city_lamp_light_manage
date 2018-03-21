@@ -16,7 +16,6 @@
     修改内容   : 创建文件
 
 ******************************************************************************/
-#include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -27,7 +26,6 @@
 #include <math.h>
 
 
-
 #define PACK_MEM_SIZE  10240
 #define OUT_BUF_LEN    10240
 
@@ -36,8 +34,6 @@ UINT8 g_ucPackMem[PACK_MEM_SIZE] = {0}; // 测试封装命令的参数的内存�
 UINT8 g_ucOutBuf[OUT_BUF_LEN]    = {0}; // 存放输出报文
 UINT8 g_ucInBuf[OUT_BUF_LEN]     = {0};
 UINT8 g_ucOutBufColor[OUT_BUF_LEN]    = {0}; // 存放输出报文
-
-extern void socket_client_poll(void);
 
 smtPack * getSmtPackPoint()
 {
@@ -266,7 +262,7 @@ void show_mt_error(eMtErr eErr)
 }
 
 
-#if 0
+#if 1
 /*****************************************************************************
  函 数 名  : test_pack_1
  功能描述  : 测试例1
@@ -324,6 +320,8 @@ eMtErr test_pack_0001()
     pscmPacket->sData[0].bApp  = TRUE;
     pscmPacket->sData[0].usPN  = 0;
 
+   pscmPacket->sData[0].uApp.sSure.eAFN = (eMtAFN)AFN_02_LINK;
+
 
     /* 4 调用函数 */
     eRet = emtPack(pscmPacket, &usBuflen, (UINT8*)g_ucOutBuf);
@@ -371,10 +369,13 @@ eMtErr test_pack_0001_s2m()
 
     pscmPacket->ucCmdNum = 1;
     pscmPacket->sCmdData[0].eCmd  = CMD_AFN_0_F1_ALL_OK;
+    //pscmPacket->sCmdData[0].eCmd  = CMD_AFN_1_F1_HARD_INIT;
     pscmPacket->sCmdData[0].bApp  = TRUE;
     pscmPacket->sCmdData[0].usPN  = 0;
 
 
+    pscmPacket->sCmdData[0].uAppData.sSure.eAFN = (eMtAFN)AFN_02_LINK;
+    //pscmPacket->sData[0].uApp.sSure.eAFN = (eMtAFN)AFN_02_LINK;
      /* 4 \u8c03\u7528\u51fd\u6570 */
     eRet = ecm_3761_pack(pscmPacket, (UINT8*)g_ucOutBuf, &usBuflen);
     if(eRet != MT_OK)
@@ -431,6 +432,7 @@ eMtErr test_pack_0001_m2s()
     pscmPacket->sData[0].eCmd  = CMD_AFN_0_F1_ALL_OK;
     pscmPacket->sData[0].bApp  = TRUE;
     pscmPacket->sData[0].usPN  = 0;
+    pscmPacket->sData[0].uApp.sSure.eAFN = (eMtAFN)AFN_02_LINK;
 
 
     /* 4 调用函数 */
@@ -12225,12 +12227,12 @@ eMtErr test_pack_afn11df3_m2s()
 
 	pscmPacket->sData[0].uApp.std_11f3.ucTaskFormat = 0x1105;
 	pscmPacket->sData[0].uApp.std_11f3.ucTaskType = 0x06;
-	pscmPacket->sData[0].uApp.std_11f3.ucTaskLen = 0x0001;
-	pscmPacket->sData[0].uApp.std_11f3.ucData = 0x01;
-	pscmPacket->sData[0].uApp.std_11f3.ucNum = 0x0001;
-	pscmPacket->sData[0].uApp.std_11f3.ucPara[0].ucOperate =0x01;
-	memcpy(pscmPacket->sData[0].uApp.std_11f3.ucPara[0].ucPassword,"12345678",8);
-	memcpy(pscmPacket->sData[0].uApp.std_11f3.ucPara[0].ucKey,"1234567891234567891234567899876",32);
+	pscmPacket->sData[0].uApp.std_11f3.ucTaskLen = 0x1207;
+	pscmPacket->sData[0].uApp.std_11f3.ucData = 0x08;
+	pscmPacket->sData[0].uApp.std_11f3.ucNum = 0x1301;
+	pscmPacket->sData[0].uApp.std_11f3.ucPara[0].ucOperate =0x09;
+	memcpy(pscmPacket->sData[0].uApp.std_11f3.ucPara[0].ucPassword,"12345678",7);
+	memcpy(pscmPacket->sData[0].uApp.std_11f3.ucPara[0].ucKey,"1234567891234567891234567899876",31);
 
 
 
@@ -12400,7 +12402,8 @@ typedef struct
 // 下行测试例表
 sTestPack  g_test_pack_down[] = 
 {   
-    {CMD_AFN_0_F1_ALL_OK,          test_pack_0001_m2s},
+  //  {CMD_AFN_0_F1_ALL_OK,          test_pack_0001_m2s},
+	 {CMD_AFN_0_F1_ALL_OK,          test_pack_0001},
     {CMD_AFN_0_F2_ALL_DENY,	   test_pack_0002_m2s},
     {CMD_AFN_0_F3_ONE_BY_ONE,      test_pack_afn0f3_m2s},
     {CMD_AFN_1_F1_HARD_INIT,       test_pack_afn01f1_m2s},
@@ -14838,7 +14841,7 @@ void show_pack_adp(sCmPacket * psUnpack)
     char strTmp[128] = {0};
     int i = 0;
     int nSubNum = 0;
-    eMtDir eDir = MT_DIR_M2S;
+    eMtDir eDir = MT_DIR_S2M;
 
     // 输出地址信息
     show_main_name("address:\n");
@@ -15259,16 +15262,10 @@ void unpack_analyse(int nstart, int argc, char *argv[])
     sMtCmdInfor    sCmdInfor   = {0};
     eMtDir eDir;
 
-    if(nstart == 0){
-        printf("data from socket\n");
-        memcpy(g_ucInBuf, argv, argc);
-    }
-    else{
-
-        for(i = nstart; i < argc; i++)
-        {
-            g_ucInBuf[j++] = strtol(argv[i], NULL,16);
-        }
+   
+    for(i = nstart; i < argc; i++)
+    {
+        g_ucInBuf[j++] = strtol(argv[i], NULL,16);
     }
 
     pInBuf = (UINT8*)g_ucInBuf;
@@ -15318,12 +15315,6 @@ void unpack_analyse(int nstart, int argc, char *argv[])
     
     show_main_name("起始字符:\t");
     printf("    [%02X]\n", sUnpackCommon.sfComHead.s68);
-
-    show_main_name("版本信息:\t");
-    printf("    [%d]\n", sUnpackCommon.sfComHead.Ver);
-
-    show_main_name("加密信息:\t");
-    printf("    [%d]\n", sUnpackCommon.sfComHead.Encry);
 
     show_main_name("控 制 域:\t");
     show_sub_name("  C:");
@@ -15711,20 +15702,14 @@ void test_unpack(int nstart, int argc, char *argv[])
     UINT8* pInBuf = NULL;
     sMtInit  sInit = {0};
 
-    printf("\nargc = %d , nstart = %d, usLen = %d------------",argc, nstart, usLen);
-    
-    if(nstart == 0){
-        printf("data from socket\n");
-        memcpy(g_ucInBuf, argv, argc);
+    // printf("\nargc = %d , nstart = %d, usLen = %d------------",argc, nstart, usLen);
+    // 解决命令行输入的参数
+    for(i = nstart; i < argc; i++)
+    {
+        g_ucInBuf[j++] = strtol(argv[i], NULL,16);
+        //printf(" %02X", (unsigned int)strtol(argv[i], NULL,16));
     }
-    else{
-        // 解决命令行输入的参数
-        for(i = nstart; i < argc; i++)
-        {
-            g_ucInBuf[j++] = strtol(argv[i], NULL,16);
-            printf(" %02X", (unsigned int)strtol(argv[i], NULL,16));
-        }
-    }
+
 
     pInBuf = (UINT8*)g_ucInBuf;
 
@@ -15764,120 +15749,9 @@ void test_unpack(int nstart, int argc, char *argv[])
     free(psUnpack);
 }
 
-void cmd_ctrl(void)
-{
-    int argc = 0;
-    char argv[2048];
-    //char* opt = NULL;
-    int opt;
-    int optind = 2;
-    int longIndex = 0;
-    char *strOpt = "uohcnmap:t:e:a:d:";
-    int    iTest= 0;// 测试例ID
-    printf("cmd_ctrl!\n");
-    // struct option longOpts[] = 
-    // {
-    //     {"address",     required_argument,    NULL,    'a'},
-    //     {"pack",        required_argument,    NULL,    'p'},
-    //     {"test",        required_argument,    NULL,    't'},
-    //     {"down",        required_argument,    NULL,    'd'},
-    //     {"error",       required_argument,    NULL,    'e'},
-    //     {"adpack",      required_argument,    NULL,    'a'},
-    //     {"help",        no_argument,          NULL,    'h'},
-    //     {"unpack",      no_argument,          NULL,    'u'},
-    //     {"oadp",        no_argument,          NULL,    'o'},
-    //     {"modbus",      no_argument,          NULL,    'm'},
-    //     {"nengxiao",    no_argument,          NULL,    'n'},
-    //     {"all",         no_argument,          NULL,     0},
-    //     {NULL,          no_argument,          NULL,     0}
-    // };
-
-    // FILE* pFile = fopen("testfile.txt" , "r");
-    // if (pFile == NULL)   
-    //     perror ("Error opening file");  
-
-    // while(1){
-        while(fgets(argv, 2048, stdin) != NULL){
-            printf("wait...\n");
-            argc = strlen(argv);
-            printf("argc:%d, argv:%s\n",argc, argv);
-            // while((opt = getopt_long(argc, &argv,strOpt, longOpts, &longIndex)) != -1)
-            // {
-                //opt = argv[1];
-                switch(opt)
-                {
-                    case 'h':
-                        {
-                           int len = sizeof(sMtAfn0dF218_f);
-                           
-                           printf("sMtAfn0dF218_f len = %d\n", len);
-                           len = sizeof(sMtTd_c_f);
-                           printf("sMtTd_c_f len = %d\n", len);
-                        }
-                          break;
-
-                    case 'a':
-                        unpack_analyse(optind, argc, argv);
-                        break;
-
-                    case 'd':
-                        iTest = (int)strtol(optarg, NULL, 16);
-                        printf("test id = %04X\n", iTest);
-                        test_pack_down(iTest);
-                        break;
-
-                    case 't':
-                        iTest = (int)strtol(optarg, NULL, 16);
-                        printf("test id = %04X\n", iTest);
-                        test_pack(iTest);
-                        break;
-                        
-                    case 'e':
-
-                        {
-                            int iErr = (int)strtol(optarg, NULL, 10);
-                            show_mt_error(iErr);
-                        }
-                      break;
-
-                      
-                    case 'u':
-                        test_unpack(optind, argc, argv);
-                        break;
-                    case 'o':
-                        test_unpack_adp(optind, argc, argv);
-                        break;
-                           
-                      default:
-                          printf("Your command line parameters are not right!\n");  
-                        return -1;
-                }
-            
-            // }
-            sleep(1);
-        }
-        // sleep(1);
-    // }
-
-    // fclose(pFile);
-    return;
-
-}
-
 
 int main(int argc, char *argv[])
 {
-    pthread_t t1,t2;
-
-    printf("argc:%d\n",argc);
-#if 0
-    pthread_create(&t1,NULL,socket_client_poll,NULL);
-    pthread_create(&t2,NULL,cmd_ctrl,NULL);
-
-    pthread_join(t1,NULL);
-    pthread_join(t2,NULL);
-#else
-
     int opt = 0;
     int longIndex = 0;
     char *strOpt = "uohcnmap:t:e:a:d:";
@@ -15911,6 +15785,7 @@ int main(int argc, char *argv[])
                    printf("sMtAfn0dF218_f len = %d\n", len);
                    len = sizeof(sMtTd_c_f);
                    printf("sMtTd_c_f len = %d\n", len);
+
                 }
                   break;
 
@@ -15929,7 +15804,7 @@ int main(int argc, char *argv[])
                 printf("test id = %04X\n", iTest);
                 test_pack(iTest);
                 break;
-                
+            
             case 'e':
 
                 {
@@ -15938,22 +15813,19 @@ int main(int argc, char *argv[])
                 }
               break;
 
-              
+          
             case 'u':
                 test_unpack(optind, argc, argv);
                 break;
             case 'o':
                 test_unpack_adp(optind, argc, argv);
                 break;
-                   
+               
               default:
                   printf("Your command line parameters are not right!\n");  
                 return -1;
         }
-    
     }
-#endif
-
     return 0;
 }
 

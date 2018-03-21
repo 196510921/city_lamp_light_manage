@@ -295,7 +295,7 @@ typedef union
 
     sMtAfn04F13 		sTmTerminalCfg;		//终端电能表和路灯控制器配置参数
     sMtHaveDiffEvent stmCtrlWaycfg;    //继电器输出控制方案
-
+    sMtSure         sSure;             // 确认/否认
 
     // 上下行通用
     sCmOneByOne      scmOneByOne;       // 逐条确认与否认             CMD_ONE_BY_ONE
