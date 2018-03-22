@@ -137,8 +137,7 @@ static int socket_client_handle(int clientFd, int revent)
 }
 
 
-extern void unpack_analyse(int nstart, int argc, char *argv[]);
-extern void test_unpack(int nstart, int argc, char *argv[]);
+extern void unpack(UINT8* data, UINT16 len);
 
 static void client_rx_cb(int clientFd)
 {
@@ -165,9 +164,7 @@ static void client_rx_cb(int clientFd)
 		printf("%X ",clientTcpRxBuf[i]);
 
 	printf("--------------------------------------unpack-------------------------------------------------\n\n\n\n\n\n");
-	test_unpack(0, byteRead, clientTcpRxBuf);
-	printf("--------------------------------------unpack_analyse-------------------------------------------------\n\n\n\n\n\n");
-	unpack_analyse(0, byteRead, clientTcpRxBuf);
+	unpack(clientTcpRxBuf, byteRead);
 
 	return;
 }

@@ -6460,6 +6460,94 @@ eMtErr test_pack_afn09f8_s2m()
     return MT_OK;
 }
 
+eMtErr test_pack_afn0cf01_s2m_analog()
+{
+    /* 1 定义变量 */ 
+   eCmErr eRet;
+   UINT16 usBuflen = 0;
+   sCmPacket *pscmPacket = (sCmPacket*)g_ucPackMem;
+   
+
+    /* 2 环境初始化 */
+    sCmInit  sInit;
+    //sInit.eRole = MT_ROLE_MASTER;
+    sInit.eRole = MT_ROLE_CONTOR;
+    sInit.ucPermitDelayMinutes = 255;
+    eRet = ecm_3761_init(&sInit);
+    if(eRet != MT_OK)
+    {
+        printf("初始化失败\n");
+        return eRet;
+    }
+    char *str = "1234567890";
+    bCmSetPw(str);
+  
+    
+    /* 3 封装参数 */
+    memcpy(pscmPacket->sAddress.acRegionCode, "1100", 4);
+    pscmPacket->sAddress.usTAddress = 1;
+    pscmPacket->sAddress.bTeamAddr  = FALSE;
+    pscmPacket->sAddress.ucMAddress = 1;
+    pscmPacket->bReSend = FALSE;
+    pscmPacket->bActive = FALSE;
+
+    pscmPacket->ucCmdNum = 1;
+    pscmPacket->sCmdData[0].eCmd  = CMD_ANALOG_DATA;
+    pscmPacket->sCmdData[0].bApp  = TRUE;
+    pscmPacket->sCmdData[0].usPN  = 10;
+
+    // app
+    /*抄读时间*/
+    pscmPacket->sCmdData[0].uAppData.sTmAnalog.sReadTime.ucYY = 18;
+    pscmPacket->sCmdData[0].uAppData.sTmAnalog.sReadTime.ucMM = 3;
+    pscmPacket->sCmdData[0].uAppData.sTmAnalog.sReadTime.ucDD = 21;
+    pscmPacket->sCmdData[0].uAppData.sTmAnalog.sReadTime.ucHH = 16;
+    pscmPacket->sCmdData[0].uAppData.sTmAnalog.sReadTime.ucmm = 12;
+    /*模拟量路数*/
+    pscmPacket->sCmdData[0].uAppData.sTmAnalog.anaglogNum = 2;
+    /*1路当前电压*/
+    pscmPacket->sCmdData[0].uAppData.sTmAnalog.fU[0] = 111.1;
+    /*1路当前电流*/
+    pscmPacket->sCmdData[0].uAppData.sTmAnalog.fI[0] = 222.222;
+    /*1路当前有功功率*/
+    pscmPacket->sCmdData[0].uAppData.sTmAnalog.fP[0] = 33.333;
+    /*1路当前无功功率*/
+    pscmPacket->sCmdData[0].uAppData.sTmAnalog.fQ[0] = 44.444;
+    /*1路当前功率因数*/
+    pscmPacket->sCmdData[0].uAppData.sTmAnalog.fPf[0] = 555.5;
+    /*1路当前光控值*/
+    pscmPacket->sCmdData[0].uAppData.sTmAnalog.fLc[0] = 666.6;
+
+    /*1路当前电压*/
+    pscmPacket->sCmdData[0].uAppData.sTmAnalog.fU[1] = 111.1;
+    /*1路当前电流*/
+    pscmPacket->sCmdData[0].uAppData.sTmAnalog.fI[1] = 222.222;
+    /*1路当前有功功率*/
+    pscmPacket->sCmdData[0].uAppData.sTmAnalog.fP[1] = 33.333;
+    /*1路当前无功功率*/
+    pscmPacket->sCmdData[0].uAppData.sTmAnalog.fQ[1] = 44.444;
+    /*1路当前功率因数*/
+    pscmPacket->sCmdData[0].uAppData.sTmAnalog.fPf[1] = 555.5;
+    /*1路当前光控值*/
+    pscmPacket->sCmdData[0].uAppData.sTmAnalog.fLc[1] = 666.6;
+
+    
+    /* 4 调用函数 */
+    eRet = ecm_3761_pack(pscmPacket, (UINT8*)g_ucOutBuf, &usBuflen);
+    if(eRet != MT_OK)
+    {
+        printf("ecm_3761_pack error %d\n", eRet);
+        return eRet;
+    }
+    
+    /* 5 输出结果 */ 
+    printf_buffer_color((char*)g_ucOutBuf, usBuflen);
+  
+
+
+    return MT_OK;
+}
+
 eMtErr test_pack_afn0cf02_s2m_auto()
 {
    /* 1 定义变量 */ 
@@ -6505,9 +6593,6 @@ eMtErr test_pack_afn0cf02_s2m_auto()
     pscmPacket->sCmdData[0].uAppData.sTmlClock.ucMinute = 13;
     pscmPacket->sCmdData[0].uAppData.sTmlClock.ucSecond = 13;
    
-
-
-
     
     /* 4 调用函数 */
     eRet = ecm_3761_pack(pscmPacket, (UINT8*)g_ucOutBuf, &usBuflen);
@@ -10689,7 +10774,7 @@ eMtErr test_pack_afn0cf08_m2s()
 
 eMtErr test_pack_afn0cf25()
 {
-   eCmErr eRet;
+     eCmErr eRet;
    UINT16 usBuflen = 0;
    smtPack *pscmPacket = (smtPack*)g_ucPackMem;
    
@@ -10748,6 +10833,63 @@ eMtErr test_pack_afn0cf25()
     pscmPacket->sData[5].eCmd  = CMD_AFN_C_F25_POWER_RATE_CUR;
     pscmPacket->sData[5].bApp  = FALSE;
     pscmPacket->sData[5].usPN  = 58;
+    
+
+    /* 4 调用函数 */
+    eRet = emtPack(pscmPacket, &usBuflen, (UINT8*)g_ucOutBuf);
+    if(eRet != MT_OK)
+    {
+        printf("ecm_3761_pack error %d\n", eRet);
+        return eRet;
+    }
+    
+    /* 5 输出结果 */ 
+    printf_buffer_color((char*)g_ucOutBuf, usBuflen);
+
+    return MT_OK;
+}
+
+eMtErr test_pack_afn0cf01_m2s_analog()
+{
+   eCmErr eRet;
+   UINT16 usBuflen = 0;
+   smtPack *pscmPacket = (smtPack*)g_ucPackMem;
+   
+
+    /* 2 环境初始化 */
+    sCmInit  sInit;
+    sInit.eRole = MT_ROLE_MASTER;
+    //sInit.eRole = MT_ROLE_CONTOR;
+    sInit.ucPermitDelayMinutes = 255;
+    eRet = ecm_3761_init(&sInit);
+    if(eRet != MT_OK)
+    {
+        printf("初始化失败\n");
+        return eRet;
+    }
+    char *str = "1234567890123456";
+    bCmSetPw(str);
+  
+    
+    /* 3 封装参数 */
+    memcpy(pscmPacket->sAddress.acRegionCode, "1100", 4);
+    pscmPacket->sAddress.usTAddress = 1;
+    pscmPacket->sAddress.bTeamAddr  = FALSE;
+    pscmPacket->sAddress.ucMAddress = 1;
+
+    pscmPacket->eAFN = AFN_0C_ASK1;
+    pscmPacket->eDir = MT_DIR_M2S;
+    pscmPacket->ePRM = MT_PRM_ACTIVE;
+    
+    pscmPacket->ePos = MT_POS_SIGLE;
+    pscmPacket->ucSeq = 0;
+    pscmPacket->bAcdFcb = TRUE;
+
+
+    pscmPacket->usDataNum = 1;
+    pscmPacket->sData[0].eCmd  = CMD_AFN_C_F1_ANALOG_DATA;
+    pscmPacket->sData[0].bApp  = FALSE;
+    pscmPacket->sData[0].usPN  = 1;
     
 
     /* 4 调用函数 */
@@ -12456,7 +12598,7 @@ sTestPack  g_test_pack_down[] =
     {CMD_AFN_A_F67_GOP_AUTO_1,        test_pack_afn0af67_m2s},
     {CMD_AFN_A_F68_GOP_AUTO_2,        test_pack_afn0af68_m2s},
     
-
+    {CMD_AFN_C_F1_ANALOG_DATA,        test_pack_afn0cf01_m2s_analog},
     {CMD_AFN_C_F2_TML_CLOCK,          test_pack_afn0cf02_m2s},
     {CMD_AFN_C_F3_TML_PARA_STATE,     test_pack_afn0cf03_m2s},
     {CMD_AFN_C_F4_TML_UPCOM_STATE,    test_pack_afn0cf04_m2s},
@@ -12554,7 +12696,7 @@ sTestPack  g_test_pack[] =
     {CMD_AFN_A_F68_GOP_AUTO_2,     test_pack_afn0af68_s2m},
         
 
-    
+     {CMD_AFN_C_F1_ANALOG_DATA,          test_pack_afn0cf01_s2m_analog}, // 主动上报
    // {CMD_AFN_C_F2_TML_CLOCK,          test_pack_afn0cf02_s2m},   // 被动应答
     {CMD_AFN_C_F2_TML_CLOCK,          test_pack_afn0cf02_s2m_auto}, // 主动上报
    
@@ -15695,6 +15837,38 @@ void unpack_analyse(int nstart, int argc, char *argv[])
 }
 
 
+void unpack(UINT8* data, UINT16 len)
+{
+    sMtInit  sInit = {0};
+
+    printf_buffer_color((char*)pInBuf, usLen);
+
+    smtPack *psUnpack = (smtPack *)malloc(5* 1024);
+    // 协议初始化
+    sInit.eRole = MT_ROLE_CONTOR;
+    sInit.ucPermitDelayMinutes = 255;
+    eMtInit(&sInit);
+
+    //调用解析函数
+    eMtErr eRet = emtUnPack(psUnpack, pInBuf, usLen);
+
+    if(eRet != MT_OK)
+    {
+        printf("emtUnPack() error code = %d\n", eRet);
+        show_mt_error(eRet);
+    }
+    else
+    {
+        fm_print("--------------------------unpack success-------------------------\n",FR_GREEN);
+        // 显示解析结构
+        show_pack(psUnpack); 
+        fm_print("--------------------------unpack success-------------------------\n",FR_GREEN);
+       
+    }
+    
+    free(psUnpack);
+}
+
 void test_unpack(int nstart, int argc, char *argv[])
 {
     INT32  i, j = 0;
@@ -15750,6 +15924,13 @@ void test_unpack(int nstart, int argc, char *argv[])
 }
 
 
+extern int tcp_client_connect(void);
+int main(int argc, char *argv[])
+{
+    tcp_client_connect();
+    socket_client_poll();
+}
+#if 0
 int main(int argc, char *argv[])
 {
     int opt = 0;
@@ -15828,7 +16009,7 @@ int main(int argc, char *argv[])
     }
     return 0;
 }
-
+#endif
 
 
 

@@ -104,6 +104,8 @@ sCmdMap g_cmdMap[] =
 
 
     /* (12) 请求1类数据（AFN=0CH） */
+    
+    {CMD_ANALOG_DATA,          CMD_AFN_C_F1_ANALOG_DATA,         MT_PRM_PASIVE},
     {CMD_TML_CLOCK,            CMD_AFN_C_F2_TML_CLOCK,         MT_PRM_PASIVE},
     {CMD_CURNT_PQUI,           CMD_AFN_C_F25_POWER_RATE_CUR,   MT_PRM_PASIVE},
     {CMD_DC_RLTM_DATA,         CMD_AFN_C_F73_DC_RLTM_DATA,     MT_PRM_PASIVE},
@@ -300,7 +302,8 @@ eCmErr ecm_find_frist_valid_pack(UINT8  *pinBuf, UINT16 usLen, UINT16 *pusFirstO
 eCmErr ecm_3761_pack(sCmPacket* psCmPacket, UINT8 * pBuf, UINT16 *pusBufLen)
 {
     if(!psCmPacket || !pBuf || !pusBufLen)
-    {
+    {
+
         #ifdef CM_DEG_ON
         DEBUG("ecm_3761_pack() pointer is NULL");
         #endif
@@ -478,7 +481,8 @@ eCmErr ecm_3761_pack(sCmPacket* psCmPacket, UINT8 * pBuf, UINT16 *pusBufLen)
 eCmErr ecm_3761_unpack(UINT8 * pBuf, UINT16 usBufLen, sCmPacket* psCmPacket)
 {
     if(!pBuf || !psCmPacket)
-    {
+    {
+
         #ifdef CM_DEG_ON
         DEBUG("ecm_3761_unpack() pointer is NULL");
         #endif
@@ -748,7 +752,8 @@ eMtCmd emtTransAppData_cm_2_mt(eMtCmd emtCmd, uCmApp *pcmAppData, uMtApp *pmtApp
         {
             pmtAppData->sTmlSuptParaCfg.ucNum = pcmAppData->sTmlSuptParaCfg.ucNum;
             for(i = 0; i < pmtAppData->sTmlSuptParaCfg.ucNum; i++)
-            {
+            {
+
                 pmtAppData->sTmlSuptParaCfg.eCfgCmd[i] = eGetMtCmd(pcmAppData->sTmlSuptParaCfg.eCfgCmd[i]);
             }
         }
@@ -758,7 +763,8 @@ eMtCmd emtTransAppData_cm_2_mt(eMtCmd emtCmd, uCmApp *pcmAppData, uMtApp *pmtApp
         {
             pmtAppData->sTmlSuptCtrlCfg.ucNum = pcmAppData->sTmlSuptCtrlCfg.ucNum;
             for(i = 0; i < pmtAppData->sTmlSuptCtrlCfg.ucNum; i++)
-            {
+            {
+
                 pmtAppData->sTmlSuptCtrlCfg.eCfgCmd[i] = eGetMtCmd(pcmAppData->sTmlSuptCtrlCfg.eCfgCmd[i]);
             }
         }
@@ -768,7 +774,8 @@ eMtCmd emtTransAppData_cm_2_mt(eMtCmd emtCmd, uCmApp *pcmAppData, uMtApp *pmtApp
         {
             pmtAppData->sTmlSuptAsk1.ucNum = pcmAppData->sTmlSuptAsk1.ucNum;
             for(i = 0; i < pmtAppData->sTmlSuptAsk1.ucNum; i++)
-            {
+            {
+
                 pmtAppData->sTmlSuptAsk1.eCfgCmd[i] = eGetMtCmd(pcmAppData->sTmlSuptAsk1.eCfgCmd[i]);
             }
         }
@@ -779,7 +786,8 @@ eMtCmd emtTransAppData_cm_2_mt(eMtCmd emtCmd, uCmApp *pcmAppData, uMtApp *pmtApp
         {
             pmtAppData->sTmlSuptAsk2.ucNum = pcmAppData->sTmlSuptAsk2.ucNum;
             for(i = 0; i < pmtAppData->sTmlSuptAsk2.ucNum; i++)
-            {
+            {
+
                 pmtAppData->sTmlSuptAsk2.eCfgCmd[i] = eGetMtCmd(pcmAppData->sTmlSuptAsk2.eCfgCmd[i]);
             }
         }
@@ -928,7 +936,8 @@ eMtCmd emtTransAppData_mt_2_cm(eMtCmd emtCmd, uMtApp *pmtAppData, uCmApp *pcmApp
         {
             pcmAppData->sTmlSuptParaCfg.ucNum = pmtAppData->sTmlSuptParaCfg.ucNum;
             for(i = 0; i < pcmAppData->sTmlSuptParaCfg.ucNum; i++)
-            {
+            {
+
                 pcmAppData->sTmlSuptParaCfg.eCfgCmd[i] = eGetCmCmd(pmtAppData->sTmlSuptParaCfg.eCfgCmd[i]);
             }
 
@@ -939,7 +948,8 @@ eMtCmd emtTransAppData_mt_2_cm(eMtCmd emtCmd, uMtApp *pmtAppData, uCmApp *pcmApp
         {
             pcmAppData->sTmlSuptCtrlCfg.ucNum = pmtAppData->sTmlSuptCtrlCfg.ucNum;
             for(i = 0; i < pcmAppData->sTmlSuptCtrlCfg.ucNum; i++)
-            {
+            {
+
                 pcmAppData->sTmlSuptCtrlCfg.eCfgCmd[i] = eGetCmCmd(pmtAppData->sTmlSuptCtrlCfg.eCfgCmd[i]);
             }
 
@@ -950,7 +960,8 @@ eMtCmd emtTransAppData_mt_2_cm(eMtCmd emtCmd, uMtApp *pmtAppData, uCmApp *pcmApp
         {
             pcmAppData->sTmlSuptAsk1.ucNum = pmtAppData->sTmlSuptAsk1.ucNum;
             for(i = 0; i < pcmAppData->sTmlSuptAsk1.ucNum; i++)
-            {
+            {
+
                 pcmAppData->sTmlSuptAsk1.eCfgCmd[i] = eGetCmCmd(pmtAppData->sTmlSuptAsk1.eCfgCmd[i]);
             }
 
@@ -961,7 +972,8 @@ eMtCmd emtTransAppData_mt_2_cm(eMtCmd emtCmd, uMtApp *pmtAppData, uCmApp *pcmApp
         {
             pcmAppData->sTmlSuptAsk2.ucNum = pmtAppData->sTmlSuptAsk2.ucNum;
             for(i = 0; i < pcmAppData->sTmlSuptAsk2.ucNum; i++)
-            {
+            {
+
                 pcmAppData->sTmlSuptAsk2.eCfgCmd[i] = eGetCmCmd(pmtAppData->sTmlSuptAsk2.eCfgCmd[i]);
             }
 

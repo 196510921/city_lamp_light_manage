@@ -105,6 +105,7 @@ typedef enum
     CMD_GOP_AUTO_2_Q,               // 定时上报2类数据任务启动/停止设置 CMD_AFN_A_F68_GOP_AUTO_2
 
     /* 请求1类数据（AFN=0CH） */
+    CMD_ANALOG_DATA,
     CMD_CURNT_PQUI,                 // 当前三相及总有/无功功率、功率因数，三相电压、电流、零序电流、视在功率
     CMD_TML_CLOCK,                  // 终端日历时钟  数据结构 sMtUserClock   CMD_AFN_C_F2_TML_CLOCK
     CMD_DC_RLTM_DATA,               // 直流模拟量实时数据 CMD_AFN_C_F73_DC_RLTM_DATA
@@ -309,6 +310,7 @@ typedef union
     sMtGopAuto_2     sGoAuto_2;         // 定时上报1类数据任务启动/停止设置   CMD_GO_AUTO_2    CMD_GOP_AUTO_2_Q
 
     // 上行特有 集中器到主站
+
     sMtTmlVersion    sTmlVersion;       // 终端版本信息    CMD_AFN_TML_VERSION
     sMtTmlInputOut   sTmlInputOut;      // 终端支持的输入、输出及通信端口配置 CMD_AFN_TML_INPUT_OUT
     sMtTmlOtherCfg   sTmlOtherCfg;      // 终端支持的其他配置     CMD_TML_OTHER_CFG
@@ -317,6 +319,7 @@ typedef union
     sCmSuptAsk1      sTmlSuptAsk1;      // 终端支持的1类数据配置  CMD_SUPPORT_ASK1_CFG
     sCmSuptAsk2      sTmlSuptAsk2;      // 终端支持的2类数据配置  CMD_SUPPORT_ASK2_CFG
     sMtSuptEvent     sTmlSuptEvent;     // 终端支持的事件记录配置 CMD_SUPPORT_EVNT_CFG
+    sMtCurAnalog     sTmAnalog;         //模拟量
     sMtUserClock     sTmlClock;         // 终端日历时钟           CMD_TML_CLOCK 
     sMtCurPQUI       sCurPQUI;          // 当前三相及总有/无功功率、功率因数，三相电压、电流、零序电流、视在功率 CMD_CURNT_PQUI 
 

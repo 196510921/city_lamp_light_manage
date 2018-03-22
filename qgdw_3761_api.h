@@ -571,6 +571,7 @@ typedef enum
      * 下行: 有
     {*///
     // 组1   pn:p0                                   // F1 备用 
+    CMD_AFN_C_F1_ANALOG_DATA         = 0x0C01,        //模拟量
     CMD_AFN_C_F2_TML_CLOCK           = 0x0C02,       // 终端日历时钟
     CMD_AFN_C_F3_TML_PARA_STATE      = 0x0C03,       // 终端参数状态
     CMD_AFN_C_F4_TML_UPCOM_STATE     = 0x0C04,       // 终端上行通信状态
@@ -4591,7 +4592,8 @@ typedef struct
     sMtCascOne_f sOne[1];    // 
 
 }sMtTmlCascCfg_f, sMtAfn04f37_f;
-#pragma pack() 
+#pragma pack() 
+
 
 // 转换函数
 eMtErr emtTrans_afn04f37(eMtTrans eTrans,void* psUser, void* psFrame, UINT16* pusfLen);
@@ -5952,6 +5954,50 @@ typedef struct
 // 转换函数
 eMtErr emtTrans_afn0af39(eMtTrans eTrans,void* psUser, void* psFrame, UINT16* pusfLen);
 ///*}
+
+
+/*******************************************
+ * 数据结构: 
+ * 对应AFN : AFN_0C_ASK1 
+ * 对应CMD : CMD_AFN_C_F1_ANALOG_DATA
+ * PN 类型 : 测量点号
+{*///
+#define MT_M_MAX  12
+// 用户侧
+typedef struct
+{
+    // 实际数据
+    sMtYYMMDDhhmm   sReadTime;      // 终端抄表时间    (分时日月年)
+    UINT8           anaglogNum;
+    float           fU[2];            // 当前电压     (V)       XXX.X
+    float           fI[2];            // 当前电流     (A)  (+/-)XXX.XXX      
+    float           fP[2];             // 当前有功功率  (KW) (+/-)XX.XXXX
+    float           fQ[2];             // 当前无功功率  (KW) (+/-)XX.XXXX 
+    float           fPf[2];            // 当前功率因数  (%)  (+/-)XXX.X
+    float           fLc[2];             // 当前光控值  (%)  (+/-)XXX.X
+    
+}sMtCurAnalog, sMtAfn0cF1;
+
+
+// 帧侧
+#pragma pack(1) 
+typedef struct
+{
+    sMtYYMMDDhhmm_f           sReadTime;      // 终端抄表时间    (分时日月年)
+    UINT8                     anaglogNum;
+    sMtFmt_XXX_X              fU[2];   // 当前电压        XXX.X
+    sMtFmt_sXXX_XXX           fI[2];   // 当前电流     (A)  (+/-)XXX.XXX       
+    sMtFmt_sXX_XXXX           fP[2];   // 当前有功功率  (KW) (+/-)XX.XXXX 
+    sMtFmt_sXX_XXXX           fQ[2];   // 当前无功功率  (KW) (+/-)XX.XXXX 
+    sMtFmt_sXXX_X             fPf[2];  // 当前功率因数  (%)  (+/-)XXX.X
+    sMtFmt_sXXX_X             fLc[2];  // 当前光控值  (%)  (+/-)XXX.X
+}sMtCurAnalog_f, sMtAfn0cF1_f;
+#pragma pack()
+
+// 转换函数
+eMtErr emtTrans_afn0cf01(eMtTrans eTrans,void* psUser, void* psFrame, UINT16* pusfLen);
+
+
 
 
 
@@ -14476,6 +14522,7 @@ typedef union
     sMtSuptAsk1      sTmlSuptAsk1;       // 终端支持的1类数据配置   CMD_AFN_9_F6_SUPPORT_ASK1_CFG
     sMtSuptAsk2      sTmlSuptAsk2;       // 终端支持的2类数据配置   CMD_AFN_9_F7_SUPPORT_ASK2_CFG
     sMtSuptEvent     sTmlSuptEvent;      // 终端支持的事件记录配置  CMD_AFN_9_F8_SUPPORT_EVNT_CFG
+
     sMtUserClock     sTmlClock;          // 终端日历时钟            CMD_AFN_C_F2_TML_CLOCK
     sMtParaSta       sTmlParaStat;       // 终端参数状态            CMD_AFN_C_F3_TML_PARA_STATE 
     sMtTmlUpComState sTmlUpComStat;      // 终端上行通信状态        CMD_AFN_C_F4_TML_UPCOM_STATE 
@@ -14516,6 +14563,7 @@ typedef union
      *  主站到从站
      *  通常是命令 请求
     {*///
+    sMtCurAnalog_f   sTmAnalog;           //模拟量数据
     sMtUserClock     sCheckTime;         // 对时命令  CMD_AFN_5_F31_CHECK_TIME
     sMtTmlPowerCfg_Q sTmlPowerCfg_Q;     // 终端电能表/交流采样装置配置参数 命令参数 CMD_AFN_A_F10_TML_POWER_CFG
     sMtAsk1Cfg_Q     sAsk1Cfg_Q;         // 1类数据配置设置 （在终端支持的1类数据配置内）(查询命令参数) CMD_AFN_A_F38_CFG_ASK_1
