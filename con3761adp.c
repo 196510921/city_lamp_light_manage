@@ -388,9 +388,11 @@ eCmErr ecm_3761_pack(sCmPacket* psCmPacket, UINT8 * pBuf, UINT16 *pusBufLen)
     }
     else
     {
+        // ucPFC = g_ucCmPFCSend;
+        // g_ucCmPFCRecv = g_ucCmPFCSend + 1;
+        // g_ucCmPFCSend += 2;
         ucPFC = g_ucCmPFCSend;
-        g_ucCmPFCRecv = g_ucCmPFCSend + 1;
-        g_ucCmPFCSend += 2;
+        g_ucCmPFCSend++;
     }
 
     // 构造emtPack()参数
@@ -404,7 +406,9 @@ eCmErr ecm_3761_pack(sCmPacket* psCmPacket, UINT8 * pBuf, UINT16 *pusBufLen)
     psPack->bPW      = bmt_have_pw(eAfn, eDir);
     psPack->bEC      = psPack->bAcdFcb ;
     psPack->bTP      = bmt_have_tp(eAfn, eDir);
+    psPack->sTP.ucPFC = ucPFC;
 
+    printf("ucPFC:%d, psPack->ucSeq:%d",ucPFC,psPack->ucSeq);
     // pw
     // 自动取初始化设置的PW
     
@@ -500,7 +504,7 @@ eCmErr ecm_3761_unpack(UINT8 * pBuf, UINT16 usBufLen, sCmPacket* psCmPacket)
     // 判断是否为一个有效帧
     eMtErr eRet = MT_OK;
     int i = 0;
-    //UINT8 ucPFC = 0;
+    UINT8 ucPFC = 0;
     eRet = emtIsValidPack(pBuf, usBufLen);
     if(eRet != MT_OK)
     {
@@ -531,7 +535,16 @@ eCmErr ecm_3761_unpack(UINT8 * pBuf, UINT16 usBufLen, sCmPacket* psCmPacket)
         return eRet;
     }
 
-      psCmPacket->sAddress = psmtPack->sAddress;
+    psCmPacket->sAddress = psmtPack->sAddress;
+
+    /*PFC校准*/
+    {
+        ucPFC = psmtPack->sTP.ucPFC;
+        g_ucCmPFCRecv  = ucPFC;
+        g_ucCmPFCSend = g_ucCmPFCRecv;
+        printf("ecm_3761_unpack,g_ucCmPFCSend:%d\n",g_ucCmPFCSend);
+    }
+
       //ucPFC    = psmtPack->ucPFC;
 
       /*

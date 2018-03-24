@@ -21,9 +21,12 @@
 #include <string.h>
 #include <getopt.h>
 #include <stdarg.h>
+#include <pthread.h>
 #include "con3761adp.h"
 #include "fmprint.h"
 #include <math.h>
+#include "timeout_handle.h"
+#include "app_heartbeat.h"
 
 
 #define PACK_MEM_SIZE  10240
@@ -320,7 +323,7 @@ eMtErr test_pack_0001()
     pscmPacket->sData[0].bApp  = TRUE;
     pscmPacket->sData[0].usPN  = 0;
 
-   pscmPacket->sData[0].uApp.sSure.eAFN = (eMtAFN)AFN_02_LINK;
+    pscmPacket->sData[0].uApp.sSure.eAFN = (eMtAFN)AFN_02_LINK;
 
 
     /* 4 调用函数 */
@@ -6464,6 +6467,7 @@ eMtErr test_pack_afn0cf01_s2m_analog()
 {
     /* 1 定义变量 */ 
    eCmErr eRet;
+   UINT8 i = 0;
    UINT16 usBuflen = 0;
    sCmPacket *pscmPacket = (sCmPacket*)g_ucPackMem;
    
@@ -6496,6 +6500,7 @@ eMtErr test_pack_afn0cf01_s2m_analog()
     pscmPacket->sCmdData[0].bApp  = TRUE;
     pscmPacket->sCmdData[0].usPN  = 10;
 
+    #if 1
     // app
     /*抄读时间*/
     pscmPacket->sCmdData[0].uAppData.sTmAnalog.sReadTime.ucYY = 18;
@@ -6503,35 +6508,48 @@ eMtErr test_pack_afn0cf01_s2m_analog()
     pscmPacket->sCmdData[0].uAppData.sTmAnalog.sReadTime.ucDD = 21;
     pscmPacket->sCmdData[0].uAppData.sTmAnalog.sReadTime.ucHH = 16;
     pscmPacket->sCmdData[0].uAppData.sTmAnalog.sReadTime.ucmm = 12;
-    /*模拟量路数*/
-    pscmPacket->sCmdData[0].uAppData.sTmAnalog.anaglogNum = 2;
+
+    pscmPacket->sCmdData[0].uAppData.sTmAnalog.anaglogNum = 3;
     /*1路当前电压*/
-    pscmPacket->sCmdData[0].uAppData.sTmAnalog.fU[0] = 111.1;
+    pscmPacket->sCmdData[0].uAppData.sTmAnalog.data[0].fU = 123.4;
     /*1路当前电流*/
-    pscmPacket->sCmdData[0].uAppData.sTmAnalog.fI[0] = 222.222;
+    pscmPacket->sCmdData[0].uAppData.sTmAnalog.data[0].fI = -123.456;
     /*1路当前有功功率*/
-    pscmPacket->sCmdData[0].uAppData.sTmAnalog.fP[0] = 33.333;
+    pscmPacket->sCmdData[0].uAppData.sTmAnalog.data[0].fP = -12.345;
     /*1路当前无功功率*/
-    pscmPacket->sCmdData[0].uAppData.sTmAnalog.fQ[0] = 44.444;
+    pscmPacket->sCmdData[0].uAppData.sTmAnalog.data[0].fQ = -12.345;
     /*1路当前功率因数*/
-    pscmPacket->sCmdData[0].uAppData.sTmAnalog.fPf[0] = 555.5;
+    pscmPacket->sCmdData[0].uAppData.sTmAnalog.data[0].fPf = -123.4;
     /*1路当前光控值*/
-    pscmPacket->sCmdData[0].uAppData.sTmAnalog.fLc[0] = 666.6;
+    pscmPacket->sCmdData[0].uAppData.sTmAnalog.data[0].fLc = -123.4;
 
     /*1路当前电压*/
-    pscmPacket->sCmdData[0].uAppData.sTmAnalog.fU[1] = 111.1;
+    pscmPacket->sCmdData[0].uAppData.sTmAnalog.data[1].fU = 123.4;
     /*1路当前电流*/
-    pscmPacket->sCmdData[0].uAppData.sTmAnalog.fI[1] = 222.222;
+    pscmPacket->sCmdData[0].uAppData.sTmAnalog.data[1].fI = 123.456;
     /*1路当前有功功率*/
-    pscmPacket->sCmdData[0].uAppData.sTmAnalog.fP[1] = 33.333;
+    pscmPacket->sCmdData[0].uAppData.sTmAnalog.data[1].fP = 12.345;
     /*1路当前无功功率*/
-    pscmPacket->sCmdData[0].uAppData.sTmAnalog.fQ[1] = 44.444;
+    pscmPacket->sCmdData[0].uAppData.sTmAnalog.data[1].fQ = 12.345;
     /*1路当前功率因数*/
-    pscmPacket->sCmdData[0].uAppData.sTmAnalog.fPf[1] = 555.5;
+    pscmPacket->sCmdData[0].uAppData.sTmAnalog.data[1].fPf = 123.4;
     /*1路当前光控值*/
-    pscmPacket->sCmdData[0].uAppData.sTmAnalog.fLc[1] = 666.6;
-
+    pscmPacket->sCmdData[0].uAppData.sTmAnalog.data[1].fLc = 123.4;
     
+ /*1路当前电压*/
+    pscmPacket->sCmdData[0].uAppData.sTmAnalog.data[2].fU = 123.4;
+    /*1路当前电流*/
+    pscmPacket->sCmdData[0].uAppData.sTmAnalog.data[2].fI = 123.456;
+    /*1路当前有功功率*/
+    pscmPacket->sCmdData[0].uAppData.sTmAnalog.data[2].fP = 12.345;
+    /*1路当前无功功率*/
+    pscmPacket->sCmdData[0].uAppData.sTmAnalog.data[2].fQ = 12.345;
+    /*1路当前功率因数*/
+    pscmPacket->sCmdData[0].uAppData.sTmAnalog.data[2].fPf = 123.4;
+    /*1路当前光控值*/
+    pscmPacket->sCmdData[0].uAppData.sTmAnalog.data[2].fLc = 123.4;
+    #endif
+  
     /* 4 调用函数 */
     eRet = ecm_3761_pack(pscmPacket, (UINT8*)g_ucOutBuf, &usBuflen);
     if(eRet != MT_OK)
@@ -12861,6 +12879,12 @@ void show_app_sub_data(eMtDir eDir,eMtCmd emtCmd, uMtApp *puAppData)
     
     switch(emtCmd)
     {
+        case CMD_AFN_0_F1_ALL_OK:
+            //sMtCmdErr* psAllOk = (sMtCmdErr*)puAppData;
+            printf("AFN_0_F1_ALL_OK,eFAN:%02X\n",puAppData->sSure);//psAllOk->eAFN);
+            //app_timeout_reset(puAppData->sSure);
+
+        break;
         case CMD_AFN_0_F3_ONE_BY_ONE:
         {
             sMtOnebyOne * psOnebyOne = (sMtOnebyOne*)puAppData;
@@ -12871,6 +12895,9 @@ void show_app_sub_data(eMtDir eDir,eMtCmd emtCmd, uMtApp *puAppData)
             {
                 printf("%d:\n", i+1);
                 printf("确认命令  = %04X ", psOnebyOne->sOne[i].eCmd);
+                /*接收到确认，清除重发*/
+                printf("/*接收到确认，清除重发*/\n");
+                app_timeout_reset(psOnebyOne->sOne[i].eCmd);
                 eRet = eMtGetCmdInfor(psOnebyOne->sOne[i].eCmd, MT_DIR_S2M, &sCmdInfo);
                 
                 
@@ -13139,8 +13166,12 @@ void show_app_sub_data(eMtDir eDir,eMtCmd emtCmd, uMtApp *puAppData)
         }
         break;
 
-        
-        
+        case CMD_AFN_C_F1_ANALOG_DATA:
+        {
+            printf("CMD_AFN_C_F1_ANALOG_DATA\n");
+        }
+        break;
+
         case CMD_AFN_C_F25_POWER_RATE_CUR:
         {
             sMtCurPQUI * pData = (sMtCurPQUI*)puAppData;
@@ -13224,6 +13255,8 @@ void show_app_sub_data(eMtDir eDir,eMtCmd emtCmd, uMtApp *puAppData)
         case CMD_AFN_5_F31_CHECK_TIME:
         {
             sMtUserClock * pData = (sMtUserClock*)puAppData;
+            /*全部确认*/
+            pack_afn00f01(AFN_05_CTRL);
             printf("check time :\n");
             printf("ucYear : %d\n", pData->ucYear);
             printf("ucMonth : %d\n", pData->ucMonth);
@@ -14750,6 +14783,14 @@ void show_app_sub_data(eMtDir eDir,eMtCmd emtCmd, uMtApp *puAppData)
 	    {
 		show_error("转发主站遥控命令\n");
 	    }
+        case CMD_AFN_11_F4:
+        {
+            sMtData data;
+            data.usPN = 0;
+            data.eCmd = CMD_AFN_11_F4;
+            show_error("查询对路灯批量控制情况\n");
+            app_req_handle(&data);
+        }
 	    break;
             default:
             {
@@ -14868,7 +14909,7 @@ void show_app_data_adp(eMtDir eDir, sCmSub *pSub)
 
 
 
-
+extern void app_req_handle(sMtData* pSub);
 /*****************************************************************************
  函 数 名  : show_app_data
  功能描述  : 显示应用层数据
@@ -14945,19 +14986,13 @@ void show_app_data(eMtDir eDir, sMtData *pSub)
         break;
    }
    
-
-      // 应用层数据
-    if(sCmdInfor.pFunc == NULL)
-    {
-       show_item_value("无数据单元\n");
-       return;
-
-    }
     
     // 应用层数据
     if(sCmdInfor.pFunc == NULL)
     {
        show_item_value("无数据单元\n");
+       /*判断是否为请求数据包*/
+       app_req_handle(pSub);
        return;
 
     }
@@ -15028,9 +15063,6 @@ void show_pack_adp(sCmPacket * psUnpack)
     printf("\n");
 }
 
-
-
-
 void show_pack(smtPack *psUnpack)
 {
     if(!psUnpack)
@@ -15079,6 +15111,7 @@ void show_pack(smtPack *psUnpack)
             break;
         case AFN_01_RSET:
             str = "复位";
+            pack_afn00f01(AFN_01_RSET);
             break;
         case AFN_02_LINK:
             str = "接口检测";
@@ -15088,6 +15121,7 @@ void show_pack(smtPack *psUnpack)
             break;
         case AFN_04_SETP:
             str = "设置参数";
+            pack_afn00f01(AFN_01_RSET);
             break;
         case AFN_05_CTRL:
             str = "控制命令";
@@ -15109,6 +15143,7 @@ void show_pack(smtPack *psUnpack)
             break;
          case AFN_0C_ASK1:
             str = "请求1类数据 实时数据";
+
             break;
 
         case AFN_0D_ASK2:
@@ -15837,11 +15872,11 @@ void unpack_analyse(int nstart, int argc, char *argv[])
 }
 
 
-void unpack(UINT8* data, UINT16 len)
+void unpack(UINT8* pInBuf, UINT16 usLen)
 {
     sMtInit  sInit = {0};
 
-    printf_buffer_color((char*)pInBuf, usLen);
+    //printf_buffer_color((char*)pInBuf, usLen);
 
     smtPack *psUnpack = (smtPack *)malloc(5* 1024);
     // 协议初始化
@@ -15923,14 +15958,32 @@ void test_unpack(int nstart, int argc, char *argv[])
     free(psUnpack);
 }
 
+void heartbeat_timeout(void)
+{
+    while(1){
+        //app_heartbeat();
+        app_timeout_handle();
+        sleep(1);
+    }
+}
 
+#if 0
 extern int tcp_client_connect(void);
+extern void socket_client_poll(void);
+extern void app_test_step(int step, void* data);
 int main(int argc, char *argv[])
 {
+    pthread_t t1,t2;
     tcp_client_connect();
-    socket_client_poll();
+    app_test_step(1, NULL);
+    pthread_create(&t1,NULL,socket_client_poll,NULL);
+    pthread_create(&t2,NULL,heartbeat_timeout,NULL);
+
+    pthread_join(t1,NULL);
+    pthread_join(t2,NULL);
+    //socket_client_poll();
 }
-#if 0
+#else
 int main(int argc, char *argv[])
 {
     int opt = 0;

@@ -5962,8 +5962,45 @@ eMtErr emtTrans_afn0af39(eMtTrans eTrans,void* psUser, void* psFrame, UINT16* pu
  * 对应CMD : CMD_AFN_C_F1_ANALOG_DATA
  * PN 类型 : 测量点号
 {*///
-#define MT_M_MAX  12
+#define MT_M_MAX  20
+#if 1
 // 用户侧
+typedef struct
+{
+    float           fU;            // 当前电压     (V)       XXX.X
+    float           fI;            // 当前电流     (A)  (+/-)XXX.XXX      
+    float           fP;             // 当前有功功率  (KW) (+/-)XX.XXXX
+    float           fQ;             // 当前无功功率  (KW) (+/-)XX.XXXX 
+    float           fPf;            // 当前功率因数  (%)  (+/-)XXX.X
+    float           fLc;             // 当前光控值  (%)  (+/-)XXX.X
+    
+}sMtAnalogData;
+
+typedef struct
+{
+    sMtYYMMDDhhmm   sReadTime;      // 终端抄表时间    (分时日月年)
+    UINT8           anaglogNum;
+    sMtAnalogData   data[1];
+}sMtCurAnalog, sMtAfn0cF1;
+
+// 帧侧
+#pragma pack(1) 
+typedef struct
+{
+    sMtFmt_XXX_X              fU;   // 当前电压        XXX.X
+    sMtFmt_sXXX_XXX           fI;   // 当前电流     (A)  (+/-)XXX.XXX       
+    sMtFmt_sXX_XXXX           fP;   // 当前有功功率  (KW) (+/-)XX.XXXX 
+    sMtFmt_sXX_XXXX           fQ;   // 当前无功功率  (KW) (+/-)XX.XXXX 
+    sMtFmt_sXXX_X             fPf;  // 当前功率因数  (%)  (+/-)XXX.X
+    sMtFmt_sXXX_X             fLc;  // 当前光控值  (%)  (+/-)XXX.X
+}sMtAnalogData_f;
+
+typedef struct
+{
+    sMtYYMMDDhhmm_f           sReadTime;      // 终端抄表时间    (分时日月年)
+    UINT8                     anaglogNum;
+}sMtCurAnalog_f,sMtAfn0cF1_f;
+#else
 typedef struct
 {
     // 实际数据
@@ -5979,8 +6016,8 @@ typedef struct
 }sMtCurAnalog, sMtAfn0cF1;
 
 
-// 帧侧
-#pragma pack(1) 
+
+
 typedef struct
 {
     sMtYYMMDDhhmm_f           sReadTime;      // 终端抄表时间    (分时日月年)
@@ -5993,7 +6030,7 @@ typedef struct
     sMtFmt_sXXX_X             fLc[2];  // 当前光控值  (%)  (+/-)XXX.X
 }sMtCurAnalog_f, sMtAfn0cF1_f;
 #pragma pack()
-
+#endif
 // 转换函数
 eMtErr emtTrans_afn0cf01(eMtTrans eTrans,void* psUser, void* psFrame, UINT16* pusfLen);
 
@@ -9337,7 +9374,7 @@ eMtErr emtTrans_td_m(eMtTrans eTrans, void* psUser, void* psFrame, UINT16* pusfL
 {*///
 
  #define MT_M_MIN      (1)                        // 费率数最小值
- #define MT_M_MAX      (12)                       // 费率数最大值
+ #define MT_M_MAX      (20)                       // 费率数最大值
 
 // 用户侧
 typedef struct
@@ -14524,6 +14561,7 @@ typedef union
     sMtSuptEvent     sTmlSuptEvent;      // 终端支持的事件记录配置  CMD_AFN_9_F8_SUPPORT_EVNT_CFG
 
     sMtUserClock     sTmlClock;          // 终端日历时钟            CMD_AFN_C_F2_TML_CLOCK
+    //sMtFrmClock      sTmlClock;
     sMtParaSta       sTmlParaStat;       // 终端参数状态            CMD_AFN_C_F3_TML_PARA_STATE 
     sMtTmlUpComState sTmlUpComStat;      // 终端上行通信状态        CMD_AFN_C_F4_TML_UPCOM_STATE 
     sMtAfn0cF05      sTmlCtrlStat;       // 终端控制设置状态        CMD_AFN_C_F5_TML_CTRL_SET

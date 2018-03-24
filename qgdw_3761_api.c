@@ -32,6 +32,9 @@
 #endif
 
 #ifdef MT_DBG
+
+extern UINT8 g_ucCmPFCSend;        // 当前应该发送的序号
+extern UINT8 g_ucCmPFCRecv;
 /*****************************************************************************
  函 数 名  : smtGetErr
  功能描述  : 返回错误的类型名称
@@ -194,7 +197,7 @@ if(pBuf != NULL)\
  *
 {*////
 BOOL      g_bMtInit = FALSE;             // 协议是否初始化
-eMtRole   g_eMtRole = MT_ROLE_UNKOWN;    // 身份，主站或是从站
+eMtRole   g_eMtRole = MT_ROLE_CONTOR;    // 身份，主站或是从站
 UINT8     g_ucMtPermitDelayMinutes = 0;  // 允许时延
 UINT8     g_aucPw[MT_PW_LEN] = {0};
 sMtEC     g_tEC;                         // 事件计数器 仅终端上支持
@@ -3057,7 +3060,7 @@ eMtErr emt_dadt_to_pnfn(sMtDaDt* psDaDt, sMtPnFn* psPnFn)
         return MT_ERR_NULL;
     }
 
-    #if 0
+    #if 1
     #ifdef MT_DBG
     DEBUG("[in]emt_dadt_to_pnfn()");
     DEBUG("ucDA1 = 0x%X", psDaDt->ucDA1);
@@ -3133,7 +3136,7 @@ eMtErr emt_dadt_to_pnfn(sMtDaDt* psDaDt, sMtPnFn* psPnFn)
         }
     }
 
-    #if 0
+    #if 1
     #ifdef MT_DBG
     DEBUG("[out]emt_dadt_to_pnfn()");
     BOOL bP0 = bmt_is_p0(psPnFn->usPn);
@@ -11018,6 +11021,148 @@ eMtErr emtTrans_afn0af39(eMtTrans eTrans,void* psUser, void* psFrame, UINT16* pu
     修改内容   : 新生成函数
 
 *****************************************************************************/
+#if 1
+eMtErr emtTrans_afn0cf01(eMtTrans eTrans,void* psUser, void* psFrame, UINT16* pusfLen)
+{
+    if(!psUser || !psFrame || !pusfLen)
+    {
+        #ifdef MT_DBG
+        DEBUG("emtTrans_afn0cf1() pointer is null");
+        #endif
+        return MT_ERR_NULL;
+    }
+
+    sMtCurAnalog     *psAfn0cF1Header   = (sMtCurAnalog*)psUser;
+    sMtCurAnalog_f   *psAfn0cF1Header_f = (sMtCurAnalog_f*)psFrame;
+    BOOL             bNone        = FALSE;
+    UINT8            num          = 0;
+    UINT8            i            = 0;
+    UINT16           usLen        = 0;
+    UINT16           usLen_f      = 0;
+    eMtErr           eRet         = MT_OK;
+
+    // 帧侧转为用户侧
+    if(MT_TRANS_F2U == eTrans)
+    {
+       
+        printf("帧侧转为用户侧暂不需实现\n");
+    }
+    else if(MT_TRANS_U2F == eTrans)
+    // 用户侧转为帧侧
+    {
+
+        DEBUG("emtTrans_afn0cf1()\n");
+        // sReadTime
+        eRet = emt_trans_YYMMDDhhmm(eTrans, &(psAfn0cF1Header->sReadTime),
+        &(psAfn0cF1Header_f->sReadTime));
+        if(MT_OK != eRet)
+        {
+            #ifdef MT_DBG
+            DEBUG("emtTrans_afn0cf1() trans error %d ", eRet);
+            #endif
+            return eRet;
+        }
+
+        psAfn0cF1Header_f->anaglogNum = psAfn0cF1Header->anaglogNum; 
+        num = psAfn0cF1Header_f->anaglogNum;
+        printf("psAfn0cF1Header_f->anaglogNum:%d\n", psAfn0cF1Header_f->anaglogNum);
+        /*帧侧*/
+        //sMtFmt_XXX_X* fU_f = (sMtFmt_XXX_X*)(psAfn0cF1Header_f->data);
+        sMtFmt_XXX_X* fU_f = (sMtFmt_XXX_X*)(psAfn0cF1Header_f + 1);
+        
+        sMtFmt_sXXX_XXX* fI_f = (sMtFmt_sXXX_XXX*)((UINT8*)fU_f + (sizeof(sMtFmt_XXX_X) * num));
+
+        sMtFmt_sXX_XXXX* fP_f = (sMtFmt_sXX_XXXX*)((UINT8*)fI_f + (sizeof(sMtFmt_sXXX_XXX) * num));
+
+        sMtFmt_sXX_XXXX* fQ_f = (sMtFmt_sXX_XXXX*)((UINT8*)fP_f + (sizeof(sMtFmt_sXX_XXXX) * num));
+
+        sMtFmt_sXXX_X* fPf_f = (sMtFmt_sXXX_X*)((UINT8*)fQ_f + (sizeof(sMtFmt_sXX_XXXX) * num));
+
+        sMtFmt_sXXX_X* fLc_f = (sMtFmt_sXXX_X*)((UINT8*)fPf_f + (sizeof(sMtFmt_sXXX_X) * num));
+
+        for(i = 0; i < psAfn0cF1Header_f->anaglogNum; i++){
+             // fU
+            eRet = emt_trans_XXX_X(eTrans, &(psAfn0cF1Header->data[i].fU), (sMtFmt_XXX_X*)&fU_f[i]);
+            if(MT_OK != eRet)
+            {
+                #ifdef MT_DBG
+                DEBUG("emtTrans_afn0cf1() trans error %d ", eRet);
+                #endif
+                return eRet;
+            }
+            // fI
+            eRet = emt_trans_sXXX_XXX(eTrans, &(psAfn0cF1Header->data[i].fI), (sMtFmt_sXXX_XXX*)&fI_f[i]);
+            if(MT_OK != eRet)
+            {
+                #ifdef MT_DBG
+                DEBUG("emtTrans_afn0cf25() trans error %d ", eRet);
+                #endif
+                return eRet;
+            }
+            printf("fI:%f\n", psAfn0cF1Header->data[i].fI);
+            printf("fU:%f\n", psAfn0cF1Header->data[i].fU);
+            // fp
+            eRet = emt_trans_sXX_XXXX(eTrans, &(psAfn0cF1Header->data[i].fP), (sMtFmt_sXX_XXXX*)&fP_f[i]);
+            if(MT_OK != eRet)
+            {
+                #ifdef MT_DBG
+                DEBUG("emtTrans_afn0cf1() trans error %d ", eRet);
+                #endif
+                return eRet;
+            }
+            printf("fP:%f\n", psAfn0cF1Header->data[i].fP);
+            // fQ
+            eRet = emt_trans_sXX_XXXX(eTrans, &(psAfn0cF1Header->data[i].fQ), (sMtFmt_sXX_XXXX*)&fQ_f[i]);
+            if(MT_OK != eRet)
+            {
+                #ifdef MT_DBG
+                DEBUG("emtTrans_afn0cf1() trans error %d ", eRet);
+                #endif
+                return eRet;
+            }
+            printf("fQ:%f\n", psAfn0cF1Header->data[i].fQ);
+            // Pf
+            eRet = emt_trans_sXXX_X(eTrans, &(psAfn0cF1Header->data[i].fPf), (sMtFmt_sXX_XXXX*)&fPf_f[i]);
+            if(MT_OK != eRet)
+            {
+                #ifdef MT_DBG
+                DEBUG("emtTrans_afn0cf1() trans error %d ", eRet);
+                #endif
+                return eRet;
+            }
+            printf("fPf:%f\n", psAfn0cF1Header->data[i].fPf);
+            // fLc
+            eRet = emt_trans_sXXX_X(eTrans, &(psAfn0cF1Header->data[i].fLc), (sMtFmt_sXXX_X*)&fLc_f[i]);
+            if(MT_OK != eRet)
+            {
+                #ifdef MT_DBG
+                DEBUG("emtTrans_afn0cf1() trans error %d ", eRet);
+                #endif
+                return eRet;
+            }
+            printf("fLc:%f\n", psAfn0cF1Header->data[i].fLc);
+     
+       }
+    }
+    else
+    {
+        #ifdef MT_DBG
+        DEBUG("emtTrans_afn0cf1() para error!");
+        #endif
+        return MT_ERR_PARA;
+    }
+
+    // 计算在帧侧的字节长度
+    *pusfLen = sizeof(sMtYYMMDDhhmm_f) + 1 + (sizeof(sMtFmt_sXX_XXXX) 
+        + sizeof(sMtFmt_sXX_XXXX) + sizeof(sMtFmt_sXXX_X)
+         + sizeof(sMtFmt_XXX_X)
+          + sizeof(sMtFmt_sXXX_XXX) + sizeof(sMtFmt_sXXX_X)
+         ) * psAfn0cF1Header->anaglogNum;
+    printf("pusfLen:%d\n",*pusfLen);
+
+    return MT_OK;
+}
+#else
 eMtErr emtTrans_afn0cf01(eMtTrans eTrans,void* psUser, void* psFrame, UINT16* pusfLen)
 {
     if(!psUser || !psFrame || !pusfLen)
@@ -11171,12 +11316,11 @@ eMtErr emtTrans_afn0cf01(eMtTrans eTrans,void* psUser, void* psFrame, UINT16* pu
             return eRet;
         }
 
-
         psAfn0cF1_f->anaglogNum = psAfn0cF1->anaglogNum;
-        DEBUG("psAfn0cF1_f->anaglogNum:%d\n",psAfn0cF1_f->anaglogNum);
+
         for(i = 0; i < psAfn0cF1->anaglogNum; i++){
             // fp
-            usLen = sizeof(sMtFmt_sXX_XXXX);
+
             DEBUG("psAfn0cF1->fP[i]:%f\n",psAfn0cF1->fP[i]);
             eRet = emt_trans_sXX_XXXX(eTrans, &(psAfn0cF1->fP[i]),
             &(psAfn0cF1_f->fP[i]));
@@ -11188,12 +11332,13 @@ eMtErr emtTrans_afn0cf01(eMtTrans eTrans,void* psUser, void* psFrame, UINT16* pu
                 #endif
                 return eRet;
             }
+            
        
             // fQ
-            usLen = sizeof(sMtFmt_sXX_XXXX);
+   
             eRet = emt_trans_sXX_XXXX(eTrans, &(psAfn0cF1->fQ[i]), 
             &(psAfn0cF1_f->fQ[i]));
-            DEBUG("psAfn0cF1_f->fP[i].BCD_1:%d\n",psAfn0cF1_f->fQ[i].BCD_1);
+            DEBUG("psAfn0cF1_f->fQ[i].BCD_1:%d\n",psAfn0cF1_f->fQ[i].BCD_1);
             if(MT_OK != eRet)
             {
                 #ifdef MT_DBG
@@ -11201,8 +11346,9 @@ eMtErr emtTrans_afn0cf01(eMtTrans eTrans,void* psUser, void* psFrame, UINT16* pu
                 #endif
                 return eRet;
             }
+            
             // Pf
-            usLen = sizeof(sMtFmt_sXXX_X);
+       
             eRet = emt_trans_sXXX_X(eTrans, &(psAfn0cF1->fPf[i]), 
             &(psAfn0cF1_f->fPf[i]));
             if(MT_OK != eRet)
@@ -11212,9 +11358,8 @@ eMtErr emtTrans_afn0cf01(eMtTrans eTrans,void* psUser, void* psFrame, UINT16* pu
                 #endif
                 return eRet;
             }
-               
+            
             // fU
-            usLen = sizeof(sMtFmt_XXX_X);
             eRet = emt_trans_XXX_X(eTrans, &(psAfn0cF1->fU[i]), 
             &(psAfn0cF1_f->fU[i]));
             if(MT_OK != eRet)
@@ -11223,10 +11368,8 @@ eMtErr emtTrans_afn0cf01(eMtTrans eTrans,void* psUser, void* psFrame, UINT16* pu
                 DEBUG("emtTrans_afn0cf1() trans error %d ", eRet);
                 #endif
                 return eRet;
-            }
-               
+            }  
             // fI
-            usLen = sizeof(sMtFmt_sXXX_XXX);
             eRet = emt_trans_sXXX_XXX(eTrans, &(psAfn0cF1->fI[i]), 
             &(psAfn0cF1_f->fI[i]));
             if(MT_OK != eRet)
@@ -11236,9 +11379,7 @@ eMtErr emtTrans_afn0cf01(eMtTrans eTrans,void* psUser, void* psFrame, UINT16* pu
                 #endif
                 return eRet;
             }
-               
             // fLc
-            usLen = sizeof(sMtFmt_sXXX_X);
             eRet = emt_trans_sXXX_X(eTrans, &(psAfn0cF1->fLc[i]), 
             &(psAfn0cF1_f->fLc[i]));
             if(MT_OK != eRet)
@@ -11269,7 +11410,7 @@ eMtErr emtTrans_afn0cf01(eMtTrans eTrans,void* psUser, void* psFrame, UINT16* pu
 
     return MT_OK;
 }
-
+#endif
 /*****************************************************************************
  函 数 名  : emtTrans_afn0cf02
  功能描述  :  格式转换函数
@@ -11296,6 +11437,7 @@ eMtErr emtTrans_afn0cf02(eMtTrans eTrans,void* psUser, void* psFrame, UINT16* pu
     eRet = emt_trans_YYWWMMDDhhmmss(eTrans, (sMtUserClock *)psUser,(sMtFrmClock *)psFrame);
 
     *pusfLen = sizeof(sMtFrmClock);
+    printf("pusfLen:%d\n",*pusfLen);
     return eRet;
 }
 
@@ -36525,6 +36667,7 @@ eMtErr emt_trans_tp(eMtTrans eTrans, sMtTP* pTP_u, sMtTP_f* pTP_f)
 
     if(MT_TRANS_U2F == eTrans)
     {   
+        printf("emt_trans_tp :pTP_u->ucPFC:%d\n",pTP_u->ucPFC);
         pTP_f->ucPFC = pTP_u->ucPFC;
         pTP_f->ucPermitDelayMinutes = pTP_u->ucPermitDelayMinutes;
         emt_trans_DDHHmmss(MT_TRANS_U2F, &(pTP_u->sDDHHmmss), &(pTP_f->sDDHHmmss));
@@ -36627,6 +36770,7 @@ eMtErr emt_get_tp(UINT8 ucPFC, sMtTP *psuTp)
     psuTp->ucPermitDelayMinutes = g_ucMtPermitDelayMinutes;
     psuTp->ucPFC = ucPFC;
 
+    printf("emt_get_tp ,psuTp->ucPFC:%d\n",ucPFC);
     return MT_OK;
 }
 
@@ -39926,6 +40070,7 @@ eMtErr emtLitePack(smtLitePack* psPack, UINT16* pusLen, UINT8* pOutBuf)
     // 如果有 TP
     if(TRUE == bmt_have_tp(eAFN, eDir))  // 除了这种情况的所有报文中
     {
+        printf("bmt_have_tp\n");
         pData = (UINT8*)(pSeq2Cs + usSeq2CsPos);
         psfTp = (sMtTP_f *)pData;
         suTp  = psPack->sTP;
@@ -40427,9 +40572,11 @@ eMtErr emtPackLite(smtPack* psPack, UINT16* pusLen, UINT8* pOutBuf)
     bTP = bmt_have_tp(eAFN, eDir);
     if(TRUE == bTP)
     {
+        printf("BTP YES\n");
         (void)emt_get_tp(psPack->sTP.ucPFC, &sTp);
         psLitePack->sTP.sDDHHmmss = sTp.sDDHHmmss;
         psLitePack->sTP.ucPermitDelayMinutes = sTp.ucPermitDelayMinutes;
+        psLitePack->sTP.ucPFC = sTp.ucPFC;
         // psBasePack->sTP.ucPFC = psBasePack->sTP.ucPFC;// 这个已经在封装时由用户添加
     }
 
@@ -40666,6 +40813,12 @@ eMtErr emtUnPackLite(smtPack *psUnpack, UINT8* pInBuf, UINT16 usLen)
     if(TRUE == psUnpack->bTP)
     {
         psUnpack->sTP = pLiteUnpack->sTP;
+         /*PFC校准*/
+        {
+            g_ucCmPFCRecv  = psUnpack->sTP.ucPFC;
+            g_ucCmPFCSend = g_ucCmPFCRecv;
+            printf("emtUnPackLite,g_ucCmPFCSend:%d\n",g_ucCmPFCSend);
+        }
     }
 
     // 应用层数据
@@ -40680,6 +40833,7 @@ eMtErr emtUnPackLite(smtPack *psUnpack, UINT8* pInBuf, UINT16 usLen)
             if(MT_PN_NONE == usPn)
             {
                 // 合法但不处理, 即没有对应位置的PN
+                DEBUG( "合法但不处理, 即没有对应位置的PN:%d\n",pLiteUnpack->sData[i].sPnFn.usPn[pi]);
             }
             else if(usPn < MT_PN_MIN || usPn > MT_PN_MAX)
             {
@@ -40692,10 +40846,10 @@ eMtErr emtUnPackLite(smtPack *psUnpack, UINT8* pInBuf, UINT16 usLen)
             }
             else
             {
-                #if 0
+                #if 1
                 #ifdef MT_DBG
                 for(fi = 0; fi < 8; fi++)
-                {   ucFn = pUnpackBase->sData[i].sPnFn.ucFn[fi];                
+                {   ucFn = pLiteUnpack->sData[i].sPnFn.ucFn[fi];                
                     DEBUG("emtUnPack() sData[%d].sPnFn.ucFn[%d] = %d",i, fi, ucFn);
                 }
                 #endif
@@ -40706,7 +40860,7 @@ eMtErr emtUnPackLite(smtPack *psUnpack, UINT8* pInBuf, UINT16 usLen)
                     ucFn = pLiteUnpack->sData[i].sPnFn.ucFn[fi];
                     if(MT_FN_NONE == ucFn)
                     {
-                        // 这种情况即没有该FN, 合法但不处理
+                        DEBUG( "这种情况即没有该FN, 合法但不处理");
                     }
                     else if(ucFn < MT_FN_MIN || ucFn > MT_FN_MAX)
                     {
@@ -40749,6 +40903,7 @@ eMtErr emtUnPackLite(smtPack *psUnpack, UINT8* pInBuf, UINT16 usLen)
 
                             memcpy((void*)&(psUnpack->sData[j].uApp), (void*)puApp, sizeof(uMtApp));
                             MT_FREE(puApp);
+                            printf("MT_FREE\n");
                         }
                         else
                         {
@@ -40761,9 +40916,10 @@ eMtErr emtUnPackLite(smtPack *psUnpack, UINT8* pInBuf, UINT16 usLen)
             }
         }
     }
-
+    printf("usDataNum:%d\n",j);
     psUnpack->usDataNum = j;
     MT_FREE(pMemBase);
+    printf("end\n");
     return MT_OK;
 }
 

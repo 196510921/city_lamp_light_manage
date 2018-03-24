@@ -10,6 +10,7 @@
 #include <stdint.h>
 #include <string.h>
 
+
 enum conn_flag_t{
 	TCP_CONNECTED = 0,
 	TCP_DISCONNECTED
@@ -20,14 +21,31 @@ enum block_status_t{
 	TCP_CLIENT_SUCCESS
 };
 
+#define PACK_MEM_SIZE  10240
+#define OUT_BUF_LEN    10240
+
+typedef char                INT8;       //c
+typedef short               INT16;      //s
+typedef int                 INT32;      //l
+typedef unsigned char       UINT8;      //uc
+typedef unsigned short      UINT16;     //us
+typedef unsigned int        UINT32;  
+
+extern UINT8 g_ucInBuf[OUT_BUF_LEN];
+
+#if 0
 #define SERVER_IP  "172.16.200.1"
 #define SERV_PORT 6666
-// #define SERVER_IP  "192.168.9.100"
-// #define SERV_PORT 10004
+#else
+// #define SERVER_IP  "101.132.91.12"
+// #define SERV_PORT 14000
+#define SERVER_IP  "192.168.1.177"
+#define SERV_PORT 14000
+#endif
 
 static int conn_flag = TCP_DISCONNECTED;
 static int client_sockfd = 0;
-static char clientTcpRxBuf[2048] = {0};
+static UINT8 clientTcpRxBuf[2048] = {0};
 
 static int socket_client_handle(int clientFd, int revent);
 static void client_rx_cb(int clientFd);
@@ -137,7 +155,7 @@ static int socket_client_handle(int clientFd, int revent)
 }
 
 
-extern void unpack(UINT8* data, UINT16 len);
+void unpack(UINT8* pInBuf, UINT16 usLen);
 
 static void client_rx_cb(int clientFd)
 {
@@ -145,6 +163,7 @@ static void client_rx_cb(int clientFd)
 	int byteRead = 0;
 	int rtn = 0;
 	int i = 0;
+	UINT8* pInBuf = NULL;
 
 
 	printf("SRPC_RxCB++[%x]\n", clientFd);
@@ -159,13 +178,28 @@ static void client_rx_cb(int clientFd)
 
 	byteRead = read(clientFd, clientTcpRxBuf, 2048);
 
-	printf("client rx, len:%d, data: \n");
+
+	printf("client rx, len:%d, data: \n",byteRead);
 	for( i = 0; i < byteRead; i++)
-		printf("%X ",clientTcpRxBuf[i]);
+		printf("%02X ",clientTcpRxBuf[i]);
+	printf("\n");
 
 	printf("--------------------------------------unpack-------------------------------------------------\n\n\n\n\n\n");
 	unpack(clientTcpRxBuf, byteRead);
 
 	return;
 }
+
+
+void socket_client_send(UINT8* data, UINT16* len)
+{
+	int rtn;
+
+	rtn = write(client_sockfd, data, len);
+	if(rtn < 0)
+		printf("write error\n");
+}
+
+
+
 
