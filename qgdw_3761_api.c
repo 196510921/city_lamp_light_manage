@@ -31,10 +31,10 @@
 #define DEBUG(format,...) printf("File: "__FILE__", Line: %d: "format"\n", __LINE__, ##__VA_ARGS__)
 #endif
 
-#ifdef MT_DBG
-
 extern UINT8 g_ucCmPFCSend;        // 当前应该发送的序号
 extern UINT8 g_ucCmPFCRecv;
+
+#ifdef MT_DBG
 /*****************************************************************************
  函 数 名  : smtGetErr
  功能描述  : 返回错误的类型名称
@@ -711,7 +711,8 @@ const sMtCmdInfor gmt_cmdinfor[] =
     {CMD_AFN_C_F5_TML_CTRL_SET,      MT_DIR_S2M, MT_PN_P0,  emtTrans_afn0cf05,     "终端控制设置状态"},
     {CMD_AFN_C_F6_TML_CTRL_STATE,    MT_DIR_S2M, MT_PN_P0,  emtTrans_afn0cf06,     "终端当前控制状态"},
     {CMD_AFN_C_F7_TML_EC_VALUE,      MT_DIR_S2M, MT_PN_P0,  emtTrans_afn0cf07,     "终端事件计数器当前值"},
-    {CMD_AFN_C_F8_TML_EVNT_FLAG,     MT_DIR_S2M, MT_PN_P0,  emtTrans_afn0cf08,     "终端事件标志状态"}, 
+   //huyuxiang
+    {CMD_AFN_C_F8_TML_EVNT_FLAG,     MT_DIR_S2M, MT_PN_MP,  emtTrans_afn0cf08,     "终端事件标志状态"},
 
     // 组2   pn:p0
     {CMD_AFN_C_F9_TML_STATE_BIT,     MT_DIR_S2M, MT_PN_P0,  emtTrans_afn0cf09,     "终端状态量及变位标志"},
@@ -1550,12 +1551,13 @@ const sMtCmdInfor gmt_cmdinfor[] =
      *  
     {*///
     // 上行
-    {CMD_AFN_11_F4,            		MT_DIR_S2M, MT_PN_MP,  emtTrans_afn11hf4_s2m,                  "查询对路灯批量执行状况"},
+    {CMD_AFN_11_F4,                 MT_DIR_S2M, MT_PN_MP,  emtTrans_afn11hf4_s2m,                  "查询对路灯批量执行状况"},
  
     //huyuxiang
     // 下行
-    {CMD_AFN_11_F3,            		MT_DIR_M2S, MT_PN_MP,  emtTrans_afn11hf3_m2s,                  "转发主张对电表的控制"},
-    {CMD_AFN_11_F4,            		MT_DIR_M2S, MT_PN_MP,  emtTrans_afn11hf4_m2s,                  "查询对路灯批量执行状况"},
+    {CMD_AFN_11_F2,                 MT_DIR_M2S, MT_PN_MP,  emtTrans_afn11hf2_m2s,                  "日控制时段表"},
+    {CMD_AFN_11_F3,                 MT_DIR_M2S, MT_PN_MP,  emtTrans_afn11hf3_m2s,                  "转发主张对电表的控制"},
+    {CMD_AFN_11_F4,                 MT_DIR_M2S, MT_PN_MP,  emtTrans_afn11hf4_m2s,                  "查询对路灯批量执行状况"},
      /*******************************
      *  (16) 最大命令 
      *   
@@ -2006,8 +2008,8 @@ eMtErr emtIsValidPack(const UINT8* pOutBuf, UINT16 usLen)
         #endif
         return MT_ERR_PROTO;
     }
-	
-	usUserLen =  ((pfComHead->L2 << 6) & 0x3FC0) | (pfComHead->L1 & 0x003F); 
+    
+    usUserLen =  ((pfComHead->L2 << 6) & 0x3FC0) | (pfComHead->L1 & 0x003F); 
 
 
 #endif
@@ -2279,7 +2281,7 @@ BOOL   bmt_have_ec(eMtAFN eAFN, eMtDir eDir)
 *****************************************************************************/
 BOOL   bmt_have_pw(eMtAFN eAFN, eMtDir eDir)
 {
-	//huyuxiang
+    //huyuxiang
 #if 0
     if(((MT_DIR_M2S == eDir)  &&
         (AFN_01_RSET == eAFN  ||
@@ -2362,7 +2364,7 @@ BOOL   bmt_need_con(eMtAFN eAFN, eMtDir eDir)
     else if((MT_DIR_S2M == eDir) &&
        (AFN_02_LINK == eAFN))
     {
-	return TRUE;
+    return TRUE;
     }
     else
     {
@@ -2679,7 +2681,8 @@ BOOL bmt_same_team_pn(UINT16 *pUsPn8, UINT8* pucDa2)
 
     if(pucDa2 != NULL)
     {
-       *pucDa2 = (usPn[0] - 1) / 8  + 1;
+      // *pucDa2 = (usPn[0] - 1) / 8  + 1;  //huyuxiang
+         *pucDa2 = (usPn[0] - 1) / 8;
     }
     
     return TRUE;
@@ -3060,7 +3063,7 @@ eMtErr emt_dadt_to_pnfn(sMtDaDt* psDaDt, sMtPnFn* psPnFn)
         return MT_ERR_NULL;
     }
 
-    #if 1
+    #if 0
     #ifdef MT_DBG
     DEBUG("[in]emt_dadt_to_pnfn()");
     DEBUG("ucDA1 = 0x%X", psDaDt->ucDA1);
@@ -3136,7 +3139,7 @@ eMtErr emt_dadt_to_pnfn(sMtDaDt* psDaDt, sMtPnFn* psPnFn)
         }
     }
 
-    #if 1
+    #if 0
     #ifdef MT_DBG
     DEBUG("[out]emt_dadt_to_pnfn()");
     BOOL bP0 = bmt_is_p0(psPnFn->usPn);
@@ -3835,18 +3838,38 @@ void   vMtSetDoubleSign(double *pdVal, int sign)
  ******************************************************************************/
 
 
+/*****************************************************************************
+ *  函 数 名  : emtTrans_Sure
+ *  功能描述  :确认/否认转换函数
+ *  输入参数  : eMTTransDir eDir  
+ *  void *psUser      
+ *  void *psFrame     
+ *  UINT16 *pusfLen   
+ *  输出参数  : 无
+ *  返 回 值  : 
+ *  调用函数  : 
+ *  被调函数  : 
+ *    
+ *  修改历史      :
+ *  1.日    期   : 2013年6月9日
+ *  作    者   : 李明
+ *  修改内容   : 新生成函数
+ *
+ ******************************************************************************/
+
+
 eMtErr emtTrans_Sure(eMtTrans eTrans,void* psUser, void* psFrame, UINT16* pusfLen)
 {
      eMtAFN      eAFN      = AFN_NULL;
      sMtSure_f *psSure_f = (sMtSure_f *)psFrame;
      sMtSure   *psSure_u = (sMtSure   *)psUser;
-	// 帧侧转为用户侧
-	
+    // 帧侧转为用户侧
+    
 
      if(MT_TRANS_F2U == eTrans)
      {
-    	 eAFN = (eMtAFN)psSure_f->ucAFN;
-    	 psSure_u->eAFN = eAFN;
+         eAFN = (eMtAFN)psSure_f->ucAFN;
+         psSure_u->eAFN = eAFN;
      }
     else if(MT_TRANS_U2F == eTrans)
     {
@@ -3855,12 +3878,12 @@ eMtErr emtTrans_Sure(eMtTrans eTrans,void* psUser, void* psFrame, UINT16* pusfLe
     }
     else
     {
-	return MT_ERR_PARA;
+    return MT_ERR_PARA;
     }
 
 
    //*pusfLen = sizeof(sMtSure_f);
-   printf("sizeof smtsure_f is %d\n",sizeof(sMtSure_f));
+   printf("sizeof smtsure_f is %ld\n",sizeof(sMtSure_f));
    printf("eAFN is %d\n",psSure_u->eAFN);
    *pusfLen = 1;
  
@@ -4167,6 +4190,162 @@ eMtErr emtTrans_afn03f1(eMtTrans eTrans,void* psUser, void* psFrame, UINT16* pus
     return MT_OK;
 }
 
+/*****************************************************************************^M
+ *  函 数 名  : emtTrans_afn11hf3_m2s
+ *  功能描述  :            
+ *  输入参数  : eMTTransDir eDir  ^M       
+ *  void *psUser      ^M               
+ *  void *psFrame     ^M
+ *  UINT16 *pusfLen   ^M
+ *  输出参数  : 无^M
+ *  返 回 值  : ^M
+ *  调用函数  : ^M
+ *  被调函数  : ^M
+ *  ^M
+ *  修改历史      :^M
+ *    1.日    期   : 2013年6月9日^M
+ *     作    者   : 李明^M
+ * 修改内容   : 新生成函数^M
+ *  
+ ******************************************************************************/
+
+unsigned char BCD2HEX(unsigned char bcd_data)    //BCD×ªÎªHEX×Ó³ÌÐò
+{
+    unsigned char temp;
+    temp=(bcd_data/16*10 + bcd_data%16);
+    return temp;
+}
+
+
+eMtErr emtTrans_afn11hf2_m2s(eMtTrans eTrans, void* psUser, void* psFrame, UINT16* pusfLen)
+{
+    if(!psUser || !psFrame || !pusfLen)
+    {
+        #ifdef MT_DBG
+        DEBUG("emtTrans_afn04f1() pointer is null");
+        #endif
+        return MT_ERR_NULL;
+    }
+    
+    UINT8 i;
+    UINT8 ucdata1 = 0;
+    UINT8 ucdata2 = 0;
+    UINT8 *Frame = NULL;
+    UINT8 *User = NULL;
+    sMtTime_f *time = NULL;
+    sMtPara1_f *data_f; 
+
+    sMt11f2_u    *psAfn11f2   = (sMt11f2_u *)psUser;
+    sMt11f2_f_head  *psAfn11f2_f_head = (sMt11f2_f_head *)psFrame;
+   
+    Frame = (UINT8 *)psFrame;
+    Frame = Frame + sizeof(sMt11f2_f_head);
+    User = User + sizeof(sMt11f2_u);
+    
+
+   // 帧侧转为用户侧 
+   if(MT_TRANS_F2U == eTrans)
+   {
+#if 0
+     psAfn11f2_head->ucTaskFormat = 
+     psAfn11f2_head->ucTaskType
+     psAfn11f2_head->ucTaskLen = 
+     psAfn11f2_head->LastTime =
+     psAfn11f2_head->ucTimeNum =
+#endif
+     psAfn11f2->ucTaskFormat =psAfn11f2_f_head->ucTaskFormat ;
+     psAfn11f2->ucTaskType   =psAfn11f2_f_head->ucTaskType;
+     psAfn11f2->ucTaskLen    =psAfn11f2_f_head->ucTaskLen;        
+     psAfn11f2->LastTime     =psAfn11f2_f_head->LastTime;         
+     psAfn11f2->ucTimeNum    =psAfn11f2_f_head->ucTimeNum;    
+     emt_trans_YYMMDD(MT_TRANS_F2U,&(psAfn11f2->sT),&(psAfn11f2_f_head->sT));
+    
+    
+     for(i=0; i<psAfn11f2_f_head->ucTimeNum; i++)
+     {
+        psAfn11f2->Time[i].Min = BCD2HEX(*Frame);
+        Frame++;
+        psAfn11f2->Time[i].Hour = BCD2HEX(*Frame);
+        Frame++;
+        psAfn11f2->Time[i].Status = BCD2HEX(*Frame);
+        Frame++;
+        psAfn11f2->Time[i].Light = BCD2HEX(*Frame);
+        Frame++;    
+     }
+
+     ucdata1 = *Frame;
+     Frame++;
+     ucdata2 = *Frame;
+     Frame++;
+     psAfn11f2->ucDataNum = ((UINT16)ucdata1|(UINT16)ucdata2<<8);
+
+     data_f = (sMtPara1_f *)Frame;
+    
+    for(i=0; i<psAfn11f2->ucDataNum; i++)
+    {
+    psAfn11f2->Data[i].ucOperate = data_f->ucOperate;
+    memcpy(psAfn11f2->Data[i].ucAddress, data_f->ucAddress,8);
+    memcpy(psAfn11f2->Data[i].ucKey,data_f->ucKey,32);
+        data_f++;
+
+    } 
+     
+        
+   }
+   else if(MT_TRANS_U2F == eTrans)// 用户侧转为帧
+   {
+     psAfn11f2_f_head->ucTaskFormat =psAfn11f2->ucTaskFormat;
+     psAfn11f2_f_head->ucTaskType   =psAfn11f2->ucTaskType;   
+     psAfn11f2_f_head->ucTaskLen    =psAfn11f2->ucTaskLen;        
+     psAfn11f2_f_head->LastTime     =psAfn11f2->LastTime;         
+     psAfn11f2_f_head->ucTimeNum    =psAfn11f2->ucTimeNum;  
+    //emt_trans_YYMMDD(MT_TRANS_U2F,&(psAfn11f2->sT),&(psAfn11f2_f->sT));
+     emt_trans_YYMMDD(MT_TRANS_U2F,&(psAfn11f2->sT),&(psAfn11f2_f_head->sT));
+    
+    // *Frame = psAfn11f2->ucTimeNum;
+     //Frame++;
+     
+     time = (sMtTime_f *)Frame;
+     for(i=0; i<psAfn11f2->ucTimeNum;i++)
+     {
+    memcpy(time, &psAfn11f2->Time[i],sizeof(sMtTime_f));
+    time++;
+     }
+     Frame = (UINT8 *) time;
+     *Frame = (UINT8)(psAfn11f2->ucDataNum & 0x00ff);
+     Frame++;
+     *Frame = (UINT8)(psAfn11f2->ucDataNum & 0xff00)>>8;
+     Frame++;
+      data_f = (sMtPara1_f *)Frame;
+      
+      for(i=0; i<psAfn11f2->ucDataNum; i++)
+      {
+    memcpy(data_f,&psAfn11f2->Data[i],sizeof(sMtPara_f));
+    data_f++;
+      }
+
+   }
+   else
+   {
+        #ifdef MT_DBG
+        DEBUG("emtTrans_afn0cf1() para error!");
+        #endif
+        return MT_ERR_PARA;
+   }
+
+
+   // 计算在帧侧的字节长度
+
+    *pusfLen = 12 + sizeof(sMtTime_f) * psAfn11f2->ucTimeNum + sizeof(sMtPara_f) * psAfn11f2->ucDataNum;
+    printf("pusfLen:%d\n",*pusfLen);
+    //printf("sMt11f2_f:%d\n",sizeof(sMt11f2_f));
+
+    return MT_OK;
+
+
+}
+
+
 /*****************************************************************************
  函 数 名  : emtTrans_afn11hf3_m2s
  功能描述  : 
@@ -4180,11 +4359,12 @@ eMtErr emtTrans_afn03f1(eMtTrans eTrans,void* psUser, void* psFrame, UINT16* pus
  被调函数  : 
  
  修改历史      :
-  1.日    期   : 2013年6月9日
+  1.日    期   : 20i13年6月9日
     作    者   : 李明
     修改内容   : 新生成函数
 
 *****************************************************************************/
+
 eMtErr emtTrans_afn11hf3_m2s(eMtTrans eTrans, void* psUser, void* psFrame, UINT16* pusfLen)
 {
     if(!psUser || !psFrame || !pusfLen)
@@ -4195,19 +4375,62 @@ eMtErr emtTrans_afn11hf3_m2s(eMtTrans eTrans, void* psUser, void* psFrame, UINT1
         return MT_ERR_NULL;
     }
 
+    UINT8 i = 0;
+    UINT8 ucdata1 = 0;
+    UINT8 ucdata2 = 0;
+    UINT8 ucDataNum = 0;
+    UINT8 *Frame = NULL;
+
+    sMtTime_11hf3_f  *sMtime11f3 = NULL;
+    sMtPara_f   *sMtpara11f3 = NULL;
+    UINT16 ContrlNum = 0;
     sMtCtr_11hf3    *psAfn11f3   = (sMtCtr_11hf3*)psUser;
-    sMtCtr_11hf3_f  *psAfn11f3_f = (sMtCtr_11hf3_f*)psFrame;
+
+    //UINT16 *ucParaNum = NULL;
+    //sMtCtr_11hf3_f  *psAfn11f3_f = (sMtCtr_11hf3_f*)psFrame;
+
+    sMtCtr_11hf3_f_head *psAfn11f3_f_head = (sMtCtr_11hf3_f_head *)psFrame;
+
+    Frame = (UINT8 *)psFrame;
+    Frame = Frame + sizeof(sMtCtr_11hf3_f_head);
+    
+    sMtime11f3 = (sMtTime_11hf3_f *)Frame;
      
-    UINT8 bs8Con = 0;
     
     if(MT_TRANS_U2F == eTrans)
     {
-	psAfn11f3_f->ucTaskFormat = psAfn11f3->ucTaskFormat;
-	psAfn11f3_f->ucTaskType   = psAfn11f3->ucTaskType;
-	psAfn11f3_f->ucTaskLen    = psAfn11f3->ucTaskLen;
-	psAfn11f3_f->ucData     = psAfn11f3->ucData;
-	psAfn11f3_f->ucNum        = psAfn11f3->ucNum;
-	memcpy(psAfn11f3_f->ucPara,psAfn11f3->ucPara,sizeof(psAfn11f3->ucPara));
+    psAfn11f3_f_head->ucTaskFormat = psAfn11f3->ucTaskFormat;
+    psAfn11f3_f_head->ucTaskType   = psAfn11f3->ucTaskType;
+    psAfn11f3_f_head->ucTaskLen    = psAfn11f3->ucTaskLen;
+   
+    ContrlNum = psAfn11f3->ucTaskLen/sizeof(sMtTime_11hf3);
+       
+        for(i=0; i<ContrlNum; i++)
+    {
+            emt_trans_YYMMDDhhmm(MT_TRANS_U2F,&psAfn11f3->ucData[i].Time,&sMtime11f3->Time);
+        sMtime11f3->Status = psAfn11f3->ucData[i].Status;
+        sMtime11f3->Light = psAfn11f3->ucData[i].Light;
+        sMtime11f3++;
+    }
+        
+    Frame = (UINT8 *)sMtime11f3;
+    *Frame = (UINT8)(psAfn11f3->ucNum & 0x00ff);
+    Frame++;
+    *Frame = (UINT8)(psAfn11f3->ucNum & 0xff00)>>8;
+    Frame++;
+    
+    sMtpara11f3 = (sMtPara_f *)Frame;
+
+    
+    for(i=0; i<psAfn11f3->ucNum; i++)
+    {
+        memcpy(sMtpara11f3,&psAfn11f3->ucPara[i],sizeof(sMtPara_f));
+        sMtpara11f3++;
+
+    }
+    
+    
+    //memcpy(psAfn11f3_f->ucPara,psAfn11f3->ucPara,sizeof(psAfn11f3->ucPara));
 
 
 
@@ -4226,12 +4449,49 @@ eMtErr emtTrans_afn11hf3_m2s(eMtTrans eTrans, void* psUser, void* psFrame, UINT1
     }
     else if(MT_TRANS_F2U == eTrans)
     {
-	psAfn11f3->ucTaskFormat = psAfn11f3_f->ucTaskFormat;
-	psAfn11f3->ucTaskType   = psAfn11f3_f->ucTaskType;
-	psAfn11f3->ucTaskLen    = psAfn11f3_f->ucTaskLen;
-	psAfn11f3->ucData    = psAfn11f3_f->ucData;
-	psAfn11f3->ucNum        = psAfn11f3_f->ucNum;
-	memcpy(psAfn11f3->ucPara,psAfn11f3_f->ucPara,sizeof(psAfn11f3_f->ucPara));
+        psAfn11f3->ucTaskFormat = psAfn11f3_f_head->ucTaskFormat;
+        psAfn11f3->ucTaskType   = psAfn11f3_f_head->ucTaskType  ;
+        psAfn11f3->ucTaskLen    = psAfn11f3_f_head->ucTaskLen   ;
+
+
+
+        sMtime11f3 = (sMtTime_11hf3_f *)Frame;
+
+        ucDataNum = psAfn11f3->ucTaskLen /sizeof(sMtTime_11hf3);
+
+        for(i=0; i<ucDataNum; i++)
+        {
+            emt_trans_YYMMDDhhmm(MT_TRANS_F2U,&psAfn11f3->ucData[i].Time,&sMtime11f3->Time);
+            psAfn11f3->ucData[i].Status  = sMtime11f3->Status;
+            psAfn11f3->ucData[i].Light   = sMtime11f3->Light ;
+            sMtime11f3++;
+        }
+
+        Frame = (UINT8 *)sMtime11f3;
+
+        ucdata1 = *Frame;
+        Frame++;
+        ucdata2 = *Frame;
+        Frame++;
+        psAfn11f3->ucNum = ((UINT16)ucdata1|(UINT16)ucdata2<<8);
+
+
+        sMtpara11f3 = (sMtPara_f *)Frame;
+
+        for(i=0; i<psAfn11f3->ucNum; i++)
+        {
+            memcpy(&psAfn11f3->ucPara[i],sMtpara11f3,sizeof(sMtPara_f));
+            sMtpara11f3++;
+        }
+
+#if 0
+    psAfn11f3->ucTaskFormat = psAfn11f3_f->ucTaskFormat;
+    psAfn11f3->ucTaskType   = psAfn11f3_f->ucTaskType;
+    psAfn11f3->ucTaskLen    = psAfn11f3_f->ucTaskLen;
+    psAfn11f3->ucData    = psAfn11f3_f->ucData;
+    psAfn11f3->ucNum        = psAfn11f3_f->ucNum;
+    memcpy(psAfn11f3->ucPara,psAfn11f3_f->ucPara,sizeof(psAfn11f3_f->ucPara));
+#endif
 
 
 
@@ -4263,7 +4523,7 @@ eMtErr emtTrans_afn11hf3_m2s(eMtTrans eTrans, void* psUser, void* psFrame, UINT1
         return MT_ERR_PARA;
     }
     
-    *pusfLen = sizeof(sMtCtr_11hf3_f);
+    *pusfLen = 7 + psAfn11f3->ucTaskLen + psAfn11f3->ucNum * 41;
 
     return MT_OK;
 
@@ -4302,27 +4562,27 @@ eMtErr emtTrans_afn11hf4_s2m(eMtTrans eTrans, void* psUser, void* psFrame, UINT1
   sMt_s2m_11hf4    *psAfn11f4   = (sMt_s2m_11hf4*)psUser;
     sMt_s2m_11hf4_f *psAfn11f4_f  = (sMt_s2m_11hf4_f*)psFrame;
      
-    UINT8 bs8Con = 0;
+    //UINT8 bs8Con = 0;
     
     if(MT_TRANS_U2F == eTrans)
     {
-	psAfn11f4_f->ucDataUnit = psAfn11f4->ucDataUnit;
-	psAfn11f4_f->ucTaskType   = psAfn11f4->ucTaskType;
-	psAfn11f4_f->ucCtrlNum   = psAfn11f4->ucCtrlNum;
-	psAfn11f4_f->ucExeNum   = psAfn11f4->ucExeNum;
-	memcpy(psAfn11f4_f->addr,psAfn11f4->addr,sizeof(sMtAddress));
-        printf(" sMtAddress %d\n",sizeof(sMtAddress));
+    psAfn11f4_f->ucDataUnit = psAfn11f4->ucDataUnit;
+    psAfn11f4_f->ucTaskType   = psAfn11f4->ucTaskType;
+    psAfn11f4_f->ucCtrlNum   = psAfn11f4->ucCtrlNum;
+    psAfn11f4_f->ucExeNum   = psAfn11f4->ucExeNum;
+    memcpy(psAfn11f4_f->addr,psAfn11f4->addr,sizeof(sMtAddress));
+        printf(" sMtAddress %ld\n",sizeof(sMtAddress));
 
       }
     else if(MT_TRANS_F2U == eTrans)
     {
-	psAfn11f4_f->ucDataUnit = psAfn11f4->ucDataUnit;
-	psAfn11f4_f->ucTaskType   = psAfn11f4->ucTaskType;
-	psAfn11f4_f->ucCtrlNum   = psAfn11f4->ucCtrlNum;
-	psAfn11f4_f->ucExeNum   = psAfn11f4->ucExeNum;
+    psAfn11f4_f->ucDataUnit = psAfn11f4->ucDataUnit;
+    psAfn11f4_f->ucTaskType   = psAfn11f4->ucTaskType;
+    psAfn11f4_f->ucCtrlNum   = psAfn11f4->ucCtrlNum;
+    psAfn11f4_f->ucExeNum   = psAfn11f4->ucExeNum;
 
-	memcpy(psAfn11f4->addr,psAfn11f4_f->addr,sizeof(sMtAddress));
-        printf(" sMtAddress %d\n",sizeof(sMtAddress));
+    memcpy(psAfn11f4->addr,psAfn11f4_f->addr,sizeof(sMtAddress));
+        printf(" sMtAddress %ld\n",sizeof(sMtAddress));
 
     }
     else
@@ -4332,7 +4592,7 @@ eMtErr emtTrans_afn11hf4_s2m(eMtTrans eTrans, void* psUser, void* psFrame, UINT1
     
     
     *pusfLen = sizeof(sMt_s2m_11hf4_f );
-    printf("sMt_m2s_11hf4_f is %d\n",sizeof(sMt_s2m_11hf4_f));
+    printf("sMt_m2s_11hf4_f is %ld\n",sizeof(sMt_s2m_11hf4_f));
 
     return MT_OK;
 
@@ -4372,18 +4632,18 @@ eMtErr emtTrans_afn11hf4_m2s(eMtTrans eTrans, void* psUser, void* psFrame, UINT1
   sMt_m2s_11hf4    *psAfn11f4   = (sMt_m2s_11hf4*)psUser;
     sMt_m2s_11hf4_f *psAfn11f4_f = (sMt_m2s_11hf4_f*)psFrame;
      
-    UINT8 bs8Con = 0;
+    //UINT8 bs8Con = 0;
     
     if(MT_TRANS_U2F == eTrans)
     {
-	psAfn11f4_f->ucDataUnit = psAfn11f4->ucDataUnit;
-	psAfn11f4_f->ucTaskType   = psAfn11f4->ucTaskType;
+    psAfn11f4_f->ucDataUnit = psAfn11f4->ucDataUnit;
+    psAfn11f4_f->ucTaskType   = psAfn11f4->ucTaskType;
 
       }
     else if(MT_TRANS_F2U == eTrans)
     {
-	psAfn11f4->ucDataUnit   = psAfn11f4_f->ucDataUnit;
-	psAfn11f4->ucTaskType   = psAfn11f4_f->ucTaskType;
+    psAfn11f4->ucDataUnit   = psAfn11f4_f->ucDataUnit;
+    psAfn11f4->ucTaskType   = psAfn11f4_f->ucTaskType;
 
     }
     else
@@ -4652,8 +4912,8 @@ eMtErr emtTrans_afn04f3(eMtTrans eTrans,void* psUser, void* psFrame, UINT16* pus
         psAfn04F3_f->usMainPort  = psAfn04F3->usMainPort;
         psAfn04F3_f->usBackPort  = psAfn04F3->usBackPort;
         memcpy(psAfn04F3_f->ucascAPN, psAfn04F3->ucascAPN, 16);
-	memcpy(psAfn04F3_f->virUserName, psAfn04F3->virUserName, 32);
-	memcpy(psAfn04F3_f->virUserPw, psAfn04F3->virUserPw, 32);
+    memcpy(psAfn04F3_f->virUserName, psAfn04F3->virUserName, 32);
+    memcpy(psAfn04F3_f->virUserPw, psAfn04F3->virUserPw, 32);
 
 
     }
@@ -4675,14 +4935,14 @@ eMtErr emtTrans_afn04f3(eMtTrans eTrans,void* psUser, void* psFrame, UINT16* pus
         psAfn04F3->usMainPort = psAfn04F3_f->usMainPort;
         psAfn04F3->usBackPort = psAfn04F3_f->usBackPort;
         memcpy(psAfn04F3->ucascAPN, psAfn04F3_f->ucascAPN, 16);
-	memcpy(psAfn04F3->virUserName, psAfn04F3_f->virUserName, 32);
-	memcpy(psAfn04F3->virUserPw, psAfn04F3_f->virUserPw, 32);
+    memcpy(psAfn04F3->virUserName, psAfn04F3_f->virUserName, 32);
+    memcpy(psAfn04F3->virUserPw, psAfn04F3_f->virUserPw, 32);
     }
     else
     {
         return MT_ERR_PARA;
     }
-    printf("smtafn04f3 is sizeof is%d\n",sizeof(sMtAfn04F3_f));
+    printf("smtafn04f3 is sizeof is%ld\n",sizeof(sMtAfn04F3_f));
     *pusfLen = sizeof(sMtAfn04F3_f);
     return MT_OK;
 }
@@ -4755,6 +5015,7 @@ eMtErr emtTrans_afn04f5(eMtTrans eTrans,void* psUser, void* psFrame, UINT16* pus
 *****************************************************************************/
 eMtErr emtTrans_afn04f6(eMtTrans eTrans,void* psUser, void* psFrame, UINT16* pusfLen)
 {
+    
     *pusfLen = sizeof(sMtAfn04F6_f);
     return MT_OK;
 }   
@@ -4833,10 +5094,236 @@ eMtErr emtTrans_afn04f8(eMtTrans eTrans,void* psUser, void* psFrame, UINT16* pus
 *****************************************************************************/
 eMtErr emtTrans_afn04f9(eMtTrans eTrans,void* psUser, void* psFrame, UINT16* pusfLen)
 {
+    if(!psUser || !psFrame || !pusfLen)
+    {
+         #ifdef MT_DBG
+         DEBUG("emtTrans_afn04f10() pointer is null");
+         #endif
+         return MT_ERR_NULL;
+    }
+
+    sMtAfn04F9   *psAfn04F9   = (sMtAfn04F9*)psUser;
+    sMtAfn04F9_f *psAfn04F9_f = (sMtAfn04F9_f*)psFrame;
+    
+    if(MT_TRANS_U2F == eTrans)
+    {
+    memcpy(psAfn04F9_f->Data,psAfn04F9->Data,8);
+    memcpy(psAfn04F9_f->Priority,psAfn04F9->Priority,8);
+    }
+    else if(MT_TRANS_F2U == eTrans)
+    {
+    memcpy(psAfn04F9->Data,psAfn04F9_f->Data,8);
+    memcpy(psAfn04F9->Priority,psAfn04F9_f->Priority,8);
+    
+    }
+    else
+    {
+        return MT_ERR_PARA;
+    }
+   
+
     *pusfLen = sizeof(sMtAfn04F9_f);
     return MT_OK;
+}
+/*****************************************************************************
+ 函 数 名  : emtTrans_afn04f9
+ 功能描述  : F9：终端事件记录配置设置 
+             CMD_AFN_4_F9_TML_EVENT_CFG 
+             CMD_AFN_A_F9_TML_EVENT_CFG
+ 输入参数  : eMtTrans eTrans  
+             void* psUser     
+             void* psFrame    
+             UINT16* pusfLen  
+ 输出参数  : 无
+ 返 回 值  : 
+ 调用函数  : 
+ 被调函数  : 
+ 
+ 修改历史      :
+  1.日    期   : 2013年8月14日 星期三
+    作    者   : liming
+    修改内容   : 新生成函数
+
+*****************************************************************************/
+eMtErr emtTrans_afn0af9(eMtTrans eTrans,void* psUser, void* psFrame, UINT16* pusfLen)
+{
+    if(!psUser || !psFrame || !pusfLen)
+    {
+         #ifdef MT_DBG
+         DEBUG("emtTrans_afn04f10() pointer is null");
+         #endif
+         return MT_ERR_NULL;
+    }
+
+    sMtAfn0aF9   *psAfn0aF9   = (sMtAfn0aF9*)psUser;
+    sMtAfn0aF9_f *psAfn0aF9_f = (sMtAfn0aF9_f*)psFrame;
+    
+    if(MT_TRANS_U2F == eTrans)
+    {
+    memcpy(psAfn0aF9_f->Data,psAfn0aF9->Data,8);
+    
+    }
+    else if(MT_TRANS_F2U == eTrans)
+    {
+    memcpy(psAfn0aF9->Data,psAfn0aF9_f->Data,8);
+    
+    }
+    else
+    {
+        return MT_ERR_PARA;
+    }
+   
+     printf("sMtAfn0aF9_f is %ld\n",sizeof(sMtAfn0aF9_f));
+    *pusfLen = sizeof(sMtAfn0aF9_f);
+    return MT_OK;
+
+
+}
+
+
+/*****************************************************************************
+ 函 数 名  : emtTrans_afn04f10
+ 功能描述  : F10：终端电能表/交流采样装置配置参数 
+             CMD_AFN_4_F10_TML_POWER_CFG 
+             CMD_AFN_A_F10_TML_POWER_CFG
+ 输入参数  : eMtTrans eTrans  
+             void* psUser     
+             void* psFrame    
+             UINT16* pusfLen  
+ 输出参数  : 无
+ 返 回 值  : 
+ 调用函数  : 
+ 被调函数  : 
+ 
+ 修改历史      :
+  1.日    期   : 2013年8月14日 星期三
+    作    者   : liming
+    修改内容   : 新生成函数
+
+*****************************************************************************/
+eMtErr emtTrans_afn04f10(eMtTrans eTrans,void* psUser, void* psFrame, UINT16* pusfLen)
+{
+    if(!psUser || !psFrame || !pusfLen)
+    {
+         #ifdef MT_DBG
+         DEBUG("emtTrans_afn04f10() pointer is null");
+         #endif
+         return MT_ERR_NULL;
+    }
+   
+    UINT8 i;
+
+    sMtAfn04F10   *psAfn04F10   = (sMtAfn04F10*)psUser;
+    sMtAfn04F10_f *psAfn04F10_f = (sMtAfn04F10_f*)psFrame;
+
+   
+    if(MT_TRANS_U2F == eTrans)
+    {
+        psAfn04F10_f->ucStateInput = 0;
+        psAfn04F10_f->ucStateAttr = 0;
+
+    for(i=0; i<32; i++)
+    {
+        switch(psAfn04F10->aeStateInput[31-i])
+        {
+           case MT_INPUT1_ON:
+            //psAfn04F10_f->ucStateInput = (psAfn04F10_f->ucStateInput | (0x0001<<i));
+            //psAfn04F10_f->ucStateInput = psAfn04F10_f->ucStateInput << 1;
+            psAfn04F10_f->ucStateInput |= (1<<i);
+        
+           break;
+
+           case MT_INPUT1_OFF:
+            //psAfn04F10_f->ucStateInput = (psAfn04F10_f->ucStateInput & 0xFFFE);
+            //psAfn04F10_f->ucStateInput = psAfn04F10_f->ucStateInput << 1;
+             //psAfn04F10_f->ucStateInput = (psAfn04F10_f->ucStateInput &( ~(0x0001<<i)));
+             psAfn04F10_f->ucStateInput &= ~(1<<i);
+        
+           break;
+
+           case MT_INPUT1_UNKOWN:
+        
+           break;
+
+           default:
+
+           break;
+        }
+    }
+    for(i=0; i<32; i++)
+    {
+        switch(psAfn04F10->aeStateAttr[31-i])
+        {/*{{{*/
+           case MT_ATTR1_ON:
+            //psAfn04F10_f->ucStateAttr = (psAfn04F10_f->ucStateAttr | (0x0001<<i));
+            //psAfn04F10_f->ucStateAttr = psAfn04F10_f->ucStateAttr << 1;
+             psAfn04F10_f->ucStateAttr |= (0x0001<<i);
+           break;
+
+           case MT_ATTR1_OFF:
+            //psAfn04F10_f->ucStateAttr = (psAfn04F10_f->ucStateAttr & 0xfffe);
+            //psAfn04F10_f->ucStateAttr = psAfn04F10_f->ucStateAttr << 1;
+             psAfn04F10_f->ucStateAttr &= ~(1<<i);
+
+        
+           break;
+
+           case MT_ATTR1_UNKOWN:
+        
+           break;
+
+           default:
+
+           break;
+        }/*}}}*/
+    }
+    
+    }
+    else if(MT_TRANS_F2U == eTrans)
+    {
+    for(i=0; i<32; i++)
+    {
+        if((psAfn04F10_f->ucStateInput & 0x0001) == 0x0001)
+        {
+            psAfn04F10->aeStateInput[i] = MT_INPUT1_ON;
+        }
+        else 
+        {
+            psAfn04F10->aeStateInput[i] = MT_INPUT1_OFF;
+        }
+        psAfn04F10_f->ucStateInput = psAfn04F10_f->ucStateInput >> 1;
+        
+    }
+
+    for(i=0; i<32; i++)
+    {
+        if((psAfn04F10_f->ucStateAttr & 0x0001) == 0x0001)
+        {
+            psAfn04F10->aeStateAttr[i] = MT_ATTR1_ON;
+        }
+        else 
+        {
+            psAfn04F10->aeStateAttr[i] = MT_ATTR1_OFF;
+        }
+        psAfn04F10_f->ucStateAttr = psAfn04F10_f->ucStateAttr >> 1;
+        
+    }
+
+    }   
+    else
+    {
+        return MT_ERR_PARA;
+    }
+   
+
+    *pusfLen = sizeof(sMtAfn04F10_f);
+    return MT_OK;
+   
+
+
 }     
 
+#if 0
 /*****************************************************************************
  函 数 名  : emtTrans_afn04f10
  功能描述  : F10：终端电能表/交流采样装置配置参数 
@@ -5404,6 +5891,8 @@ eMtErr emtTrans_afn04f10(eMtTrans eTrans,void* psUser, void* psFrame, UINT16* pu
     *pusfLen = sizeof(sMtTmlPowerCfgOne_f)* usCfgNum + sizeof(UINT16);
     return MT_OK;
 }     
+#endif
+
 
 /*****************************************************************************
  函 数 名  : emtTrans_afn04f11
@@ -5513,7 +6002,7 @@ eMtErr emtTrans_afn04f13(eMtTrans eTrans,void* psUser, void* psFrame, UINT16* pu
         return MT_ERR_NULL;
     }
 
-    UINT8 ucNum = 0;
+    //UINT8 ucNum = 0;
     sMtAfn04F13_f * psAfn04F13_f = (sMtAfn04F13_f*)psFrame;
     sMtAfn04F13*    psAfn04F13   = (sMtAfn04F13*)psUser;
   
@@ -5527,28 +6016,31 @@ eMtErr emtTrans_afn04f13(eMtTrans eTrans,void* psUser, void* psFrame, UINT16* pu
         psAfn04F13_f->PortType = psAfn04F13->PortType;
         psAfn04F13_f->Num = psAfn04F13->Num;
 
-	memcpy(psAfn04F13_f->Group,&psAfn04F13->Group,4);
-	memcpy(psAfn04F13_f->sAddress,&psAfn04F13->address,6);
-	memcpy(&psAfn04F13_f->PosLong,&psAfn04F13->PosLong,sizeof(Position));
-	memcpy(&psAfn04F13_f->PosLat,&psAfn04F13->PosLat,sizeof(Position));
+    memcpy(&psAfn04F13_f->Group[0],&psAfn04F13->Group[0],4);
+    memcpy(&psAfn04F13_f->sAddress[0],&psAfn04F13->address[0],6);
+    memcpy(&psAfn04F13_f->PosLong,&psAfn04F13->PosLong,sizeof(Position));
+    memcpy(&psAfn04F13_f->PosLat,&psAfn04F13->PosLat,sizeof(Position));
 
-	
+    
 
     }
     else if(MT_TRANS_F2U == eTrans)
     {
         //ucNum = psAfn04F13_f->ucNum;
-	   psAfn04F13->Type 		= psAfn04F13_f->Type	;
-		psAfn04F13->Nature		= psAfn04F13_f->Nature 	;
-		psAfn04F13->Flag		= psAfn04F13_f->Flag 	;
-		psAfn04F13->Port		= psAfn04F13_f->Port 	;
-		psAfn04F13->PortType	= psAfn04F13_f->PortType;
-		psAfn04F13->Group		= psAfn04F13_f->Group;
-		psAfn04F13->Num		= psAfn04F13_f->Num;
-		memcpy(psAfn04F13_f->sAddress,&psAfn04F13->address,6);
-		memcpy(&psAfn04F13->PosLong,&psAfn04F13_f->PosLong,sizeof(Position));
-		memcpy(&psAfn04F13->PosLat,&psAfn04F13_f->PosLat,sizeof(Position));
-		memcpy(&psAfn04F13->Group,psAfn04F13_f->Group,4);
+       psAfn04F13->Type         = psAfn04F13_f->Type    ;
+        psAfn04F13->Nature      = psAfn04F13_f->Nature  ;
+        psAfn04F13->Flag        = psAfn04F13_f->Flag    ;
+        psAfn04F13->Port        = psAfn04F13_f->Port    ;
+        psAfn04F13->PortType    = psAfn04F13_f->PortType;
+
+        psAfn04F13->Num     = psAfn04F13_f->Num;
+
+        //psAfn04F13->Group     = psAfn04F13_f->Group;
+        memcpy(&psAfn04F13->Group[0], &psAfn04F13_f->Group[0],4);
+        memcpy(&psAfn04F13->address[0],&psAfn04F13_f->sAddress[0],6);
+        memcpy(&psAfn04F13->PosLong,&psAfn04F13_f->PosLong,sizeof(Position));
+        memcpy(&psAfn04F13->PosLat,&psAfn04F13_f->PosLat,sizeof(Position));
+        //memcpy(&psAfn04F13->Group,psAfn04F13_f->Group,4);
 
 
     }
@@ -5556,7 +6048,7 @@ eMtErr emtTrans_afn04f13(eMtTrans eTrans,void* psUser, void* psFrame, UINT16* pu
     {
         return MT_ERR_PARA;
     }
-    printf("sMtAfn04F13_f is %d\n",sizeof(sMtAfn04F13_f));
+    printf("sMtAfn04F13_f is %ld\n",sizeof(sMtAfn04F13_f));
 
     *pusfLen = sizeof(sMtAfn04F13_f);
     return MT_OK;
@@ -5726,10 +6218,10 @@ eMtErr emtTrans_afn04f15(eMtTrans eTrans,void* psUser, void* psFrame, UINT16* pu
         #endif
         return MT_ERR_NULL;
     }
-	UINT8 i=0;
+    UINT8 i=0;
 
-	UINT16 usLen = 0;
-	UINT8  ucM   = 0;
+    UINT16 usLen = 0;
+    UINT8  ucM   = 0;
     
     sMtAfn04F15_f * psAfn04F15_f = (sMtAfn04F15_f*)psFrame;
     sMtAfn04F15*    psAfn04F15   = (sMtAfn04F15*)psUser;
@@ -5737,34 +6229,34 @@ eMtErr emtTrans_afn04f15(eMtTrans eTrans,void* psUser, void* psFrame, UINT16* pu
   
     if(MT_TRANS_U2F == eTrans)
     {
-    	 ucM = psAfn04F15->ucM;
-		psAfn04F15_f->LastTime = psAfn04F15->LastTime;
-		psAfn04F15_f->WayFlag = psAfn04F15->WayFlag;
-		psAfn04F15_f->ucM = psAfn04F15->ucM;
+         ucM = psAfn04F15->ucM;
+        psAfn04F15_f->LastTime = psAfn04F15->LastTime;
+        psAfn04F15_f->WayFlag = psAfn04F15->WayFlag;
+        psAfn04F15_f->ucM = psAfn04F15->ucM;
  
-		emt_trans_YYMMDD(MT_TRANS_U2F,&(psAfn04F15->BeginTime),&(psAfn04F15_f->BeginTime));
-		for(i=0; i<ucM; i++)
-		{
-			emt_trans_HHmm(MT_TRANS_U2F,&(psAfn04F15->sTime[i].sBegin),&(psAfn04F15_f->sTime[i].sBegin));
-			emt_trans_HHmm(MT_TRANS_U2F,&(psAfn04F15->sTime[i].sEnd),&(psAfn04F15_f->sTime[i].sEnd));
-		}
+        emt_trans_YYMMDD(MT_TRANS_U2F,&(psAfn04F15->BeginTime),&(psAfn04F15_f->BeginTime));
+        for(i=0; i<ucM; i++)
+        {
+            emt_trans_HHmm(MT_TRANS_U2F,&(psAfn04F15->sTime[i].sBegin),&(psAfn04F15_f->sTime[i].sBegin));
+            emt_trans_HHmm(MT_TRANS_U2F,&(psAfn04F15->sTime[i].sEnd),&(psAfn04F15_f->sTime[i].sEnd));
+        }
 
 
     }
     else if(MT_TRANS_F2U == eTrans)
     {
 
-    	 ucM = psAfn04F15_f->ucM;
-		psAfn04F15->LastTime = psAfn04F15_f->LastTime;
-		psAfn04F15->WayFlag = psAfn04F15_f->WayFlag ;
-		psAfn04F15->ucM = psAfn04F15_f->ucM;
+         ucM = psAfn04F15_f->ucM;
+        psAfn04F15->LastTime = psAfn04F15_f->LastTime;
+        psAfn04F15->WayFlag = psAfn04F15_f->WayFlag ;
+        psAfn04F15->ucM = psAfn04F15_f->ucM;
  
-		emt_trans_YYMMDD(MT_TRANS_U2F,&(psAfn04F15->BeginTime),&(psAfn04F15_f->BeginTime));
-		for(i=0; i<ucM; i++)
-		{
-			emt_trans_HHmm(MT_TRANS_F2U,&(psAfn04F15->sTime[i].sBegin),&(psAfn04F15_f->sTime[i].sBegin));
-			emt_trans_HHmm(MT_TRANS_F2U,&(psAfn04F15->sTime[i].sEnd),&(psAfn04F15_f->sTime[i].sEnd));
-		}
+        emt_trans_YYMMDD(MT_TRANS_U2F,&(psAfn04F15->BeginTime),&(psAfn04F15_f->BeginTime));
+        for(i=0; i<ucM; i++)
+        {
+            emt_trans_HHmm(MT_TRANS_F2U,&(psAfn04F15->sTime[i].sBegin),&(psAfn04F15_f->sTime[i].sBegin));
+            emt_trans_HHmm(MT_TRANS_F2U,&(psAfn04F15->sTime[i].sEnd),&(psAfn04F15_f->sTime[i].sEnd));
+        }
     }
     else
     {
@@ -5773,7 +6265,7 @@ eMtErr emtTrans_afn04f15(eMtTrans eTrans,void* psUser, void* psFrame, UINT16* pu
    usLen = ucM *sizeof(sMtBeginCtrlEnd_f) +7;
    printf("usLen is %d\n",usLen);
 
-   printf("sMtBeginCtrlEnd is  %d\n",sizeof(sMtBeginCtrlEnd_f));
+   printf("sMtBeginCtrlEnd is  %ld\n",sizeof(sMtBeginCtrlEnd_f));
 
     *pusfLen = usLen;
     return MT_OK;
@@ -8649,11 +9141,12 @@ eMtErr emtTrans_afn09f1(eMtTrans eTrans,void* psUser, void* psFrame, UINT16* pus
   
     if(MT_TRANS_U2F == eTrans)
     {
+#if 0
         memcpy(psF->ucFactoryID, psU->ucFactoryID, 4);
         memcpy(psF->ucDeviceID, psU->ucDeviceID, 8);
         memcpy(psF->ucSoftwareID, psU->ucSoftwareID, 4);
         memcpy(psF->ucInfoCodeCap, psU->ucInfoCodeCap, 11);
-        memcpy(psF->ucProtolID, psU->ucProtolID, 4);
+        //memcpy(psF->ucProtolID, psU->ucProtolID, 4);
         memcpy(psF->ucHardWareID, psU->ucHardWareID, 4);
         eRet = emt_trans_YYMMDD(eTrans, &(psU->sDateSoftware), &(psF->sDateSoftware));
         if(MT_OK != eRet)
@@ -8672,14 +9165,62 @@ eMtErr emtTrans_afn09f1(eMtTrans eTrans,void* psUser, void* psFrame, UINT16* pus
             #endif
             return eRet;
         }
+#endif
+
+        memcpy(psF->ucFactoryID, psU->ucFactoryID, 4);
+    memcpy(psF->ucDeviceID, psU->ucDeviceID, 8);
+    memcpy(psF->ucSoftwareID, psU->ucSoftwareID, 8);
+    eRet = emt_trans_YYMMDD(eTrans, &(psU->sDateSoftware), &(psF->sDateSoftware));
+    if(MT_OK != eRet)
+    {
+            #ifdef MT_DBG
+        DEBUG("emtTrans_afn09f1() emt_trans_YYMMDD() error = %d", eRet);
+            #endif
+            return eRet;
+    }   
+    memcpy(psF->ucInfoCodeCap, psU->ucInfoCodeCap, 16);
+
+
+
+    memcpy(psF->ucHardWareID, psU->ucHardWareID, 8);
+    eRet = emt_trans_YYMMDD(eTrans, &(psU->sDateHardware), &(psF->sDateHardware));
+    if(MT_OK != eRet)
+    {
+        #ifdef MT_DBG
+        DEBUG("emtTrans_afn09f1() emt_trans_YYMMDD() error = %d", eRet);
+        #endif
+        return eRet;
+    }
+    
+    
+    memcpy(psF->ucRemoteID, psU->ucRemoteID, 8);
+    eRet = emt_trans_YYMMDD(eTrans, &(psU->sRemote), &(psF->sRemote));
+    if(MT_OK != eRet)
+    {
+        #ifdef MT_DBG
+        DEBUG("emtTrans_afn09f1() emt_trans_YYMMDD() error = %d", eRet);
+        #endif
+        return eRet;
+    }
+    memcpy(psF->ucLocalID, psU->ucLocalID, 8);
+    eRet = emt_trans_YYMMDD(eTrans, &(psU->sLocal), &(psF->sLocal));
+    if(MT_OK != eRet)
+    {
+        #ifdef MT_DBG
+        DEBUG("emtTrans_afn09f1() emt_trans_YYMMDD() error = %d", eRet);
+        #endif
+        return eRet;
+    }
+
     }
     else if(MT_TRANS_F2U == eTrans)
     {
+#if 0
         memcpy(psU->ucFactoryID, psF->ucFactoryID, 4);
         memcpy(psU->ucDeviceID, psF->ucDeviceID, 8);
         memcpy(psU->ucSoftwareID, psF->ucSoftwareID, 4);
         memcpy(psU->ucInfoCodeCap, psF->ucInfoCodeCap, 11);
-        memcpy(psU->ucProtolID, psF->ucProtolID, 4);
+       // memcpy(psU->ucProtolID, psF->ucProtolID, 4);
         memcpy(psU->ucHardWareID, psF->ucHardWareID, 4);
         eRet = emt_trans_YYMMDD(eTrans, &(psU->sDateSoftware), &(psF->sDateSoftware));
         if(MT_OK != eRet)
@@ -8698,6 +9239,58 @@ eMtErr emtTrans_afn09f1(eMtTrans eTrans,void* psUser, void* psFrame, UINT16* pus
             #endif
             return eRet;
         }
+#endif
+    memcpy(psU->ucFactoryID, psF->ucFactoryID, 4);
+    memcpy(psU->ucDeviceID, psF->ucDeviceID, 8);
+    memcpy(psU->ucSoftwareID, psF->ucSoftwareID, 8);
+    
+    
+    eRet = emt_trans_YYMMDD(eTrans, &(psU->sDateSoftware), &(psF->sDateSoftware));
+    if(MT_OK != eRet)
+    {
+        #ifdef MT_DBG
+        DEBUG("emtTrans_afn09f1() emt_trans_YYMMDD() error = %d", eRet);
+        #endif
+        return eRet;
+    } 
+    memcpy(psU->ucInfoCodeCap, psF->ucInfoCodeCap, 16);
+    
+    
+    memcpy(psU->ucHardWareID, psF->ucHardWareID, 8);
+    eRet = emt_trans_YYMMDD(eTrans, &(psU->sDateHardware), &(psF->sDateHardware));
+    if(MT_OK != eRet)
+    {
+        #ifdef MT_DBG
+        DEBUG("emtTrans_afn09f1() emt_trans_YYMMDD() error = %d", eRet);
+        #endif
+        return eRet;
+    }
+    
+    memcpy(psU->ucRemoteID, psF->ucRemoteID, 8);
+    eRet = emt_trans_YYMMDD(eTrans, &(psU->sRemote), &(psF->sRemote));
+    if(MT_OK != eRet)
+    {
+        #ifdef MT_DBG
+        DEBUG("emtTrans_afn09f1() emt_trans_YYMMDD() error = %d", eRet);
+        #endif
+        return eRet;
+    }
+    
+    
+    memcpy(psU->ucLocalID, psF->ucLocalID, 8);
+    eRet = emt_trans_YYMMDD(eTrans, &(psU->sLocal), &(psF->sLocal));
+    if(MT_OK != eRet)
+    {
+        #ifdef MT_DBG
+        DEBUG("emtTrans_afn09f1() emt_trans_YYMMDD() error = %d", eRet);
+        #endif
+        return eRet;
+    }
+
+    
+    
+
+    
     }
     else
     {
@@ -8705,6 +9298,7 @@ eMtErr emtTrans_afn09f1(eMtTrans eTrans,void* psUser, void* psFrame, UINT16* pus
     }
 
     *pusfLen = sizeof(sMtAfn09F1_f);
+    printf("*pusflen is %d \n",*pusfLen);
     return MT_OK;
 }
 
@@ -11021,148 +11615,6 @@ eMtErr emtTrans_afn0af39(eMtTrans eTrans,void* psUser, void* psFrame, UINT16* pu
     修改内容   : 新生成函数
 
 *****************************************************************************/
-#if 1
-eMtErr emtTrans_afn0cf01(eMtTrans eTrans,void* psUser, void* psFrame, UINT16* pusfLen)
-{
-    if(!psUser || !psFrame || !pusfLen)
-    {
-        #ifdef MT_DBG
-        DEBUG("emtTrans_afn0cf1() pointer is null");
-        #endif
-        return MT_ERR_NULL;
-    }
-
-    sMtCurAnalog     *psAfn0cF1Header   = (sMtCurAnalog*)psUser;
-    sMtCurAnalog_f   *psAfn0cF1Header_f = (sMtCurAnalog_f*)psFrame;
-    BOOL             bNone        = FALSE;
-    UINT8            num          = 0;
-    UINT8            i            = 0;
-    UINT16           usLen        = 0;
-    UINT16           usLen_f      = 0;
-    eMtErr           eRet         = MT_OK;
-
-    // 帧侧转为用户侧
-    if(MT_TRANS_F2U == eTrans)
-    {
-       
-        printf("帧侧转为用户侧暂不需实现\n");
-    }
-    else if(MT_TRANS_U2F == eTrans)
-    // 用户侧转为帧侧
-    {
-
-        DEBUG("emtTrans_afn0cf1()\n");
-        // sReadTime
-        eRet = emt_trans_YYMMDDhhmm(eTrans, &(psAfn0cF1Header->sReadTime),
-        &(psAfn0cF1Header_f->sReadTime));
-        if(MT_OK != eRet)
-        {
-            #ifdef MT_DBG
-            DEBUG("emtTrans_afn0cf1() trans error %d ", eRet);
-            #endif
-            return eRet;
-        }
-
-        psAfn0cF1Header_f->anaglogNum = psAfn0cF1Header->anaglogNum; 
-        num = psAfn0cF1Header_f->anaglogNum;
-        printf("psAfn0cF1Header_f->anaglogNum:%d\n", psAfn0cF1Header_f->anaglogNum);
-        /*帧侧*/
-        //sMtFmt_XXX_X* fU_f = (sMtFmt_XXX_X*)(psAfn0cF1Header_f->data);
-        sMtFmt_XXX_X* fU_f = (sMtFmt_XXX_X*)(psAfn0cF1Header_f + 1);
-        
-        sMtFmt_sXXX_XXX* fI_f = (sMtFmt_sXXX_XXX*)((UINT8*)fU_f + (sizeof(sMtFmt_XXX_X) * num));
-
-        sMtFmt_sXX_XXXX* fP_f = (sMtFmt_sXX_XXXX*)((UINT8*)fI_f + (sizeof(sMtFmt_sXXX_XXX) * num));
-
-        sMtFmt_sXX_XXXX* fQ_f = (sMtFmt_sXX_XXXX*)((UINT8*)fP_f + (sizeof(sMtFmt_sXX_XXXX) * num));
-
-        sMtFmt_sXXX_X* fPf_f = (sMtFmt_sXXX_X*)((UINT8*)fQ_f + (sizeof(sMtFmt_sXX_XXXX) * num));
-
-        sMtFmt_sXXX_X* fLc_f = (sMtFmt_sXXX_X*)((UINT8*)fPf_f + (sizeof(sMtFmt_sXXX_X) * num));
-
-        for(i = 0; i < psAfn0cF1Header_f->anaglogNum; i++){
-             // fU
-            eRet = emt_trans_XXX_X(eTrans, &(psAfn0cF1Header->data[i].fU), (sMtFmt_XXX_X*)&fU_f[i]);
-            if(MT_OK != eRet)
-            {
-                #ifdef MT_DBG
-                DEBUG("emtTrans_afn0cf1() trans error %d ", eRet);
-                #endif
-                return eRet;
-            }
-            // fI
-            eRet = emt_trans_sXXX_XXX(eTrans, &(psAfn0cF1Header->data[i].fI), (sMtFmt_sXXX_XXX*)&fI_f[i]);
-            if(MT_OK != eRet)
-            {
-                #ifdef MT_DBG
-                DEBUG("emtTrans_afn0cf25() trans error %d ", eRet);
-                #endif
-                return eRet;
-            }
-            printf("fI:%f\n", psAfn0cF1Header->data[i].fI);
-            printf("fU:%f\n", psAfn0cF1Header->data[i].fU);
-            // fp
-            eRet = emt_trans_sXX_XXXX(eTrans, &(psAfn0cF1Header->data[i].fP), (sMtFmt_sXX_XXXX*)&fP_f[i]);
-            if(MT_OK != eRet)
-            {
-                #ifdef MT_DBG
-                DEBUG("emtTrans_afn0cf1() trans error %d ", eRet);
-                #endif
-                return eRet;
-            }
-            printf("fP:%f\n", psAfn0cF1Header->data[i].fP);
-            // fQ
-            eRet = emt_trans_sXX_XXXX(eTrans, &(psAfn0cF1Header->data[i].fQ), (sMtFmt_sXX_XXXX*)&fQ_f[i]);
-            if(MT_OK != eRet)
-            {
-                #ifdef MT_DBG
-                DEBUG("emtTrans_afn0cf1() trans error %d ", eRet);
-                #endif
-                return eRet;
-            }
-            printf("fQ:%f\n", psAfn0cF1Header->data[i].fQ);
-            // Pf
-            eRet = emt_trans_sXXX_X(eTrans, &(psAfn0cF1Header->data[i].fPf), (sMtFmt_sXX_XXXX*)&fPf_f[i]);
-            if(MT_OK != eRet)
-            {
-                #ifdef MT_DBG
-                DEBUG("emtTrans_afn0cf1() trans error %d ", eRet);
-                #endif
-                return eRet;
-            }
-            printf("fPf:%f\n", psAfn0cF1Header->data[i].fPf);
-            // fLc
-            eRet = emt_trans_sXXX_X(eTrans, &(psAfn0cF1Header->data[i].fLc), (sMtFmt_sXXX_X*)&fLc_f[i]);
-            if(MT_OK != eRet)
-            {
-                #ifdef MT_DBG
-                DEBUG("emtTrans_afn0cf1() trans error %d ", eRet);
-                #endif
-                return eRet;
-            }
-            printf("fLc:%f\n", psAfn0cF1Header->data[i].fLc);
-     
-       }
-    }
-    else
-    {
-        #ifdef MT_DBG
-        DEBUG("emtTrans_afn0cf1() para error!");
-        #endif
-        return MT_ERR_PARA;
-    }
-
-    // 计算在帧侧的字节长度
-    *pusfLen = sizeof(sMtYYMMDDhhmm_f) + 1 + (sizeof(sMtFmt_sXX_XXXX) 
-        + sizeof(sMtFmt_sXX_XXXX) + sizeof(sMtFmt_sXXX_X)
-         + sizeof(sMtFmt_XXX_X)
-          + sizeof(sMtFmt_sXXX_XXX) + sizeof(sMtFmt_sXXX_X)
-         ) * psAfn0cF1Header->anaglogNum;
-    printf("pusfLen:%d\n",*pusfLen);
-
-    return MT_OK;
-}
-#else
 eMtErr emtTrans_afn0cf01(eMtTrans eTrans,void* psUser, void* psFrame, UINT16* pusfLen)
 {
     if(!psUser || !psFrame || !pusfLen)
@@ -11174,6 +11626,390 @@ eMtErr emtTrans_afn0cf01(eMtTrans eTrans,void* psUser, void* psFrame, UINT16* pu
     }
 
     sMtAfn0cF1     *psAfn0cF1   = (sMtAfn0cF1*)psUser;
+    sMtAfn0cF1_head_f *psAfn0cF1_f = (sMtAfn0cF1_head_f*)psFrame;
+    sMtAfn0cF1_p0_f   *psAfn0cF1_p0_f = NULL;
+    sMtAfn0cF1_pn_f   *psAfn0cF1_pn_f = NULL;
+    //sMtAfn0cF1_f   *psAfn0cF1_f = (sMtAfn0cF1_f*)psFrame;
+    BOOL             bNone        = FALSE;
+    UINT8            i            = 0;
+    UINT8               *Frame = NULL;
+    UINT16           usLen        = 0;
+    eMtErr           eRet         = MT_OK;
+
+    Frame = psFrame + sizeof(sMtAfn0cF1_head_f);
+    // 帧侧转为用户侧
+    if(MT_TRANS_F2U == eTrans)
+    {
+        usLen = sizeof(sMtYYMMDDhhmm_f);
+    bNone = bmt_is_none((UINT8*)&(psAfn0cF1_f->sReadTime), usLen);
+    if(TRUE != bNone)
+    {
+
+    eRet = emt_trans_YYMMDDhhmm(eTrans, &(psAfn0cF1->sReadTime),&(psAfn0cF1_f->sReadTime));
+
+    if(MT_OK != eRet)
+    {
+        #ifdef MT_DBG
+        DEBUG("emtTrans_afn0cf1() trans error %d ", eRet);
+        #endif
+        return eRet;
+    }
+    }
+    psAfn0cF1->anaglogNum = psAfn0cF1_f->anaglogNum;
+
+
+    if(psAfn0cF1->anaglogNum == 1)
+    {
+        psAfn0cF1_pn_f = (sMtAfn0cF1_pn_f *)Frame;
+
+        //Fu
+        usLen = sizeof(sMtFmt_XXX_X);
+        bNone = bmt_is_none((UINT8*)&(psAfn0cF1_pn_f->fU), usLen);
+        if(TRUE != bNone)
+        {
+            eRet = emt_trans_XXX_X(eTrans, &(psAfn0cF1->fU[0]),
+            &(psAfn0cF1_pn_f->fU));
+            if(MT_OK != eRet)
+            {
+                #ifdef MT_DBG
+                DEBUG("emtTrans_afn0cf1() trans error %d ", eRet);
+                #endif
+                return eRet;
+            }
+        }
+        // fI
+            usLen = sizeof(sMtFmt_sXXX_XXX);
+            bNone = bmt_is_none((UINT8*)&(psAfn0cF1_pn_f->fI), usLen);
+            if(TRUE != bNone)
+            {
+                eRet = emt_trans_sXXX_XXX(eTrans, &(psAfn0cF1->fI[0]),
+                &(psAfn0cF1_pn_f->fI));
+                if(MT_OK != eRet)
+                {
+                    #ifdef MT_DBG
+                    DEBUG("emtTrans_afn0cf1() trans error %d ", eRet);
+                    #endif
+                    return eRet;
+                }
+            }
+
+            // fp
+            usLen = sizeof(sMtFmt_sXX_XXXX);
+            bNone = bmt_is_none((UINT8*)&(psAfn0cF1_pn_f->fP), usLen);
+            if(TRUE != bNone)
+            {
+
+                eRet = emt_trans_sXX_XXXX(eTrans, &(psAfn0cF1->fP[0]),
+                &(psAfn0cF1_pn_f->fP));
+
+                if(MT_OK != eRet)
+                {
+                    #ifdef MT_DBG
+                    DEBUG("emtTrans_afn0cf25() trans error %d ", eRet);
+                    #endif
+                    return eRet;
+                }
+            }
+
+            // fQ
+            bNone = bmt_is_none((UINT8*)&(psAfn0cF1_pn_f->fQ), usLen);
+            if(TRUE != bNone)
+            {
+                eRet = emt_trans_sXX_XXXX(eTrans, &(psAfn0cF1->fQ[0]),
+                &(psAfn0cF1_pn_f->fQ));
+                if(MT_OK != eRet)
+                {
+                    #ifdef MT_DBG
+                    DEBUG("emtTrans_afn0cf1() trans error %d ", eRet);
+                    #endif
+                    return eRet;
+                }
+            }
+            // fPf
+            usLen = sizeof(sMtFmt_sXXX_X);
+            bNone = bmt_is_none((UINT8*)&(psAfn0cF1_pn_f->fPf), usLen);
+            if(TRUE != bNone)
+            {
+                eRet = emt_trans_sXXX_X(eTrans, &(psAfn0cF1->fPf[0]),
+                &(psAfn0cF1_pn_f->fPf));
+                if(MT_OK != eRet)
+                {
+                    #ifdef MT_DBG
+                    DEBUG("emtTrans_afn0cf25() trans error %d ", eRet);
+                    #endif
+                    return eRet;
+                }
+            }
+            // fLc
+                usLen = sizeof(sMtFmt_sXXX_X);
+                bNone = bmt_is_none((UINT8*)&(psAfn0cF1_pn_f->fLc), usLen);
+                if(TRUE != bNone)
+                {
+                    eRet = emt_trans_sXXX_X(eTrans, &(psAfn0cF1->fLc[0]),
+                    &(psAfn0cF1_pn_f->fLc));
+                    if(MT_OK != eRet)
+                    {
+                        #ifdef MT_DBG
+                        DEBUG("emtTrans_afn0cf1() trans error %d ", eRet);
+                        #endif
+                        return eRet;
+                    }
+                }
+
+                //开关灯状态
+                psAfn0cF1->state = psAfn0cF1_pn_f->state;
+
+                //当前视在功率 fs
+                bNone = bmt_is_none((UINT8*)&(psAfn0cF1_pn_f->fS), usLen);
+                if(TRUE != bNone)
+                {
+                    eRet = emt_trans_sXX_XXXX(eTrans, &(psAfn0cF1->fS[0]),
+                    &(psAfn0cF1_pn_f->fS));
+                    if(MT_OK != eRet)
+                    {
+                        #ifdef MT_DBG
+                        DEBUG("emtTrans_afn0cf1() trans error %d ", eRet);
+                        #endif
+                        return eRet;
+                    }
+                }
+
+                //累计开灯时间
+                eRet = emt_trans_XXXXX_X(eTrans, &(psAfn0cF1->Time),&(psAfn0cF1_pn_f->Time));
+
+                //漏电流
+                eRet =emt_trans_XXXX(eTrans, &(psAfn0cF1->Lc[0]),&(psAfn0cF1_pn_f->Lc));
+                //有功能量寄存器
+                eRet = emt_trans_XXXXX_X(eTrans, &(psAfn0cF1->EP[0]),&(psAfn0cF1_pn_f->EP));
+
+                //正向有功能量寄存器
+                eRet = emt_trans_XXXXX_X(eTrans, &(psAfn0cF1->PosEP[0]),&(psAfn0cF1_pn_f->PosEP));
+                //反向有功能量寄存器
+                eRet = emt_trans_XXXXX_X(eTrans, &(psAfn0cF1->NegEP[0]),&(psAfn0cF1_pn_f->NegEP));
+                //无功能量寄存器
+                eRet = emt_trans_XXXXX_X(eTrans, &(psAfn0cF1->EQ[0]),&(psAfn0cF1_pn_f->EQ));
+
+                //正向无功能量寄存器
+                eRet = emt_trans_XXXXX_X(eTrans, &(psAfn0cF1->PosEQ[0]),&(psAfn0cF1_pn_f->PosEQ));
+                //反向无功能量寄存器
+                eRet = emt_trans_XXXXX_X(eTrans, &(psAfn0cF1->NegEQ[0]),&(psAfn0cF1_pn_f->NegEQ));
+                //视在能量寄存器
+                eRet = emt_trans_XXXXX_X(eTrans, &(psAfn0cF1->ES[0]),&(psAfn0cF1_pn_f->ES));
+
+
+                *pusfLen = 7 + sizeof(sMtFmt_XXX_X)+sizeof(sMtFmt_sXXX_XXX)+sizeof(sMtFmt_XXXX) + \
+                        sizeof(sMtFmt_XXXXX_X)*8 + 3*sizeof(sMtFmt_sXX_XXXX)+2*sizeof(sMtFmt_sXXX_X);
+
+
+    }
+    else if(psAfn0cF1->anaglogNum == 4)
+    {
+        psAfn0cF1_p0_f = (sMtAfn0cF1_p0_f *)Frame;
+        for(i=0; i<psAfn0cF1->anaglogNum; i++)
+        {
+                //终端停上电
+                psAfn0cF1->TPower[i] = psAfn0cF1_p0_f->TPower[i];
+                // 当前电压        XXX.X
+                eRet = emt_trans_XXX_X(eTrans, &(psAfn0cF1->fU[i]),&(psAfn0cF1_p0_f->fU[i]));
+
+                 // 当前电流     (A)  (+/-)XXX.XXX
+                eRet = emt_trans_sXXX_XXX(eTrans, &(psAfn0cF1->fI[i]),&(psAfn0cF1_p0_f->fI[i]));
+
+                // 当前有功功率  (KW) (+/-)XX.XXXX
+                eRet = emt_trans_sXX_XXXX(eTrans, &(psAfn0cF1->fP[0]),&(psAfn0cF1_p0_f->fP[i]));
+
+                // 当前无功功率  (KW) (+/-)XX.XXXX
+                eRet = emt_trans_sXX_XXXX(eTrans, &(psAfn0cF1->fQ[i]),&(psAfn0cF1_p0_f->fQ[i]));
+
+
+                // 当前功率因数  (%)  (+/-)XXX.X
+                eRet = emt_trans_sXXX_X(eTrans, &(psAfn0cF1->fPf[i]),&(psAfn0cF1_p0_f->fPf[i]));
+
+                // 当前光控值  (%)  (+/-)XXX.X
+                eRet = emt_trans_sXXX_X(eTrans, &(psAfn0cF1->fLc[i]),&(psAfn0cF1_p0_f->fLc[i]));
+
+                // 当前视在功率  (%)  (+/-)XXX.X
+                eRet = emt_trans_sXX_XXXX(eTrans, &(psAfn0cF1->fS[i]),&(psAfn0cF1_p0_f->fS[i]));
+
+                //有功能量寄存器
+                eRet = emt_trans_XXXXX_X(eTrans, &(psAfn0cF1->EP[i]),&(psAfn0cF1_p0_f->EP[i]));
+
+                //正向有功能量寄存器
+                eRet = emt_trans_XXXXX_X(eTrans, &(psAfn0cF1->PosEP[i]),&(psAfn0cF1_p0_f->PosEP[i]));
+
+                //反向有功能量寄存器
+                eRet = emt_trans_XXXXX_X(eTrans, &(psAfn0cF1->NegEP[i]),&(psAfn0cF1_p0_f->NegEP[i]));
+
+                //无功能量寄存器
+                eRet = emt_trans_XXXXX_X(eTrans, &(psAfn0cF1->EQ[i]),&(psAfn0cF1_p0_f->EQ[i]));
+
+                //正向无功能量寄存器
+                eRet = emt_trans_XXXXX_X(eTrans, &(psAfn0cF1->PosEQ[i]),&(psAfn0cF1_p0_f->PosEQ[i]));
+                //反向无功能量寄存器
+                eRet = emt_trans_XXXXX_X(eTrans, &(psAfn0cF1->NegEQ[i]),&(psAfn0cF1_p0_f->NegEQ[i]));
+                //视在能量寄存器
+                eRet = emt_trans_XXXXX_X(eTrans, &(psAfn0cF1->ES[i]),&(psAfn0cF1_p0_f->ES[i]));
+        }
+
+         *pusfLen = 6 + (1 + sizeof(sMtFmt_XXXXX_X)*7 + sizeof(sMtFmt_sXX_XXXX)*3 + \
+                 sizeof(sMtFmt_sXXX_X)*2+sizeof(sMtFmt_XXX_X)+sizeof(sMtFmt_sXXX_XXX))*psAfn0cF1->anaglogNum;
+    }
+
+    
+    }
+    else if(MT_TRANS_U2F == eTrans)
+    // 用户侧转为帧侧
+    {
+
+        eRet = emt_trans_YYMMDDhhmm(eTrans, &(psAfn0cF1->sReadTime),&(psAfn0cF1_f->sReadTime));
+
+         psAfn0cF1_f->anaglogNum = psAfn0cF1->anaglogNum;
+         if(psAfn0cF1_f->anaglogNum == 1)
+         {
+                psAfn0cF1_pn_f = (sMtAfn0cF1_pn_f *)Frame;
+
+
+                eRet = emt_trans_XXX_X(eTrans, &(psAfn0cF1->fU[0]),&(psAfn0cF1_pn_f->fU));
+
+                eRet = emt_trans_sXXX_XXX(eTrans, &(psAfn0cF1->fI[0]),&(psAfn0cF1_pn_f->fI));
+
+                eRet = emt_trans_sXX_XXXX(eTrans, &(psAfn0cF1->fP[0]),&(psAfn0cF1_pn_f->fP));
+
+                eRet = emt_trans_sXX_XXXX(eTrans, &(psAfn0cF1->fQ[0]),&(psAfn0cF1_pn_f->fQ));
+
+                eRet = emt_trans_sXXX_X(eTrans, &(psAfn0cF1->fPf[0]),&(psAfn0cF1_pn_f->fPf));
+
+                eRet = emt_trans_sXXX_X(eTrans, &(psAfn0cF1->fLc[0]),&(psAfn0cF1_pn_f->fLc));
+
+                //开关灯状态
+                 psAfn0cF1_pn_f->state =psAfn0cF1->state;
+
+                 //当前视在功率 fs
+                 eRet = emt_trans_sXX_XXXX(eTrans, &(psAfn0cF1->fS[0]),&(psAfn0cF1_pn_f->fS));
+
+                //累计开灯时间
+                eRet = emt_trans_XXXXX_X(eTrans, &(psAfn0cF1->Time),&(psAfn0cF1_pn_f->Time));
+
+
+
+                //漏电流
+                eRet =emt_trans_XXXX(eTrans, &(psAfn0cF1->Lc[0]),&(psAfn0cF1_pn_f->Lc));
+                //有功能量寄存器
+                eRet = emt_trans_XXXXX_X(eTrans, &(psAfn0cF1->EP[0]),&(psAfn0cF1_pn_f->EP));
+
+                //正向有功能量寄存器
+                eRet = emt_trans_XXXXX_X(eTrans, &(psAfn0cF1->PosEP[0]),&(psAfn0cF1_pn_f->PosEP));
+                //反向有功能量寄存器
+                eRet = emt_trans_XXXXX_X(eTrans, &(psAfn0cF1->NegEP[0]),&(psAfn0cF1_pn_f->NegEP));
+                //无功能量寄存器
+                eRet = emt_trans_XXXXX_X(eTrans, &(psAfn0cF1->EQ[0]),&(psAfn0cF1_pn_f->EQ));
+
+                //正向无功能量寄存器
+                eRet = emt_trans_XXXXX_X(eTrans, &(psAfn0cF1->PosEQ[0]),&(psAfn0cF1_pn_f->PosEQ));
+                //反向无功能量寄存器
+                eRet = emt_trans_XXXXX_X(eTrans, &(psAfn0cF1->NegEQ[0]),&(psAfn0cF1_pn_f->NegEQ));
+                //视在能量寄存器
+                eRet = emt_trans_XXXXX_X(eTrans, &(psAfn0cF1->ES[0]),&(psAfn0cF1_pn_f->ES));
+
+
+                *pusfLen = 7 + sizeof(sMtFmt_XXX_X)+sizeof(sMtFmt_sXXX_XXX)+sizeof(sMtFmt_XXXX) + \
+                        sizeof(sMtFmt_XXXXX_X)*8 + 3*sizeof(sMtFmt_sXX_XXXX)+2*sizeof(sMtFmt_sXXX_X);
+
+
+
+         }
+         else
+         {
+             psAfn0cF1_p0_f = (sMtAfn0cF1_p0_f *)Frame;
+             for(i=0; i<psAfn0cF1->anaglogNum; i++)
+            {
+                    //终端停上电
+                    psAfn0cF1_p0_f->TPower[i] = psAfn0cF1->TPower[i];
+                    // 当前电压        XXX.X
+                    eRet = emt_trans_XXX_X(eTrans, &(psAfn0cF1->fU[i]),&(psAfn0cF1_p0_f->fU[i]));
+
+                     // 当前电流     (A)  (+/-)XXX.XXX
+                    eRet = emt_trans_sXXX_XXX(eTrans, &(psAfn0cF1->fI[i]),&(psAfn0cF1_p0_f->fI[i]));
+
+                    // 当前有功功率  (KW) (+/-)XX.XXXX
+                    eRet = emt_trans_sXX_XXXX(eTrans, &(psAfn0cF1->fP[i]),&(psAfn0cF1_p0_f->fP[i]));
+
+                    // 当前无功功率  (KW) (+/-)XX.XXXX
+                    eRet = emt_trans_sXX_XXXX(eTrans, &(psAfn0cF1->fQ[i]),&(psAfn0cF1_p0_f->fQ[i]));
+
+
+                    // 当前功率因数  (%)  (+/-)XXX.X
+                    eRet = emt_trans_sXXX_X(eTrans, &(psAfn0cF1->fPf[i]),&(psAfn0cF1_p0_f->fPf[i]));
+
+                    // 当前光控值  (%)  (+/-)XXX.X
+                    eRet = emt_trans_sXXX_X(eTrans, &(psAfn0cF1->fLc[i]),&(psAfn0cF1_p0_f->fLc[i]));
+
+                    // 当前视在功率  (%)  (+/-)XXX.X
+                    eRet = emt_trans_sXX_XXXX(eTrans, &(psAfn0cF1->fS[i]),&(psAfn0cF1_p0_f->fS[i]));
+
+                    //有功能量寄存器
+                    eRet = emt_trans_XXXXX_X(eTrans, &(psAfn0cF1->EP[i]),&(psAfn0cF1_p0_f->EP[i]));
+
+                    //正向有功能量寄存器
+                    eRet = emt_trans_XXXXX_X(eTrans, &(psAfn0cF1->PosEP[i]),&(psAfn0cF1_p0_f->PosEP[i]));
+
+                    //反向有功能量寄存器
+                    eRet = emt_trans_XXXXX_X(eTrans, &(psAfn0cF1->NegEP[i]),&(psAfn0cF1_p0_f->NegEP[i]));
+
+                    //无功能量寄存器
+                    eRet = emt_trans_XXXXX_X(eTrans, &(psAfn0cF1->EQ[i]),&(psAfn0cF1_p0_f->EQ[i]));
+
+                    //正向无功能量寄存器
+                    eRet = emt_trans_XXXXX_X(eTrans, &(psAfn0cF1->PosEQ[i]),&(psAfn0cF1_p0_f->PosEQ[i]));
+                    //反向无功能量寄存器
+                    eRet = emt_trans_XXXXX_X(eTrans, &(psAfn0cF1->NegEQ[i]),&(psAfn0cF1_p0_f->NegEQ[i]));
+                    //视在能量寄存器
+                    eRet = emt_trans_XXXXX_X(eTrans, &(psAfn0cF1->ES[i]),&(psAfn0cF1_p0_f->ES[i]));
+
+
+            }
+
+             *pusfLen = 6 + ( 1 + sizeof(sMtFmt_XXXXX_X)*7 + sizeof(sMtFmt_sXX_XXXX)*3 + \
+                     sizeof(sMtFmt_sXXX_X)*2+sizeof(sMtFmt_XXX_X)+sizeof(sMtFmt_sXXX_XXX))*psAfn0cF1->anaglogNum;
+
+         }
+    
+
+    }
+    else
+    {
+        #ifdef MT_DBG
+        DEBUG("emtTrans_afn0cf1() para error!");
+        #endif
+        return MT_ERR_PARA;
+    }
+
+    // 计算在帧侧的字节长度
+#if 0
+    *pusfLen = sizeof(sMtYYMMDDhhmm_f) + 1 + (sizeof(sMtFmt_sXX_XXXX) 
+        + sizeof(sMtFmt_sXX_XXXX) + sizeof(sMtFmt_sXXX_X)
+         + sizeof(sMtFmt_XXX_X)
+          + sizeof(sMtFmt_sXXX_XXX) + sizeof(sMtFmt_sXXX_X)
+         ) * psAfn0cF1_f->anaglogNum;
+#endif
+    printf("huyuxiang pusfLen:%d\n",*pusfLen);
+
+    return MT_OK;
+}
+
+#if 0
+eMtErr emtTrans_afn0cf01(eMtTrans eTrans,void* psUser, void* psFrame, UINT16* pusfLen)
+{
+    if(!psUser || !psFrame || !pusfLen)
+    {
+        #ifdef MT_DBG
+        DEBUG("emtTrans_afn0cf1() pointer is null");
+        #endif
+        return MT_ERR_NULL;
+    }
+
+    sMtAfn0cF1     *psAfn0cF1   = (sMtAfn0cF1*)psUser;
+    sMtAfn0cF1_f   *psAfn0cF1_f = (sMtAfn0cF1_f*)psFrame;
     sMtAfn0cF1_f   *psAfn0cF1_f = (sMtAfn0cF1_f*)psFrame;
     BOOL             bNone        = FALSE;
     UINT8            i            = 0;
@@ -11316,11 +12152,12 @@ eMtErr emtTrans_afn0cf01(eMtTrans eTrans,void* psUser, void* psFrame, UINT16* pu
             return eRet;
         }
 
-        psAfn0cF1_f->anaglogNum = psAfn0cF1->anaglogNum;
 
+        psAfn0cF1_f->anaglogNum = psAfn0cF1->anaglogNum;
+        DEBUG("psAfn0cF1_f->anaglogNum:%d\n",psAfn0cF1_f->anaglogNum);
         for(i = 0; i < psAfn0cF1->anaglogNum; i++){
             // fp
-
+            usLen = sizeof(sMtFmt_sXX_XXXX);
             DEBUG("psAfn0cF1->fP[i]:%f\n",psAfn0cF1->fP[i]);
             eRet = emt_trans_sXX_XXXX(eTrans, &(psAfn0cF1->fP[i]),
             &(psAfn0cF1_f->fP[i]));
@@ -11332,13 +12169,12 @@ eMtErr emtTrans_afn0cf01(eMtTrans eTrans,void* psUser, void* psFrame, UINT16* pu
                 #endif
                 return eRet;
             }
-            
        
             // fQ
-   
+            usLen = sizeof(sMtFmt_sXX_XXXX);
             eRet = emt_trans_sXX_XXXX(eTrans, &(psAfn0cF1->fQ[i]), 
             &(psAfn0cF1_f->fQ[i]));
-            DEBUG("psAfn0cF1_f->fQ[i].BCD_1:%d\n",psAfn0cF1_f->fQ[i].BCD_1);
+            DEBUG("psAfn0cF1_f->fP[i].BCD_1:%d\n",psAfn0cF1_f->fQ[i].BCD_1);
             if(MT_OK != eRet)
             {
                 #ifdef MT_DBG
@@ -11346,9 +12182,8 @@ eMtErr emtTrans_afn0cf01(eMtTrans eTrans,void* psUser, void* psFrame, UINT16* pu
                 #endif
                 return eRet;
             }
-            
             // Pf
-       
+            usLen = sizeof(sMtFmt_sXXX_X);
             eRet = emt_trans_sXXX_X(eTrans, &(psAfn0cF1->fPf[i]), 
             &(psAfn0cF1_f->fPf[i]));
             if(MT_OK != eRet)
@@ -11358,8 +12193,9 @@ eMtErr emtTrans_afn0cf01(eMtTrans eTrans,void* psUser, void* psFrame, UINT16* pu
                 #endif
                 return eRet;
             }
-            
+               
             // fU
+            usLen = sizeof(sMtFmt_XXX_X);
             eRet = emt_trans_XXX_X(eTrans, &(psAfn0cF1->fU[i]), 
             &(psAfn0cF1_f->fU[i]));
             if(MT_OK != eRet)
@@ -11368,8 +12204,10 @@ eMtErr emtTrans_afn0cf01(eMtTrans eTrans,void* psUser, void* psFrame, UINT16* pu
                 DEBUG("emtTrans_afn0cf1() trans error %d ", eRet);
                 #endif
                 return eRet;
-            }  
+            }
+               
             // fI
+            usLen = sizeof(sMtFmt_sXXX_XXX);
             eRet = emt_trans_sXXX_XXX(eTrans, &(psAfn0cF1->fI[i]), 
             &(psAfn0cF1_f->fI[i]));
             if(MT_OK != eRet)
@@ -11379,7 +12217,9 @@ eMtErr emtTrans_afn0cf01(eMtTrans eTrans,void* psUser, void* psFrame, UINT16* pu
                 #endif
                 return eRet;
             }
+               
             // fLc
+            usLen = sizeof(sMtFmt_sXXX_X);
             eRet = emt_trans_sXXX_X(eTrans, &(psAfn0cF1->fLc[i]), 
             &(psAfn0cF1_f->fLc[i]));
             if(MT_OK != eRet)
@@ -11410,7 +12250,9 @@ eMtErr emtTrans_afn0cf01(eMtTrans eTrans,void* psUser, void* psFrame, UINT16* pu
 
     return MT_OK;
 }
+/*}}}*//*}}}*/
 #endif
+
 /*****************************************************************************
  函 数 名  : emtTrans_afn0cf02
  功能描述  :  格式转换函数
@@ -11437,7 +12279,6 @@ eMtErr emtTrans_afn0cf02(eMtTrans eTrans,void* psUser, void* psFrame, UINT16* pu
     eRet = emt_trans_YYWWMMDDhhmmss(eTrans, (sMtUserClock *)psUser,(sMtFrmClock *)psFrame);
 
     *pusfLen = sizeof(sMtFrmClock);
-    printf("pusfLen:%d\n",*pusfLen);
     return eRet;
 }
 
@@ -12108,7 +12949,8 @@ eMtErr emtTrans_afn0cf08(eMtTrans eTrans,void* psUser, void* psFrame, UINT16* pu
             }
         }
 
-        for (i = sizeof(UINT32); i < 2 * sizeof(UINT32) * 8;i++)
+        //for (i = sizeof(UINT32); i < 2 * sizeof(UINT32) * 8;i++)
+        for (i = 32; i < 64;i++)
         {
             if(psAfn0cF08->bErc[i] == TRUE)
             {
@@ -33346,7 +34188,6 @@ eMtErr emtTrans_rec_27(eMtTrans eTrans, void* psUser, void* psFrame, UINT16* pus
             #endif
             return eRet;
         }
-
         
         // Pn
         usPn = psF->usPnFlag & 0xFFF;
@@ -36504,42 +37345,42 @@ eMtErr emt_get_ctrl(eMtAFN eAFN, eMtDir eDir, eMtPRM ePRM, BOOL bAcd_Fcb, sMtCtr
             }
             
             break;
-	case AFN_11_LED:
-		 if(MT_DIR_M2S == eDir)
-		{
-		   if(MT_PRM_ACTIVE == ePRM)
-		   {
-			   psCtrl->uFCode.eFcdPrm1 = MT_FCD_RPM1_USER;
-			   psCtrl->bFcv     = TRUE;
-			   psCtrl->bAcd_Fcb = bAcd_Fcb;
-		   }
-		   else
-		   {
-			  #ifdef MT_DBG
-			  DEBUG("emt_get_ctrl() pack logic error");
-			  #endif
-			  return MT_ERR_LOGIC;
-		   }
-		}
-		else
-		{
-			if(MT_PRM_PASIVE == ePRM)
-			{
-				psCtrl->uFCode.eFcdPrm0 = MT_FCD_RPM0_USER;
-				// 该报文没有EC
-				psCtrl->bFcv     = FALSE;
-				psCtrl->bAcd_Fcb = FALSE;
-			}
-			else
-			{
-				#ifdef MT_DBG
-				DEBUG("emt_get_ctrl() pack logic error");
-				#endif
-				return MT_ERR_LOGIC;
-			}
-		}
+    case AFN_11_LED:
+         if(MT_DIR_M2S == eDir)
+        {
+           if(MT_PRM_ACTIVE == ePRM)
+           {
+               psCtrl->uFCode.eFcdPrm1 = MT_FCD_RPM1_USER;
+               psCtrl->bFcv     = TRUE;
+               psCtrl->bAcd_Fcb = bAcd_Fcb;
+           }
+           else
+           {
+              #ifdef MT_DBG
+              DEBUG("emt_get_ctrl() pack logic error");
+              #endif
+              return MT_ERR_LOGIC;
+           }
+        }
+        else
+        {
+            if(MT_PRM_PASIVE == ePRM)
+            {
+                psCtrl->uFCode.eFcdPrm0 = MT_FCD_RPM0_USER;
+                // 该报文没有EC
+                psCtrl->bFcv     = FALSE;
+                psCtrl->bAcd_Fcb = FALSE;
+            }
+            else
+            {
+                #ifdef MT_DBG
+                DEBUG("emt_get_ctrl() pack logic error");
+                #endif
+                return MT_ERR_LOGIC;
+            }
+        }
 
-	break;
+    break;
 
         default:
             return MT_ERR_PARA;
@@ -36667,7 +37508,6 @@ eMtErr emt_trans_tp(eMtTrans eTrans, sMtTP* pTP_u, sMtTP_f* pTP_f)
 
     if(MT_TRANS_U2F == eTrans)
     {   
-        printf("emt_trans_tp :pTP_u->ucPFC:%d\n",pTP_u->ucPFC);
         pTP_f->ucPFC = pTP_u->ucPFC;
         pTP_f->ucPermitDelayMinutes = pTP_u->ucPermitDelayMinutes;
         emt_trans_DDHHmmss(MT_TRANS_U2F, &(pTP_u->sDDHHmmss), &(pTP_f->sDDHHmmss));
@@ -36770,7 +37610,6 @@ eMtErr emt_get_tp(UINT8 ucPFC, sMtTP *psuTp)
     psuTp->ucPermitDelayMinutes = g_ucMtPermitDelayMinutes;
     psuTp->ucPFC = ucPFC;
 
-    printf("emt_get_tp ,psuTp->ucPFC:%d\n",ucPFC);
     return MT_OK;
 }
 
@@ -37509,6 +38348,90 @@ eMtErr emt_trans_sXXX_X(eMtTrans eTrans, float* psUser, sMtFmt05* psFrame)
     return MT_OK;
 }
 
+
+eMtErr emt_trans_XXXXX_X(eMtTrans eTrans, double* psUser, sMtFmt_XXXXX_X* psFrame)
+{
+        if(!psFrame || !psUser)
+        {
+            #ifdef MT_DBG
+            DEBUG("emt_trans_XXXXXX_XX() para pointer is null!");
+            #endif
+            return MT_ERR_NULL;
+        }
+
+        sMtFmt_XXXXX_X      *psFmtXXXXX_X;
+        double              *pdXXXXX_X;
+
+        psFmtXXXXX_X      = (sMtFmt_XXXXX_X *)psFrame;
+        pdXXXXX_X         = (double *)psUser;
+        double dXXXXX_X   = *pdXXXXX_X;
+
+         if(MT_TRANS_U2F == eTrans)
+            {
+                if(dXXXXX_X > 99999.9 || dXXXXX_X < -99999.9)
+                {
+                    return MT_ERR_OUTRNG;
+                }
+                char buf[8] = {0};
+
+                psFmtXXXXX_X->BCD_4     = (UINT8)(dXXXXX_X / nMtPow(4));
+                dXXXXX_X -= psFmtXXXXX_X->BCD_4 * nMtPow(4);
+                psFmtXXXXX_X->BCD_3     = (UINT8)(dXXXXX_X / nMtPow(3));
+                dXXXXX_X -= psFmtXXXXX_X->BCD_3 * nMtPow(3);
+                psFmtXXXXX_X->BCD_2     = (UINT8)(dXXXXX_X / nMtPow(2));
+                dXXXXX_X -= psFmtXXXXX_X->BCD_2 * nMtPow(2);
+                psFmtXXXXX_X->BCD_1     = (UINT8)(dXXXXX_X / nMtPow(1));
+                dXXXXX_X -= psFmtXXXXX_X->BCD_1 * nMtPow(1);
+                psFmtXXXXX_X->BCD_0     = (UINT32)dXXXXX_X % nMtPow(1);
+                dXXXXX_X -= psFmtXXXXX_X->BCD_0;
+                sprintf(buf,"%2.2f",dXXXXX_X);
+                psFmtXXXXX_X->BCD_0_1   =  buf[2] - '0';
+
+             }
+             // \u5e27\u4fa7\u5230\u7528\u6237\u4fa7
+             else if(MT_TRANS_F2U == eTrans)
+             {
+                UINT8    bcd[8];
+                int      i;
+                UINT32   uiInt,uiFrac;
+
+                uiInt = 0;
+                uiFrac = 0;
+
+                bcd[0] = (UINT8)psFmtXXXXX_X->BCD_0_1;
+                bcd[1] = (UINT8)psFmtXXXXX_X->BCD_0;
+                bcd[2] = (UINT8)psFmtXXXXX_X->BCD_1;
+                bcd[3] = (UINT8)psFmtXXXXX_X->BCD_2;
+                bcd[4] = (UINT8)psFmtXXXXX_X->BCD_3;
+                bcd[5] = (UINT8)psFmtXXXXX_X->BCD_4;
+
+                for(i = 0; i < 2; i++)
+                {
+                    uiFrac += bcd[i]*nMtPow(i);
+                }
+
+                for(; i < 6; i++)
+                {
+                    uiInt+= bcd[i]*nMtPow(i - 2);
+                }
+
+                dXXXXX_X = (DOUBLE)uiInt + (DOUBLE)uiFrac/100.0;
+                *pdXXXXX_X = dXXXXX_X;
+             }
+            else
+            {
+                #ifdef MT_DBG
+                DEBUG("emt_trans_XXXXXX_XX() para error!");
+                #endif
+                return MT_ERR_PARA;
+            }
+
+            return MT_OK;
+
+
+
+
+}
 /*****************************************************************************
  函 数 名  : emt_trans_sXX_XX
  功能描述  : 数据格式06 对于表A.7
@@ -37640,8 +38563,8 @@ eMtErr emt_trans_XXX_X(eMtTrans eTrans, float* psUser, sMtFmt07* psFrame)
         if(fXXX_X > 999.9f || fXXX_X < 0.0f)
         {
             #ifdef MT_DBG
-	        DEBUG("emt_trans_XXX_X() fXXX_X out range %f!", fXXX_X);
-	        #endif
+            DEBUG("emt_trans_XXX_X() fXXX_X out range %f!", fXXX_X);
+            #endif
             return MT_ERR_OUTRNG;
         }
 
@@ -39127,7 +40050,7 @@ eMtErr emt_trans_XX_XXXX(eMtTrans eTrans, float* psUser, sMtFmt23_f* psFrame)
     psFmtXX_XXXX  = (sMtFmt_XX_XXXX *)psFrame;
     pfXX_XXXX      = (float *)psUser;
     float fXX_XXXX = *pfXX_XXXX;
-    int sign       = 0; 
+    int sign       = 0;
  
     // 用户侧到帧侧
     if(MT_TRANS_U2F == eTrans)
@@ -39718,7 +40641,6 @@ eMtErr emt_unpack_common(sMtUnpackCommon *psUnpack, UINT8* pInBuf, UINT16 usLen)
         
      // 判断该帧是否是一个有效的帧
     eRet = emtIsValidPack(pInBuf, usLen);
-    #if 0
     if(MT_OK != eRet)
     {
         #ifdef MT_DBG
@@ -39726,7 +40648,7 @@ eMtErr emt_unpack_common(sMtUnpackCommon *psUnpack, UINT8* pInBuf, UINT16 usLen)
         #endif 
         return MT_ERR_PACK;
     }
-    #endif
+
     psHead = (sMtfComHead *)pInBuf;
     memcpy(&(psUnpack->sfComHead), pInBuf, sizeof(sMtfComHead));
 
@@ -40070,7 +40992,6 @@ eMtErr emtLitePack(smtLitePack* psPack, UINT16* pusLen, UINT8* pOutBuf)
     // 如果有 TP
     if(TRUE == bmt_have_tp(eAFN, eDir))  // 除了这种情况的所有报文中
     {
-        printf("bmt_have_tp\n");
         pData = (UINT8*)(pSeq2Cs + usSeq2CsPos);
         psfTp = (sMtTP_f *)pData;
         suTp  = psPack->sTP;
@@ -40191,7 +41112,6 @@ eMtErr emtLiteUnPack(smtLitePack *psUnpack, UINT8* pInBuf, UINT16 usLen)
     DEBUG("function is emtLiteUnPack\r\n");
     // 判断该帧是否是一个有效的帧
     eRet = emtIsValidPack(pInBuf, usLen);
-    #if 0
     if(MT_OK != eRet)
     {
         #ifdef MT_DBG
@@ -40199,7 +41119,7 @@ eMtErr emtLiteUnPack(smtLitePack *psUnpack, UINT8* pInBuf, UINT16 usLen)
         #endif 
         return MT_ERR_PACK;
     }
-    #endif
+
     // 报文头
     psHead = (sMtfComHead *)pInBuf;
 //encry
@@ -40252,7 +41172,9 @@ eMtErr emtLiteUnPack(smtLitePack *psUnpack, UINT8* pInBuf, UINT16 usLen)
     eDir = psUnpack->sCtrl.eDir;
     if(eDir == MT_DIR_S2M)
     {
-         bEc = psUnpack->sCtrl.bAcd_Fcb;
+        // bEc = psUnpack->sCtrl.bAcd_Fcb;
+        //huyuxiang
+            bEc= FALSE;
     }
     else
     {
@@ -40434,6 +41356,7 @@ eMtErr emtLiteUnPack(smtLitePack *psUnpack, UINT8* pInBuf, UINT16 usLen)
         //pucTemp += sizeof(sMtfTp);
     }
 
+    printf("usDataNum is %d\n",usDataNum);
     psUnpack->usDataNum = usDataNum;
     return MT_OK;
 }
@@ -40572,7 +41495,6 @@ eMtErr emtPackLite(smtPack* psPack, UINT16* pusLen, UINT8* pOutBuf)
     bTP = bmt_have_tp(eAFN, eDir);
     if(TRUE == bTP)
     {
-        printf("BTP YES\n");
         (void)emt_get_tp(psPack->sTP.ucPFC, &sTp);
         psLitePack->sTP.sDDHHmmss = sTp.sDDHHmmss;
         psLitePack->sTP.ucPermitDelayMinutes = sTp.ucPermitDelayMinutes;
@@ -40813,7 +41735,7 @@ eMtErr emtUnPackLite(smtPack *psUnpack, UINT8* pInBuf, UINT16 usLen)
     if(TRUE == psUnpack->bTP)
     {
         psUnpack->sTP = pLiteUnpack->sTP;
-         /*PFC校准*/
+        /*PFC校准*/
         {
             g_ucCmPFCRecv  = psUnpack->sTP.ucPFC;
             g_ucCmPFCSend = g_ucCmPFCRecv;
@@ -40833,7 +41755,6 @@ eMtErr emtUnPackLite(smtPack *psUnpack, UINT8* pInBuf, UINT16 usLen)
             if(MT_PN_NONE == usPn)
             {
                 // 合法但不处理, 即没有对应位置的PN
-                DEBUG( "合法但不处理, 即没有对应位置的PN:%d\n",pLiteUnpack->sData[i].sPnFn.usPn[pi]);
             }
             else if(usPn < MT_PN_MIN || usPn > MT_PN_MAX)
             {
@@ -40846,10 +41767,10 @@ eMtErr emtUnPackLite(smtPack *psUnpack, UINT8* pInBuf, UINT16 usLen)
             }
             else
             {
-                #if 1
+                #if 0
                 #ifdef MT_DBG
                 for(fi = 0; fi < 8; fi++)
-                {   ucFn = pLiteUnpack->sData[i].sPnFn.ucFn[fi];                
+                {   ucFn = pUnpackBase->sData[i].sPnFn.ucFn[fi];                
                     DEBUG("emtUnPack() sData[%d].sPnFn.ucFn[%d] = %d",i, fi, ucFn);
                 }
                 #endif
@@ -40860,7 +41781,7 @@ eMtErr emtUnPackLite(smtPack *psUnpack, UINT8* pInBuf, UINT16 usLen)
                     ucFn = pLiteUnpack->sData[i].sPnFn.ucFn[fi];
                     if(MT_FN_NONE == ucFn)
                     {
-                        DEBUG( "这种情况即没有该FN, 合法但不处理");
+                        // 这种情况即没有该FN, 合法但不处理
                     }
                     else if(ucFn < MT_FN_MIN || ucFn > MT_FN_MAX)
                     {
@@ -40903,7 +41824,6 @@ eMtErr emtUnPackLite(smtPack *psUnpack, UINT8* pInBuf, UINT16 usLen)
 
                             memcpy((void*)&(psUnpack->sData[j].uApp), (void*)puApp, sizeof(uMtApp));
                             MT_FREE(puApp);
-                            printf("MT_FREE\n");
                         }
                         else
                         {
@@ -40916,10 +41836,9 @@ eMtErr emtUnPackLite(smtPack *psUnpack, UINT8* pInBuf, UINT16 usLen)
             }
         }
     }
-    printf("usDataNum:%d\n",j);
+
     psUnpack->usDataNum = j;
     MT_FREE(pMemBase);
-    printf("end\n");
     return MT_OK;
 }
 
@@ -42007,7 +42926,6 @@ eMtErr emtUnPackBase(smtPack *psUnpack, UINT8* pInBuf, UINT16 usLen)
 /*****************************************************************************
  函 数 名  : emtPack
  功能描述  : 封装函数(高级接口)
- 实现功能  : (1) 实现离散的信息点与信息类的自动分组
              (2) 自动取当前的时间来合成tp
              (3) 为上层屏蔽相关的参数 如功能码等
              

@@ -8,10 +8,9 @@
 #define PACK_MEM_SIZE  10240
 #define OUT_BUF_LEN    10240
 
-extern UINT8 g_ucPackMem[PACK_MEM_SIZE]; // 测试封装命令的参数的内存空间
-extern UINT8 g_ucOutBuf[OUT_BUF_LEN];
+// extern UINT8 g_ucPackMem[PACK_MEM_SIZE]; // 测试封装命令的参数的内存空间
+// extern UINT8 g_ucOutBuf[OUT_BUF_LEN];
 extern void socket_client_send(UINT8* data, UINT16* len);
-
 
 /*****************************************************************************
  函 数 名  : pack_0001
@@ -32,10 +31,11 @@ eMtErr pack_afn00f01(UINT8 afn)
 {
    eCmErr eRet;
    UINT16 usBuflen = 0;
+   UINT8 g_ucPackMem[PACK_MEM_SIZE];
+   UINT8 g_ucOutBuf[OUT_BUF_LEN];
    sCmPacket *pscmPacket = (sCmPacket*)g_ucPackMem;
 
-
-     /* 2 \u73af\u5883\u521d\u59cb\u5316 */
+    /* 2 \u73af\u5883\u521d\u59cb\u5316 */
     sCmInit  sInit;
     //sInit.eRole = MT_ROLE_MASTER;
     sInit.eRole = MT_ROLE_CONTOR;
@@ -56,6 +56,7 @@ eMtErr pack_afn00f01(UINT8 afn)
     pscmPacket->sAddress.bTeamAddr  = FALSE;
     pscmPacket->sAddress.ucMAddress = 1;
     pscmPacket->bReSend = FALSE;
+    pscmPacket->bActive = FALSE;
 
     pscmPacket->ucCmdNum = 1;
     pscmPacket->sCmdData[0].eCmd  = CMD_AFN_0_F1_ALL_OK;
@@ -77,11 +78,9 @@ eMtErr pack_afn00f01(UINT8 afn)
 
     return MT_OK;
 }
-
-
 /*****************************************************************************
  函 数 名  : pack_afn02f1
- 功能描述  : 测试封装登录命令
+ 功能描述  : 登录命令
  输入参数  : 无
  输出参数  : 无
  返 回 值  : 
@@ -99,9 +98,10 @@ eMtErr pack_afn02f01(void)
    /* 1 定义变量 */ 
    eCmErr eRet;
    UINT16 usBuflen = 0;
+   UINT8 g_ucPackMem[PACK_MEM_SIZE];
+   UINT8 g_ucOutBuf[OUT_BUF_LEN];
    sCmPacket *pscmPacket = (sCmPacket*)g_ucPackMem;
    
-
     /* 2 环境初始化 */
     sCmInit  sInit;
     sInit.eRole = MT_ROLE_CONTOR;
@@ -148,7 +148,7 @@ eMtErr pack_afn02f01(void)
 }
 
 /*****************************************************************************
- 函 数 名  : test_pack_afn02f1
+ 函 数 名  : test_pack_afn02f2
  功能描述  : 登出命令
  输入参数  : 无
  输出参数  : 无
@@ -167,6 +167,8 @@ eMtErr pack_afn02f2(void)
    /* 1 定义变量 */
    eCmErr eRet;
    UINT16 usBuflen = 0;
+   UINT8 g_ucPackMem[PACK_MEM_SIZE];
+   UINT8 g_ucOutBuf[OUT_BUF_LEN];
    sCmPacket *pscmPacket = (sCmPacket*)g_ucPackMem;
 
 
@@ -214,192 +216,6 @@ eMtErr pack_afn02f2(void)
 
 }
 
-
-/*****************************************************************************
- 函 数 名  : pack_afn0cf01_s2m_analog
- 功能描述  : 查询功率
- 输入参数  : 无
- 输出参数  : 无
- 返 回 值  : 
- 调用函数  : 
- 被调函数  : 
- 
- 修改历史      :
-  1.日    期   : 2013年8月14日 星期三
-    作    者   : liming
-    修改内容   : 新生成函数
-
-*****************************************************************************/
-eMtErr pack_afn0cf01_s2m_analog(void)
-{
-    /* 1 定义变量 */ 
-   eCmErr eRet;
-   UINT16 usBuflen = 0;
-   sCmPacket *pscmPacket = (sCmPacket*)g_ucPackMem;
-   
-
-    /* 2 环境初始化 */
-    sCmInit  sInit;
-    //sInit.eRole = MT_ROLE_MASTER;
-    sInit.eRole = MT_ROLE_CONTOR;
-    sInit.ucPermitDelayMinutes = 255;
-    eRet = ecm_3761_init(&sInit);
-    if(eRet != MT_OK)
-    {
-        printf("初始化失败\n");
-        return eRet;
-    }
-    char *str = "1234567890";
-    bCmSetPw(str);
-  
-    
-    /* 3 封装参数 */
-    memcpy(pscmPacket->sAddress.acRegionCode, "1100", 4);
-    pscmPacket->sAddress.usTAddress = 1;
-    pscmPacket->sAddress.bTeamAddr  = FALSE;
-    pscmPacket->sAddress.ucMAddress = 1;
-    pscmPacket->bReSend = FALSE;//timeout_flag_get(CMD_AFN_C_F1_ANALOG_DATA);
-    pscmPacket->bActive = FALSE;
-
-    pscmPacket->ucCmdNum = 1;
-    pscmPacket->sCmdData[0].eCmd  = CMD_ANALOG_DATA;
-    pscmPacket->sCmdData[0].bApp  = TRUE;
-    pscmPacket->sCmdData[0].usPN  = 12;
-
-    // app
-    /*抄读时间*/
-    pscmPacket->sCmdData[0].uAppData.sTmAnalog.sReadTime.ucYY = 18;
-    pscmPacket->sCmdData[0].uAppData.sTmAnalog.sReadTime.ucMM = 3;
-    pscmPacket->sCmdData[0].uAppData.sTmAnalog.sReadTime.ucDD = 21;
-    pscmPacket->sCmdData[0].uAppData.sTmAnalog.sReadTime.ucHH = 16;
-    pscmPacket->sCmdData[0].uAppData.sTmAnalog.sReadTime.ucmm = 12;
-    /*模拟量路数*/
-    pscmPacket->sCmdData[0].uAppData.sTmAnalog.anaglogNum = 2;
-    /*1路当前电压*/
-    pscmPacket->sCmdData[0].uAppData.sTmAnalog.data[0].fU = 123.4;
-    /*1路当前电流*/
-    pscmPacket->sCmdData[0].uAppData.sTmAnalog.data[0].fI = -123.456;
-    /*1路当前有功功率*/
-    pscmPacket->sCmdData[0].uAppData.sTmAnalog.data[0].fP = -12.345;
-    /*1路当前无功功率*/
-    pscmPacket->sCmdData[0].uAppData.sTmAnalog.data[0].fQ = -12.345;
-    /*1路当前功率因数*/
-    pscmPacket->sCmdData[0].uAppData.sTmAnalog.data[0].fPf = -123.4;
-    /*1路当前光控值*/
-    pscmPacket->sCmdData[0].uAppData.sTmAnalog.data[0].fLc = -123.4;
-
-    /*1路当前电压*/
-    pscmPacket->sCmdData[0].uAppData.sTmAnalog.data[1].fU = 123.4;
-    /*1路当前电流*/
-    pscmPacket->sCmdData[0].uAppData.sTmAnalog.data[1].fI = 123.456;
-    /*1路当前有功功率*/
-    pscmPacket->sCmdData[0].uAppData.sTmAnalog.data[1].fP = 12.345;
-    /*1路当前无功功率*/
-    pscmPacket->sCmdData[0].uAppData.sTmAnalog.data[1].fQ = 12.345;
-    /*1路当前功率因数*/
-    pscmPacket->sCmdData[0].uAppData.sTmAnalog.data[1].fPf = 123.4;
-    /*1路当前光控值*/
-    pscmPacket->sCmdData[0].uAppData.sTmAnalog.data[1].fLc = 123.4;
-
-    
-    /* 4 调用函数 */
-    eRet = ecm_3761_pack(pscmPacket, (UINT8*)g_ucOutBuf, &usBuflen);
-    if(eRet != MT_OK)
-    {
-        printf("ecm_3761_pack error %d\n", eRet);
-        return eRet;
-    }
-    
-    /* 5 输出结果 */ 
-    printf_buffer_color((char*)g_ucOutBuf, usBuflen);
-    socket_client_send((UINT8*)(g_ucOutBuf), usBuflen);
-    /*注册重发监测*/
-    //app_timeout_register(CMD_AFN_C_F1_ANALOG_DATA);
-
-    return MT_OK;
-}
-
-
-/*****************************************************************************
- 函 数 名  : pack_afn0cf02_s2m_analog
- 功能描述  : 查询时钟
- 输入参数  : 无
- 输出参数  : 无
- 返 回 值  : 
- 调用函数  : 
- 被调函数  : 
- 
- 修改历史      :
-  1.日    期   : 2013年8月14日 星期三
-    作    者   : liming
-    修改内容   : 新生成函数
-
-*****************************************************************************/
-
-eMtErr pack_afn0cf02_s2m_auto(void)
-{
-   /* 1 定义变量 */ 
-   eCmErr eRet;
-   UINT16 usBuflen = 0;
-   sCmPacket *pscmPacket = (sCmPacket*)g_ucPackMem;
-   
-
-    /* 2 环境初始化 */
-    sCmInit  sInit;
-    //sInit.eRole = MT_ROLE_MASTER;
-    sInit.eRole = MT_ROLE_CONTOR;
-    sInit.ucPermitDelayMinutes = 255;
-    eRet = ecm_3761_init(&sInit);
-    if(eRet != MT_OK)
-    {
-        printf("初始化失败\n");
-        return eRet;
-    }
-    char *str = "1234567890";
-    bCmSetPw(str);
-  
-    
-    /* 3 封装参数 */
-    memcpy(pscmPacket->sAddress.acRegionCode, "1100", 4);
-    pscmPacket->sAddress.usTAddress = 1;
-    pscmPacket->sAddress.bTeamAddr  = FALSE;
-    pscmPacket->sAddress.ucMAddress = 1;
-    pscmPacket->bReSend = FALSE;//timeout_flag_get(CMD_AFN_C_F2_TML_CLOCK);
-    pscmPacket->bActive = FALSE;
-
-    pscmPacket->ucCmdNum = 1;
-    pscmPacket->sCmdData[0].eCmd  = CMD_TML_CLOCK;
-    pscmPacket->sCmdData[0].bApp  = TRUE;
-    pscmPacket->sCmdData[0].usPN  = 0;
-
-    // app
-    pscmPacket->sCmdData[0].uAppData.sTmlClock.ucYear = 18;
-    pscmPacket->sCmdData[0].uAppData.sTmlClock.ucMonth = 3;
-    //pscmPacket->sCmdData[0].uAppData.sTmlClock.ucWeek = 3;
-    pscmPacket->sCmdData[0].uAppData.sTmlClock.ucDay = 21;
-    pscmPacket->sCmdData[0].uAppData.sTmlClock.ucHour = 13;
-    pscmPacket->sCmdData[0].uAppData.sTmlClock.ucMinute = 13;
-    pscmPacket->sCmdData[0].uAppData.sTmlClock.ucSecond = 13;
-   
-    
-    /* 4 调用函数 */
-    eRet = ecm_3761_pack(pscmPacket, (UINT8*)g_ucOutBuf, &usBuflen);
-    if(eRet != MT_OK)
-    {
-        printf("ecm_3761_pack error %d\n", eRet);
-        return eRet;
-    }
-    
-    /* 5 输出结果 */ 
-    printf_buffer_color((char*)g_ucOutBuf, usBuflen);
-    socket_client_send((UINT8*)(g_ucOutBuf), usBuflen);
-    /*注册重发监测*/
-    //app_timeout_register(CMD_AFN_C_F2_TML_CLOCK);
-
-    return MT_OK;
-}
-
-
 /*****************************************************************************
  函 数 名  : pack_afn02f3
  功能描述  : 封装心跳命令
@@ -420,6 +236,8 @@ eMtErr pack_afn02f3(void)
    /* 1 定义变量 */
    eCmErr eRet;
    UINT16 usBuflen = 0;
+   UINT8 g_ucPackMem[PACK_MEM_SIZE];
+   UINT8 g_ucOutBuf[OUT_BUF_LEN];
    sCmPacket *pscmPacket = (sCmPacket*)g_ucPackMem;
 
 
@@ -466,7 +284,175 @@ eMtErr pack_afn02f3(void)
 
 }
 
+/*终端时间标志状态*/
+eMtErr pack_afn0cf08_s2m()
+{
+     eCmErr eRet;
+    UINT16 usBuflen = 0;
+    UINT8 g_ucPackMem[PACK_MEM_SIZE];
+    UINT8 g_ucOutBuf[OUT_BUF_LEN];
+    smtPack *pscmPacket = (smtPack*)g_ucPackMem;
+    INT32 i;
+  
+    /* 2 环境初始化 */
+    sCmInit  sInit;
+    //sInit.eRole = MT_ROLE_CONTOR;
+    sInit.eRole = MT_ROLE_CONTOR;
+    sInit.ucPermitDelayMinutes = 255;
+    eRet = ecm_3761_init(&sInit);
+    if(eRet != MT_OK)
+    {
+        printf("初始化失败\n");
+        return eRet;
+    }
+    
+    /* 3 封装参数 */
+    memcpy(pscmPacket->sAddress.acRegionCode, "1100", 4);
+    pscmPacket->sAddress.usTAddress = 1;
+    pscmPacket->sAddress.bTeamAddr  = FALSE;
+    pscmPacket->sAddress.ucMAddress = 1;
 
+    pscmPacket->eAFN = AFN_0C_ASK1;
+    pscmPacket->eDir = MT_DIR_S2M;
+    pscmPacket->ePRM = MT_PRM_PASIVE;
+    
+    pscmPacket->ePos = MT_POS_SIGLE;
+    pscmPacket->ucSeq = 0;
+    pscmPacket->bAcdFcb = TRUE;
+
+
+    pscmPacket->usDataNum = 1;
+    pscmPacket->sData[0].eCmd  = CMD_AFN_C_F8_TML_EVNT_FLAG;
+    pscmPacket->sData[0].bApp  = TRUE;
+    pscmPacket->sData[0].usPN  = 20;
+
+    for(i = 0;i < MT_AFN0CF08_ERC_MAX;i++)
+    {
+        pscmPacket->sData[0].uApp.sTmlErcSta.bErc[i] = FALSE;
+    }
+    pscmPacket->sData[0].uApp.sTmlErcSta.bErc[5]  = TRUE;
+    pscmPacket->sData[0].uApp.sTmlErcSta.bErc[4] = TRUE;
+    pscmPacket->sData[0].uApp.sTmlErcSta.bErc[3] = TRUE;
+    pscmPacket->sData[0].uApp.sTmlErcSta.bErc[2] = TRUE;
+    pscmPacket->sData[0].uApp.sTmlErcSta.bErc[1] = TRUE;
+    pscmPacket->sData[0].uApp.sTmlErcSta.bErc[0]  = TRUE;
+    
+    pscmPacket->sData[0].uApp.sTmlErcSta.bErc[37]  = TRUE;
+    pscmPacket->sData[0].uApp.sTmlErcSta.bErc[36] = TRUE;
+    pscmPacket->sData[0].uApp.sTmlErcSta.bErc[35] = TRUE;
+    pscmPacket->sData[0].uApp.sTmlErcSta.bErc[34] = TRUE;
+    pscmPacket->sData[0].uApp.sTmlErcSta.bErc[33] = TRUE;
+    pscmPacket->sData[0].uApp.sTmlErcSta.bErc[32]  = TRUE;
+
+    /* 4 调用函数 */
+    eRet = emtPack(pscmPacket, &usBuflen, (UINT8*)g_ucOutBuf);
+    if(eRet != MT_OK)
+    {
+        printf("ecm_3761_pack error %d\n", eRet);
+        return eRet;
+    }
+    
+    /* 5 输出结果 */ 
+    printf_buffer_color((char*)g_ucOutBuf, usBuflen);
+    socket_client_send((UINT8*)(g_ucOutBuf), usBuflen);
+    /*注册重发监测*/
+    app_timeout_register(CMD_AFN_C_F8_TML_EVNT_FLAG);
+    return MT_OK;
+}
+
+/*****************************************************************************
+ 函 数 名  : pack_afn09f1_s2m
+ 功能描述  : 终端版本信息
+ 输入参数  : 无
+ 输出参数  : 无
+ 返 回 值  :
+ 调用函数  :
+ 被调函数  :
+
+ 修改历史      :
+  1.日    期   : 2013年8月14日 星期三
+    作    者   : liming
+    修改内容   : 新生成函数
+
+*****************************************************************************/
+eMtErr pack_afn09f1_s2m()
+{
+   /* 1 定义变量 */ 
+   eCmErr eRet;
+   UINT16 usBuflen = 0;
+   UINT8 g_ucPackMem[PACK_MEM_SIZE];
+   UINT8 g_ucOutBuf[OUT_BUF_LEN];
+   sCmPacket *pscmPacket = (sCmPacket*)g_ucPackMem;
+   
+
+    /* 2 环境初始化 */
+    sCmInit  sInit;
+    //sInit.eRole = MT_ROLE_MASTER;
+    sInit.eRole = MT_ROLE_CONTOR;
+    sInit.ucPermitDelayMinutes = 255;
+    eRet = ecm_3761_init(&sInit);
+    if(eRet != MT_OK)
+    {
+        printf("初始化失败\n");
+        return eRet;
+    }
+    char *str = "1234567890";
+    bCmSetPw(str);
+  
+    
+    /* 3 封装参数 */
+    memcpy(pscmPacket->sAddress.acRegionCode, "1100", 4);
+    pscmPacket->sAddress.usTAddress = 1;
+    pscmPacket->sAddress.bTeamAddr  = FALSE;
+    pscmPacket->sAddress.ucMAddress = 1;
+    pscmPacket->bReSend = FALSE;
+
+    pscmPacket->ucCmdNum = 1;
+    pscmPacket->sCmdData[0].eCmd  = CMD_AFN_TML_VERSION;
+    //pscmPacket->sCmdData[0].eCmd  = CMD_AFN_9_F1_TML_VERSION;
+    pscmPacket->sCmdData[0].bApp  = TRUE;
+    pscmPacket->sCmdData[0].usPN  = 0;
+
+    // app
+    memcpy(pscmPacket->sCmdData[0].uAppData.sTmlVersion.ucFactoryID, "fact", 4);
+    memcpy(pscmPacket->sCmdData[0].uAppData.sTmlVersion.ucDeviceID, "devciced", 8);
+    memcpy(pscmPacket->sCmdData[0].uAppData.sTmlVersion.ucSoftwareID, "soft_dalitek", 8);
+
+    pscmPacket->sCmdData[0].uAppData.sTmlVersion.sDateSoftware.ucYY = 13;
+    pscmPacket->sCmdData[0].uAppData.sTmlVersion.sDateSoftware.ucMM = 8;
+    pscmPacket->sCmdData[0].uAppData.sTmlVersion.sDateSoftware.ucDD = 23;
+
+    memcpy(pscmPacket->sCmdData[0].uAppData.sTmlVersion.ucInfoCodeCap, "123456789987654321", 16);
+    //memcpy(pscmPacket->sCmdData[0].uAppData.sTmlVersion.ucProtolID, "prot", 4);
+   
+    memcpy(pscmPacket->sCmdData[0].uAppData.sTmlVersion.ucHardWareID, "hardware", 8);
+    pscmPacket->sCmdData[0].uAppData.sTmlVersion.sDateHardware.ucYY = 13;
+    pscmPacket->sCmdData[0].uAppData.sTmlVersion.sDateHardware.ucMM = 8;
+    pscmPacket->sCmdData[0].uAppData.sTmlVersion.sDateHardware.ucDD = 23;
+
+    memcpy(pscmPacket->sCmdData[0].uAppData.sTmlVersion.ucRemoteID, "hardware", 8);
+    pscmPacket->sCmdData[0].uAppData.sTmlVersion.sRemote.ucYY = 13;
+    pscmPacket->sCmdData[0].uAppData.sTmlVersion.sRemote.ucMM = 8;
+    pscmPacket->sCmdData[0].uAppData.sTmlVersion.sRemote.ucDD = 23;
+
+    memcpy(pscmPacket->sCmdData[0].uAppData.sTmlVersion.ucLocalID, "hardware", 8);
+    pscmPacket->sCmdData[0].uAppData.sTmlVersion.sLocal.ucYY = 13;
+    pscmPacket->sCmdData[0].uAppData.sTmlVersion.sLocal.ucMM = 8;
+    pscmPacket->sCmdData[0].uAppData.sTmlVersion.sLocal.ucDD = 23;
+
+    /* 4 调用函数 */
+    eRet = ecm_3761_pack(pscmPacket, (UINT8*)g_ucOutBuf, &usBuflen);
+    if(eRet != MT_OK)
+    {
+        printf("ecm_3761_pack error %d\n", eRet);
+        return eRet;
+    }
+    
+    /* 5 输出结果 */ 
+    printf_buffer_color((char*)g_ucOutBuf, usBuflen);
+    socket_client_send((UINT8*)(g_ucOutBuf), usBuflen);
+    return MT_OK;
+}
 /*****************************************************************************
  函 数 名  : test_pack_afn0af1_s2m
  功能描述  : 查询终端上行参数设置
@@ -487,6 +473,8 @@ eMtErr pack_afn0af1_s2m(void)
    /* 1 定义变量 */
    eCmErr eRet;
    UINT16 usBuflen = 0;
+   UINT8 g_ucPackMem[PACK_MEM_SIZE];
+   UINT8 g_ucOutBuf[OUT_BUF_LEN];
    sCmPacket *pscmPacket = (sCmPacket*)g_ucPackMem;
 
 
@@ -510,8 +498,7 @@ eMtErr pack_afn0af1_s2m(void)
     pscmPacket->sAddress.usTAddress = 1;
     pscmPacket->sAddress.bTeamAddr  = FALSE;
     pscmPacket->sAddress.ucMAddress = 1;
-    /*获取重发标志*/
-    pscmPacket->bReSend = FALSE;//timeout_flag_get(CMD_AFN_A_F1_TML_UP_CFG);
+    pscmPacket->bReSend = FALSE;
 
     pscmPacket->ucCmdNum = 1;
     pscmPacket->sCmdData[0].eCmd  = CMD_CFG_TML_UP_Q;
@@ -540,8 +527,6 @@ eMtErr pack_afn0af1_s2m(void)
     /* 5 输出结果 */
     printf_buffer_color((char*)g_ucOutBuf, usBuflen);
     socket_client_send((UINT8*)(g_ucOutBuf), usBuflen);
-    /*注册重发监测*/
-    //app_timeout_register(CMD_AFN_A_F1_TML_UP_CFG);
 
     return MT_OK;
 }
@@ -566,6 +551,8 @@ eMtErr pack_afn0af3_s2m(void)
    /* 1 定义变量 */
    eCmErr eRet;
    UINT16 usBuflen = 0;
+   UINT8 g_ucPackMem[PACK_MEM_SIZE];
+   UINT8 g_ucOutBuf[OUT_BUF_LEN];
    sCmPacket *pscmPacket = (sCmPacket*)g_ucPackMem;
 
 
@@ -589,7 +576,7 @@ eMtErr pack_afn0af3_s2m(void)
     pscmPacket->sAddress.usTAddress = 1;
     pscmPacket->sAddress.bTeamAddr  = FALSE;
     pscmPacket->sAddress.ucMAddress = 1;
-    pscmPacket->bReSend = FALSE;//timeout_flag_get(CMD_AFN_A_F3_MST_IP_PORT);
+    pscmPacket->bReSend = FALSE;
 
     pscmPacket->ucCmdNum = 1;
     pscmPacket->sCmdData[0].eCmd  = CMD_IP_QUEST_0AF3;
@@ -619,8 +606,6 @@ eMtErr pack_afn0af3_s2m(void)
     /* 5 输出结果 */
     printf_buffer_color((char*)g_ucOutBuf, usBuflen);
     socket_client_send((UINT8*)(g_ucOutBuf), usBuflen);
-    /*注册重发监测*/
-    //app_timeout_register(CMD_AFN_A_F3_MST_IP_PORT);
 
     return MT_OK;
 }
@@ -645,6 +630,8 @@ eMtErr pack_afn0af13_s2m(void)
    /* 1 定义变量 */
    eCmErr eRet;
    UINT16 usBuflen = 0;
+   UINT8 g_ucPackMem[PACK_MEM_SIZE];
+   UINT8 g_ucOutBuf[OUT_BUF_LEN];
    sCmPacket *pscmPacket = (sCmPacket*)g_ucPackMem;
 
 
@@ -668,7 +655,7 @@ eMtErr pack_afn0af13_s2m(void)
     pscmPacket->sAddress.usTAddress = 1;
     pscmPacket->sAddress.bTeamAddr  = FALSE;
     pscmPacket->sAddress.ucMAddress = 1;
-    pscmPacket->bReSend = FALSE;//timeout_flag_get(CMD_AFN_A_F13_LED_UP_CFG);
+    pscmPacket->bReSend = FALSE;
 
     pscmPacket->ucCmdNum = 1;
     pscmPacket->sCmdData[0].eCmd  = CMD_LED_0AF13;
@@ -688,7 +675,10 @@ eMtErr pack_afn0af13_s2m(void)
     pscmPacket->sCmdData[0].uAppData.sTmTerminalCfg.address[3] = 0x44;
     pscmPacket->sCmdData[0].uAppData.sTmTerminalCfg.address[4] = 0x55;
     pscmPacket->sCmdData[0].uAppData.sTmTerminalCfg.address[5] = 0x66;
-    pscmPacket->sCmdData[0].uAppData.sTmTerminalCfg.Group = 0x11223344;
+    pscmPacket->sCmdData[0].uAppData.sTmTerminalCfg.Group[0] = 0x11;
+    pscmPacket->sCmdData[0].uAppData.sTmTerminalCfg.Group[1] = 0x22;
+    pscmPacket->sCmdData[0].uAppData.sTmTerminalCfg.Group[2] = 0x33;
+    pscmPacket->sCmdData[0].uAppData.sTmTerminalCfg.Group[3]= 0x44;
     pscmPacket->sCmdData[0].uAppData.sTmTerminalCfg.Num = 0x11;
     pscmPacket->sCmdData[0].uAppData.sTmTerminalCfg.PosLong.Flag = 0x11;
     pscmPacket->sCmdData[0].uAppData.sTmTerminalCfg.PosLong.Degree = 0x11;
@@ -712,8 +702,6 @@ eMtErr pack_afn0af13_s2m(void)
     /* 5 输出结果 */
     printf_buffer_color((char*)g_ucOutBuf, usBuflen);
     socket_client_send((UINT8*)(g_ucOutBuf), usBuflen);
-    /*注册重发监测*/
-    //app_timeout_register(CMD_AFN_A_F13_LED_UP_CFG);
 
     return MT_OK;
 }
@@ -738,6 +726,8 @@ eMtErr pack_afn0af15_s2m(void)
    /* 1 定义变量 */
    eCmErr eRet;
    UINT16 usBuflen = 0;
+   UINT8 g_ucPackMem[PACK_MEM_SIZE];
+   UINT8 g_ucOutBuf[OUT_BUF_LEN];
    sCmPacket *pscmPacket = (sCmPacket*)g_ucPackMem;
 
 
@@ -761,7 +751,7 @@ eMtErr pack_afn0af15_s2m(void)
     pscmPacket->sAddress.usTAddress = 1;
     pscmPacket->sAddress.bTeamAddr  = FALSE;
     pscmPacket->sAddress.ucMAddress = 1;
-    pscmPacket->bReSend = FALSE;//timeout_flag_get(CMD_AFN_A_F15_HAVE_DIFF_EVENT);
+    pscmPacket->bReSend = FALSE;
 
     pscmPacket->ucCmdNum = 1;
     pscmPacket->sCmdData[0].eCmd  = CMD_RELAY_0AF15;
@@ -796,8 +786,344 @@ eMtErr pack_afn0af15_s2m(void)
     /* 5 输出结果 */
     printf_buffer_color((char*)g_ucOutBuf, usBuflen);
     socket_client_send((UINT8*)(g_ucOutBuf), usBuflen);
-    /*注册重发监测*/
-    //app_timeout_register(CMD_AFN_A_F15_HAVE_DIFF_EVENT);
+
+    return MT_OK;
+}
+
+/*****************************************************************************
+ 函 数 名  : pack_afn0cf01_s2m_analog
+ 功能描述  : 查询功率
+ 输入参数  : 无
+ 输出参数  : 无
+ 返 回 值  : 
+ 调用函数  : 
+ 被调函数  : 
+ 
+ 修改历史      :
+  1.日    期   : 2013年8月14日 星期三
+    作    者   : liming
+    修改内容   : 新生成函数
+
+*****************************************************************************/
+eMtErr pack_afn0cf01_s2m_analog()
+{
+       /* 1 定义变量 */ 
+   eCmErr eRet;
+   UINT16 usBuflen = 0;
+   UINT8 g_ucPackMem[PACK_MEM_SIZE];
+   UINT8 g_ucOutBuf[OUT_BUF_LEN];
+   sCmPacket *pscmPacket = (sCmPacket*)g_ucPackMem;
+   
+
+    /* 2 环境初始化 */
+    sCmInit  sInit;
+    //sInit.eRole = MT_ROLE_MASTER;
+    sInit.eRole = MT_ROLE_CONTOR;
+    sInit.ucPermitDelayMinutes = 255;
+    eRet = ecm_3761_init(&sInit);
+    if(eRet != MT_OK)
+    {
+        printf("初始化失败\n");
+        return eRet;
+    }
+    char *str = "1234567890";
+    bCmSetPw(str);
+  
+    
+
+   //pscmPacket = &packdata->pscmPacket;
+
+
+    /* 3 封装参数 */
+    memcpy(pscmPacket->sAddress.acRegionCode, "1100", 4);
+    pscmPacket->sAddress.usTAddress = 1;
+    pscmPacket->sAddress.bTeamAddr  = FALSE;
+    pscmPacket->sAddress.ucMAddress = 1;
+    pscmPacket->bReSend = FALSE;
+    pscmPacket->bActive = FALSE;
+
+    pscmPacket->ucCmdNum = 1;
+    pscmPacket->sCmdData[0].eCmd  = CMD_ANALOG_DATA;
+    pscmPacket->sCmdData[0].bApp  = TRUE;
+    pscmPacket->sCmdData[0].usPN  = 0;
+    //pscmPacket->sCmdData[0].usPN  = 100;
+
+    // app
+    /*抄读时间*/
+    pscmPacket->sCmdData[0].uAppData.sTmAnalog.sReadTime.ucYY = 18;
+    pscmPacket->sCmdData[0].uAppData.sTmAnalog.sReadTime.ucMM = 3;
+    pscmPacket->sCmdData[0].uAppData.sTmAnalog.sReadTime.ucDD = 21;
+    pscmPacket->sCmdData[0].uAppData.sTmAnalog.sReadTime.ucHH = 16;
+    pscmPacket->sCmdData[0].uAppData.sTmAnalog.sReadTime.ucmm = 12;
+    /*模拟量路数*/
+    pscmPacket->sCmdData[0].uAppData.sTmAnalog.anaglogNum = 4;
+    /*1路当前电压*/
+    pscmPacket->sCmdData[0].uAppData.sTmAnalog.fU[0] = 111.2;
+    /*1路当前电压*/
+    pscmPacket->sCmdData[0].uAppData.sTmAnalog.fU[0] = 111.2;
+    /*1路当前电流*/
+    pscmPacket->sCmdData[0].uAppData.sTmAnalog.fI[0] = 222.222;
+    /*1路当前有功功率*/
+    pscmPacket->sCmdData[0].uAppData.sTmAnalog.fP[0] = 33.333;
+    /*1路当前无功功率*/
+    pscmPacket->sCmdData[0].uAppData.sTmAnalog.fQ[0] = 44.444;
+    /*1路当前功率因数*/
+    pscmPacket->sCmdData[0].uAppData.sTmAnalog.fPf[0] = 555.5;
+    /*1路当前光控值*/
+    pscmPacket->sCmdData[0].uAppData.sTmAnalog.fLc[0] = 666.6;
+
+
+#if 1
+    /*终端停上电*/
+    pscmPacket->sCmdData[0].uAppData.sTmAnalog.TPower[0] = 0xFF;
+    pscmPacket->sCmdData[0].uAppData.sTmAnalog.TPower[1] = 0xFF;
+    pscmPacket->sCmdData[0].uAppData.sTmAnalog.TPower[2] = 0xFF;
+    pscmPacket->sCmdData[0].uAppData.sTmAnalog.TPower[3] = 0xFF;
+
+    /*1路当前电压*/
+    pscmPacket->sCmdData[0].uAppData.sTmAnalog.fU[1] = 111.1;
+    /*1路当前电流*/
+    pscmPacket->sCmdData[0].uAppData.sTmAnalog.fI[1] = 222.222;
+    /*1路当前有功功率*/
+    pscmPacket->sCmdData[0].uAppData.sTmAnalog.fP[1] = 33.333;
+    /*1路当前无功功率*/
+    pscmPacket->sCmdData[0].uAppData.sTmAnalog.fQ[1] = 44.444;
+    /*1路当前功率因数*/
+    pscmPacket->sCmdData[0].uAppData.sTmAnalog.fPf[1] = 555.5;
+    /*1路当前光控值*/
+    pscmPacket->sCmdData[0].uAppData.sTmAnalog.fLc[1] = 666.6;
+
+
+    /*1路当前电压*/
+    pscmPacket->sCmdData[0].uAppData.sTmAnalog.fU[2] = 111.1;
+    /*1路当前电流*/
+    pscmPacket->sCmdData[0].uAppData.sTmAnalog.fI[2] = 222.222;
+    /*1路当前有功功率*/
+    pscmPacket->sCmdData[0].uAppData.sTmAnalog.fP[2] = 33.333;
+    /*1路当前无功功率*/
+    pscmPacket->sCmdData[0].uAppData.sTmAnalog.fQ[2] = 44.444;
+    /*1路当前功率因数*/
+    pscmPacket->sCmdData[0].uAppData.sTmAnalog.fPf[2] = 555.5;
+    /*1路当前光控值*/
+    pscmPacket->sCmdData[0].uAppData.sTmAnalog.fLc[2] = 666.6;
+
+
+
+    /*1路当前电压*/
+    pscmPacket->sCmdData[0].uAppData.sTmAnalog.fU[3] = 111.1;
+    /*1路当前电流*/
+    pscmPacket->sCmdData[0].uAppData.sTmAnalog.fI[3] = 222.222;
+    /*1路当前有功功率*/
+    pscmPacket->sCmdData[0].uAppData.sTmAnalog.fP[3] = 33.333;
+    /*1路当前无功功率*/
+    pscmPacket->sCmdData[0].uAppData.sTmAnalog.fQ[3] = 44.444;
+    /*1路当前功率因数*/
+    pscmPacket->sCmdData[0].uAppData.sTmAnalog.fPf[3] = 555.5;
+    /*1路当前光控值*/
+    pscmPacket->sCmdData[0].uAppData.sTmAnalog.fLc[3] = 666.6;
+
+
+/*1路当前电压*/
+pscmPacket->sCmdData[0].uAppData.sTmAnalog.fS[0] = 33.333;
+/*1路当前电流*/
+pscmPacket->sCmdData[0].uAppData.sTmAnalog.EP[0] = 232.323;
+/*1路当前有功功率*/
+pscmPacket->sCmdData[0].uAppData.sTmAnalog.PosEP[0] = 34.3;
+/*1路当前无功功率*/
+pscmPacket->sCmdData[0].uAppData.sTmAnalog.NegEP[0] = 45.4;
+/*1路当前功率因数*/
+pscmPacket->sCmdData[0].uAppData.sTmAnalog.EQ[0] = 565.6;
+/*1路当前光控值*/
+pscmPacket->sCmdData[0].uAppData.sTmAnalog.PosEQ[0] = 676.7;
+/*1路当前光控值*/
+pscmPacket->sCmdData[0].uAppData.sTmAnalog.NegEQ[0] = 676.6;
+/*1路当前功率因数*/
+pscmPacket->sCmdData[0].uAppData.sTmAnalog.ES[0] = 585.8;
+
+
+/*1路当前电压*/
+pscmPacket->sCmdData[0].uAppData.sTmAnalog.fS[1] = 33.333;
+/*1路当前电流*/
+pscmPacket->sCmdData[0].uAppData.sTmAnalog.EP[1] = 232.3;
+/*1路当前有功功率*/
+pscmPacket->sCmdData[0].uAppData.sTmAnalog.PosEP[1] = 34.3;
+/*1路当前无功功率*/
+pscmPacket->sCmdData[0].uAppData.sTmAnalog.NegEP[1] = 45.4;
+/*1路当前功率因数*/
+pscmPacket->sCmdData[0].uAppData.sTmAnalog.EQ[1] = 565.6;
+/*1路当前光控值*/
+pscmPacket->sCmdData[0].uAppData.sTmAnalog.PosEQ[1] = 676.7;
+/*1路当前光控值*/
+pscmPacket->sCmdData[0].uAppData.sTmAnalog.NegEQ[1] = 676.7;
+/*1路当前功率因数*/
+pscmPacket->sCmdData[0].uAppData.sTmAnalog.ES[1] = 585.8;
+
+
+/*1路当前电压*/
+pscmPacket->sCmdData[0].uAppData.sTmAnalog.fS[2] = 33.3;
+/*1路当前电流*/
+pscmPacket->sCmdData[0].uAppData.sTmAnalog.EP[2] = 232.3;
+/*1路当前有功功率*/
+pscmPacket->sCmdData[0].uAppData.sTmAnalog.PosEP[2] = 34.3;
+/*1路当前无功功率*/
+pscmPacket->sCmdData[0].uAppData.sTmAnalog.NegEP[2] = 45.4;
+/*1路当前功率因数*/
+pscmPacket->sCmdData[0].uAppData.sTmAnalog.EQ[2] = 565.6;
+/*1路当前光控值*/
+pscmPacket->sCmdData[0].uAppData.sTmAnalog.PosEQ[2] = 676.7;
+/*1路当前光控值*/
+pscmPacket->sCmdData[0].uAppData.sTmAnalog.NegEQ[2] = 676.7;
+/*1路当前功率因数*/
+pscmPacket->sCmdData[0].uAppData.sTmAnalog.ES[2] = 585.8;
+
+
+/*1路当前电压*/
+pscmPacket->sCmdData[0].uAppData.sTmAnalog.fS[3] = 33.333;
+/*1路当前电流*/
+pscmPacket->sCmdData[0].uAppData.sTmAnalog.EP[3] = 232.3;
+/*1路当前有功功率*/
+pscmPacket->sCmdData[0].uAppData.sTmAnalog.PosEP[3] = 34.3;
+/*1路当前无功功率*/
+pscmPacket->sCmdData[0].uAppData.sTmAnalog.NegEP[3] = 45.4;
+/*1路当前功率因数*/
+pscmPacket->sCmdData[0].uAppData.sTmAnalog.EQ[3] = 565.6;
+/*1路当前光控值*/
+pscmPacket->sCmdData[0].uAppData.sTmAnalog.PosEQ[3] = 676.7;
+/*1路当前光控值*/
+pscmPacket->sCmdData[0].uAppData.sTmAnalog.NegEQ[3] = 676.67;
+/*1路当前功率因数*/
+pscmPacket->sCmdData[0].uAppData.sTmAnalog.ES[3] = 585.8;
+
+#endif
+
+
+#if 1
+    //开关灯状态
+   pscmPacket->sCmdData[0].uAppData.sTmAnalog.state = 0xff;
+    /*1路视在功率*/
+    pscmPacket->sCmdData[0].uAppData.sTmAnalog.fS[0] = 22.222;
+    /*累计开灯时间*/
+    pscmPacket->sCmdData[0].uAppData.sTmAnalog.Time = 444.4;
+
+    /*漏电流*/
+    pscmPacket->sCmdData[0].uAppData.sTmAnalog.Lc[0] = 1234;
+
+    /*1路当前有功能量寄存器 */
+    pscmPacket->sCmdData[0].uAppData.sTmAnalog.EP[0] = 777.7;
+    /*1路正向有功能量寄存器*/
+    pscmPacket->sCmdData[0].uAppData.sTmAnalog.PosEP[0] = 888.8;
+    /*1路反向有功能量寄存器 */
+    pscmPacket->sCmdData[0].uAppData.sTmAnalog.NegEP[0] = 999.9;
+    /*1路无功能量寄存器*/
+    pscmPacket->sCmdData[0].uAppData.sTmAnalog.EQ[0] = 111.1;
+    /*正向无功能量寄存器*/
+    pscmPacket->sCmdData[0].uAppData.sTmAnalog.PosEQ[0] = 222.2;
+    /*反向无功能量寄存器*/
+    pscmPacket->sCmdData[0].uAppData.sTmAnalog.NegEQ[0] = 222.2;
+
+    /*1路视在能量寄存器*/
+    pscmPacket->sCmdData[0].uAppData.sTmAnalog.ES[0] = 333.3;
+
+
+#endif
+
+    /* 4 调用函数 */
+    eRet = ecm_3761_pack(pscmPacket, (UINT8*)g_ucOutBuf, &usBuflen);
+    //eRet = ecm_3761_pack(pscmPacket, (UINT8*)packdata->data, &packdata->length);
+    if(eRet != MT_OK)
+    {
+        printf("ecm_3761_pack error %d\n", eRet);
+        return eRet;
+    }
+    
+    /* 5 输出结果 */ 
+   printf_buffer_color((char*)g_ucOutBuf, usBuflen);
+   socket_client_send((UINT8*)(g_ucOutBuf), usBuflen);
+
+    return MT_OK;
+}
+
+
+/*****************************************************************************
+ 函 数 名  : pack_afn0cf02_s2m_analog
+ 功能描述  : 查询时钟
+ 输入参数  : 无
+ 输出参数  : 无
+ 返 回 值  : 
+ 调用函数  : 
+ 被调函数  : 
+ 
+ 修改历史      :
+  1.日    期   : 2013年8月14日 星期三
+    作    者   : liming
+    修改内容   : 新生成函数
+
+*****************************************************************************/
+
+eMtErr pack_afn0cf02_s2m_auto(void)
+{
+   /* 1 定义变量 */ 
+   eCmErr eRet;
+   UINT16 usBuflen = 0;
+   UINT8 g_ucPackMem[PACK_MEM_SIZE];
+   UINT8 g_ucOutBuf[OUT_BUF_LEN];
+   sCmPacket *pscmPacket = (sCmPacket*)g_ucPackMem;
+   
+
+    /* 2 环境初始化 */
+    sCmInit  sInit;
+    //sInit.eRole = MT_ROLE_MASTER;
+    sInit.eRole = MT_ROLE_CONTOR;
+    sInit.ucPermitDelayMinutes = 255;
+    eRet = ecm_3761_init(&sInit);
+    if(eRet != MT_OK)
+    {
+        printf("初始化失败\n");
+        return eRet;
+    }
+    char *str = "1234567890";
+    bCmSetPw(str);
+  
+    //pscmPacket = &packdata->pscmPacket;
+
+    
+#if 1
+    /* 3 封装参数 */
+    memcpy(pscmPacket->sAddress.acRegionCode, "1100", 4);
+    pscmPacket->sAddress.usTAddress = 1;
+    pscmPacket->sAddress.bTeamAddr  = FALSE;
+    pscmPacket->sAddress.ucMAddress = 1;
+    pscmPacket->bReSend = FALSE;
+    pscmPacket->bActive = FALSE;
+
+    pscmPacket->ucCmdNum = 1;
+    pscmPacket->sCmdData[0].eCmd  = CMD_TML_CLOCK;
+    pscmPacket->sCmdData[0].bApp  = TRUE;
+    pscmPacket->sCmdData[0].usPN  = 0;
+
+    // app
+    pscmPacket->sCmdData[0].uAppData.sTmlClock.ucYear = 18;
+    pscmPacket->sCmdData[0].uAppData.sTmlClock.ucMonth = 3;
+    //pscmPacket->sCmdData[0].uAppData.sTmlClock.ucWeek = 3;
+    pscmPacket->sCmdData[0].uAppData.sTmlClock.ucDay = 21;
+    pscmPacket->sCmdData[0].uAppData.sTmlClock.ucHour = 13;
+    pscmPacket->sCmdData[0].uAppData.sTmlClock.ucMinute = 13;
+    pscmPacket->sCmdData[0].uAppData.sTmlClock.ucSecond = 13;
+   
+#endif
+    /* 4 调用函数 */
+    eRet = ecm_3761_pack(pscmPacket, (UINT8*)g_ucOutBuf, &usBuflen);
+    //eRet = ecm_3761_pack(pscmPacket, (UINT8*)packdata->data, &packdata->length);
+    if(eRet != MT_OK)
+    {
+        printf("ecm_3761_pack error %d\n", eRet);
+        return eRet;
+    }
+    
+    /* 5 输出结果 */ 
+    printf_buffer_color((char*)g_ucOutBuf, usBuflen);
+    socket_client_send((UINT8*)(g_ucOutBuf), usBuflen);
+
 
     return MT_OK;
 }
@@ -821,6 +1147,8 @@ eMtErr pack_afn11hf4_s2m(void)
 {
    eCmErr eRet;
    UINT16 usBuflen = 0;
+   UINT8 g_ucPackMem[PACK_MEM_SIZE];
+   UINT8 g_ucOutBuf[OUT_BUF_LEN];
    sCmPacket *pscmPacket = (sCmPacket*)g_ucPackMem;
 
 
@@ -838,13 +1166,13 @@ eMtErr pack_afn11hf4_s2m(void)
     char *str = "1234567890";
     bCmSetPw(str);
 
-
+    #if 0
      /* 3 \u5c01\u88c5\u53c2\u6570 */
     memcpy(pscmPacket->sAddress.acRegionCode, "1100", 4);
     pscmPacket->sAddress.usTAddress = 1;
     pscmPacket->sAddress.bTeamAddr  = FALSE;
     pscmPacket->sAddress.ucMAddress = 1;
-    pscmPacket->bReSend = FALSE;//timeout_flag_get(CMD_AFN_11_F4);;
+    pscmPacket->bReSend = FALSE;
 
     pscmPacket->ucCmdNum = 1;
     pscmPacket->sCmdData[0].eCmd  = CMD_LED_PARA;
@@ -855,11 +1183,8 @@ eMtErr pack_afn11hf4_s2m(void)
     pscmPacket->sCmdData[0].uAppData.std_11f4.ucCtrlNum= 0x3333;
     pscmPacket->sCmdData[0].uAppData.std_11f4.ucExeNum= 0x4444;
     memcpy(pscmPacket->sCmdData[0].uAppData.std_11f4.addr[0].address,"99999999",8);
+#endif
 
-   // pscmdPacket->sCmdData[0].uAppData.std_11f4.
-
-
-     /* 4 \u8c03\u7528\u51fd\u6570 */
     eRet = ecm_3761_pack(pscmPacket, (UINT8*)g_ucOutBuf, &usBuflen);
     if(eRet != MT_OK)
     {
@@ -867,8 +1192,6 @@ eMtErr pack_afn11hf4_s2m(void)
         return eRet;
     }
 
-    /* 5 \u8f93\u51fa\u7ed3\u679c */
-    printf_buffer_color((char*)g_ucOutBuf, usBuflen);
     socket_client_send((UINT8*)(g_ucOutBuf), usBuflen);
     /*注册重发监测*/
     //app_timeout_register(CMD_AFN_11_F4);
@@ -876,16 +1199,34 @@ eMtErr pack_afn11hf4_s2m(void)
     return MT_OK;
 }
 
-void app_req_handle(sMtData* pSub)
+void app_req_handle(UINT16 eCmd, void* d)
 {
-    printf("app_req_handle, pSub->eCmd:%02X",pSub->eCmd);
-    switch(pSub->eCmd)
+    printf("app_req_handle, pSub->eCmd:%02X",eCmd);
+    switch(eCmd)
     {
+        case CMD_AFN_1_F1_HARD_INIT:
+            afn_1_f1_hard_init_handle();
+        break;
+        case CMD_AFN_1_F2_DATA_INIT:
+            afn_1_f2_data_init_handle();
+        break;
+        case CMD_AFN_1_F3_FACTORY_RESET:
+            afn_1_f3_factory_reset_handle();
+        break;
+        case CMD_AFN_1_F4_PARA_INIT:
+            afn_1_f4_para_init_handle();
+        break;
+        case CMD_AFN_9_F1_TML_VERSION:
+            pack_afn09f1_s2m();
+        break;
         case CMD_AFN_C_F1_ANALOG_DATA:
-            pack_afn0cf01_s2m_analog();
+            pack_afn0cf01_s2m_analog(d);
         break;
         case CMD_AFN_C_F2_TML_CLOCK:
             pack_afn0cf02_s2m_auto();
+        break;
+        case CMD_AFN_C_F8_TML_EVNT_FLAG:
+            pack_afn0cf08_s2m();
         break;
         case CMD_AFN_A_F1_TML_UP_CFG:
             pack_afn0af1_s2m();
@@ -900,22 +1241,27 @@ void app_req_handle(sMtData* pSub)
             pack_afn0af15_s2m();
         break;
         case CMD_AFN_11_F4:
-            pack_afn11hf4_s2m();
+            //pack_afn11hf4_s2m();
+        
         break;
         
+        default:
+            printf("not mactch ecmd\n");
+        break;
     }
 }
 
-void app_test_step(int step, void* data)
+/*登录*/
+eMtErr app_login(void)
 {
-	switch(step)
-	{
-		case 1:
-			pack_afn02f01();
-		break;
-
-	}
+    return pack_afn02f01();
 }
+/*登出*/
+eMtErr app_logout(void)
+{
+    return pack_afn02f2();
+}
+
 
 
 

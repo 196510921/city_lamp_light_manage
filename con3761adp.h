@@ -94,7 +94,9 @@ typedef enum
     /* 查询参数（AFN == 0AH） */ 
     CMD_CFG_TML_UP_Q,               // 查询 终端上行通信口通信参数设置           CMD_AFN_A_F1_TML_UP_CFG
     CMD_IP_QUEST_0AF3,                //主站IP地址和端口
+     CMD_CFG_TML_EVENT,             //查询事件
     CMD_LED_0AF13,                  // 终端电表和路灯控制配置参数
+
     CMD_RELAY_0AF15,               // 继电器输出方案
     CMD_CFG_TML_POWER_Q,            // 查询 终端电能表/交流采样装置配置参数   (命令有参数 sMtTmlPowerCfg_Q)   CMD_AFN_A_F10_TML_POWER_CFG
     CMD_CFG_ASK_1_Q,                // 1类数据配置设置(在终端支持的1类数据配置内) (命令有参数 sMtAsk1Cfg_Q) CMD_AFN_A_F38_CFG_ASK_1
@@ -292,11 +294,13 @@ typedef sMtTotalPowerNone sMcNelcHumit;  // 湿度
 typedef union
 {
     //huyuxiang
-	 sMtAfn04F3  sTmIpPort;       //主站IP地址和端口
+     sMtAfn04F3  sTmIpPort;       //主站IP地址和端口
 
-    sMtAfn04F13 		sTmTerminalCfg;		//终端电能表和路灯控制器配置参数
+    sMtAfn04F13         sTmTerminalCfg;     //终端电能表和路灯控制器配置参数
     sMtHaveDiffEvent stmCtrlWaycfg;    //继电器输出控制方案
     sMtSure         sSure;             // 确认/否认
+    sMtAfn0aF9      sAfn0aF9;         //终端事件记录配置
+    sMtAfn0cF8      sAfn0cF8;         //终端事件记录上报
 
     // 上下行通用
     sCmOneByOne      scmOneByOne;       // 逐条确认与否认             CMD_ONE_BY_ONE
@@ -310,7 +314,6 @@ typedef union
     sMtGopAuto_2     sGoAuto_2;         // 定时上报1类数据任务启动/停止设置   CMD_GO_AUTO_2    CMD_GOP_AUTO_2_Q
 
     // 上行特有 集中器到主站
-
     sMtTmlVersion    sTmlVersion;       // 终端版本信息    CMD_AFN_TML_VERSION
     sMtTmlInputOut   sTmlInputOut;      // 终端支持的输入、输出及通信端口配置 CMD_AFN_TML_INPUT_OUT
     sMtTmlOtherCfg   sTmlOtherCfg;      // 终端支持的其他配置     CMD_TML_OTHER_CFG

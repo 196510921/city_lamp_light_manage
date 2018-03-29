@@ -33,14 +33,15 @@ typedef unsigned int        UINT32;
 
 extern UINT8 g_ucInBuf[OUT_BUF_LEN];
 
-#if 0
-#define SERVER_IP  "172.16.200.1"
-#define SERV_PORT 6666
+#if 1
+#define SERVER_IP  "192.168.1.210"
+#define SERV_PORT 14000
 #else
 // #define SERVER_IP  "101.132.91.12"
 // #define SERV_PORT 14000
-#define SERVER_IP  "192.168.1.177"
-#define SERV_PORT 14000
+#define SERVER_IP  "172.16.200.1"
+#define SERV_PORT 6666
+
 #endif
 
 static int conn_flag = TCP_DISCONNECTED;
@@ -91,7 +92,7 @@ void socket_client_poll(void)
 	{
 		if(get_connect_flag() == TCP_DISCONNECTED){
 			printf("reconnect...\n");
-			//sleep(5);
+			sleep(5);
 			/*reconnect*/ 
 			if(tcp_client_connect() != TCP_CLIENT_SUCCESS)
 				continue;
@@ -148,6 +149,7 @@ static int socket_client_handle(int clientFd, int revent)
 		printf("POLLRDHUP\n");
 		//its a shut down close the socket
 		printf("Client fd:%d disconnected\n", clientFd);
+		set_connect_flag(TCP_DISCONNECTED);
 		return TCP_CLIENT_FAILED;
 	}
 
@@ -178,14 +180,15 @@ static void client_rx_cb(int clientFd)
 
 	byteRead = read(clientFd, clientTcpRxBuf, 2048);
 
+	if(byteRead > 0){
+		printf("client rx, len:%d, data: \n",byteRead);
+		for( i = 0; i < byteRead; i++)
+			printf("%02X ",clientTcpRxBuf[i]);
+		printf("\n");
 
-	printf("client rx, len:%d, data: \n",byteRead);
-	for( i = 0; i < byteRead; i++)
-		printf("%02X ",clientTcpRxBuf[i]);
-	printf("\n");
-
-	printf("--------------------------------------unpack-------------------------------------------------\n\n\n\n\n\n");
-	unpack(clientTcpRxBuf, byteRead);
+		printf("--------------------------------------unpack-------------------------------------------------\n\n\n\n\n\n");
+		unpack(clientTcpRxBuf, byteRead);
+	}
 
 	return;
 }

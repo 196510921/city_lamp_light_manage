@@ -92,6 +92,8 @@ sCmdMap g_cmdMap[] =
     /* (6) 查询参数 (AFN == 0AH） */ 
     {CMD_CFG_TML_UP_Q,         CMD_AFN_A_F1_TML_UP_CFG,        MT_PRM_PASIVE},
     {CMD_IP_QUEST_0AF3,        CMD_AFN_A_F3_MST_IP_PORT,       MT_PRM_PASIVE},
+     //huyuxiang 
+    {CMD_CFG_TML_EVENT,        CMD_AFN_A_F9_TML_EVENT_CFG,     MT_PRM_PASIVE},
     {CMD_LED_0AF13,            CMD_AFN_A_F13_LED_UP_CFG,       MT_PRM_PASIVE},
     {CMD_RELAY_0AF15,          CMD_AFN_A_F15_HAVE_DIFF_EVENT,       MT_PRM_PASIVE},
     {CMD_CFG_TML_POWER_Q,      CMD_AFN_A_F10_TML_POWER_CFG,    MT_PRM_PASIVE},
@@ -409,6 +411,7 @@ eCmErr ecm_3761_pack(sCmPacket* psCmPacket, UINT8 * pBuf, UINT16 *pusBufLen)
     psPack->sTP.ucPFC = ucPFC;
 
     printf("ucPFC:%d, psPack->ucSeq:%d",ucPFC,psPack->ucSeq);
+
     // pw
     // 自动取初始化设置的PW
     
@@ -535,8 +538,15 @@ eCmErr ecm_3761_unpack(UINT8 * pBuf, UINT16 usBufLen, sCmPacket* psCmPacket)
         return eRet;
     }
 
-    psCmPacket->sAddress = psmtPack->sAddress;
-
+      psCmPacket->sAddress = psmtPack->sAddress;
+     
+      /*PFC校准*/
+    {
+        ucPFC = psmtPack->sTP.ucPFC;
+        g_ucCmPFCRecv  = ucPFC;
+        g_ucCmPFCSend = g_ucCmPFCRecv;
+        printf("ecm_3761_unpack,g_ucCmPFCSend:%d\n",g_ucCmPFCSend);
+    }
       //ucPFC    = psmtPack->ucPFC;
 
       /*
@@ -1080,58 +1090,58 @@ INT32 ncm_3761_pack(sCmPacket* psCmPacket, UINT8 * pBuf)
     eCmErr eRet  = MT_OK;
     UINT16 usLen = 0;
 
-	#if 0
-	char buf[64] = {0};
-	if(psCmPacket->sCmdData[0].eCmd == CMD_AFN_TML_VERSION)
-	{
-		
-		frwk_Trace(MID_REAL_DATAPROCESS,TRACE_LEVEL_DEBUG,"usPN = %d\n", psCmPacket->sCmdData[0].usPN);
+    #if 0
+    char buf[64] = {0};
+    if(psCmPacket->sCmdData[0].eCmd == CMD_AFN_TML_VERSION)
+    {
+        
+        frwk_Trace(MID_REAL_DATAPROCESS,TRACE_LEVEL_DEBUG,"usPN = %d\n", psCmPacket->sCmdData[0].usPN);
 
-		memcpy(buf, psCmPacket->sCmdData[0].uAppData.sTmlVersion.ucFactoryID, 4);
-		frwk_Trace(MID_REAL_DATAPROCESS,TRACE_LEVEL_DEBUG,"ucFactoryID = %s\n", buf);
+        memcpy(buf, psCmPacket->sCmdData[0].uAppData.sTmlVersion.ucFactoryID, 4);
+        frwk_Trace(MID_REAL_DATAPROCESS,TRACE_LEVEL_DEBUG,"ucFactoryID = %s\n", buf);
 
-		memset(buf,0,64);
-		memcpy(buf, psCmPacket->sCmdData[0].uAppData.sTmlVersion.ucDeviceID, 8);
-		frwk_Trace(MID_REAL_DATAPROCESS,TRACE_LEVEL_DEBUG,"ucDeviceID = %s\n", buf);
+        memset(buf,0,64);
+        memcpy(buf, psCmPacket->sCmdData[0].uAppData.sTmlVersion.ucDeviceID, 8);
+        frwk_Trace(MID_REAL_DATAPROCESS,TRACE_LEVEL_DEBUG,"ucDeviceID = %s\n", buf);
 
-		
-		memset(buf,0,64);
-		memcpy(buf, psCmPacket->sCmdData[0].uAppData.sTmlVersion.ucSoftwareID, 4);
-		frwk_Trace(MID_REAL_DATAPROCESS,TRACE_LEVEL_DEBUG,"ucSoftwareID = %s\n", buf);
-
-
-		memset(buf,0,64);
-		memcpy(buf, psCmPacket->sCmdData[0].uAppData.sTmlVersion.ucInfoCodeCap, 11);
-		frwk_Trace(MID_REAL_DATAPROCESS,TRACE_LEVEL_DEBUG,"ucInfoCodeCap = %s\n", buf);
+        
+        memset(buf,0,64);
+        memcpy(buf, psCmPacket->sCmdData[0].uAppData.sTmlVersion.ucSoftwareID, 4);
+        frwk_Trace(MID_REAL_DATAPROCESS,TRACE_LEVEL_DEBUG,"ucSoftwareID = %s\n", buf);
 
 
-		memset(buf,0,64);
-		memcpy(buf, psCmPacket->sCmdData[0].uAppData.sTmlVersion.ucProtolID, 4);
-		frwk_Trace(MID_REAL_DATAPROCESS,TRACE_LEVEL_DEBUG,"ucProtolID = %s\n", buf);
-
-		memset(buf,0,64);
-		memcpy(buf, psCmPacket->sCmdData[0].uAppData.sTmlVersion.ucHardWareID, 4);
-		frwk_Trace(MID_REAL_DATAPROCESS,TRACE_LEVEL_DEBUG,"ucHardWareID = %s\n", buf);
+        memset(buf,0,64);
+        memcpy(buf, psCmPacket->sCmdData[0].uAppData.sTmlVersion.ucInfoCodeCap, 11);
+        frwk_Trace(MID_REAL_DATAPROCESS,TRACE_LEVEL_DEBUG,"ucInfoCodeCap = %s\n", buf);
 
 
-		frwk_Trace(MID_REAL_DATAPROCESS,TRACE_LEVEL_DEBUG,"sDateSoftware = %02d%02%02d\n",
-		psCmPacket->sCmdData[0].uAppData.sTmlVersion.sDateSoftware.ucYY,
-		psCmPacket->sCmdData[0].uAppData.sTmlVersion.sDateSoftware.ucMM,
-		psCmPacket->sCmdData[0].uAppData.sTmlVersion.sDateSoftware.ucDD);
+        memset(buf,0,64);
+        memcpy(buf, psCmPacket->sCmdData[0].uAppData.sTmlVersion.ucProtolID, 4);
+        frwk_Trace(MID_REAL_DATAPROCESS,TRACE_LEVEL_DEBUG,"ucProtolID = %s\n", buf);
 
-		frwk_Trace(MID_REAL_DATAPROCESS,TRACE_LEVEL_DEBUG,"sDateHardware = %02d%02%02d\n",
-		psCmPacket->sCmdData[0].uAppData.sTmlVersion.sDateHardware.ucYY,
-		psCmPacket->sCmdData[0].uAppData.sTmlVersion.sDateHardware.ucMM,
-		psCmPacket->sCmdData[0].uAppData.sTmlVersion.sDateHardware.ucDD);
-
-		frwk_Trace(MID_REAL_DATAPROCESS,TRACE_LEVEL_DEBUG,"ucHardWareID = %s\n", buf);
+        memset(buf,0,64);
+        memcpy(buf, psCmPacket->sCmdData[0].uAppData.sTmlVersion.ucHardWareID, 4);
+        frwk_Trace(MID_REAL_DATAPROCESS,TRACE_LEVEL_DEBUG,"ucHardWareID = %s\n", buf);
 
 
-	}
-	#endif
+        frwk_Trace(MID_REAL_DATAPROCESS,TRACE_LEVEL_DEBUG,"sDateSoftware = %02d%02%02d\n",
+        psCmPacket->sCmdData[0].uAppData.sTmlVersion.sDateSoftware.ucYY,
+        psCmPacket->sCmdData[0].uAppData.sTmlVersion.sDateSoftware.ucMM,
+        psCmPacket->sCmdData[0].uAppData.sTmlVersion.sDateSoftware.ucDD);
+
+        frwk_Trace(MID_REAL_DATAPROCESS,TRACE_LEVEL_DEBUG,"sDateHardware = %02d%02%02d\n",
+        psCmPacket->sCmdData[0].uAppData.sTmlVersion.sDateHardware.ucYY,
+        psCmPacket->sCmdData[0].uAppData.sTmlVersion.sDateHardware.ucMM,
+        psCmPacket->sCmdData[0].uAppData.sTmlVersion.sDateHardware.ucDD);
+
+        frwk_Trace(MID_REAL_DATAPROCESS,TRACE_LEVEL_DEBUG,"ucHardWareID = %s\n", buf);
 
 
-	
+    }
+    #endif
+
+
+    
 
 
     eRet = ecm_3761_pack(psCmPacket, pBuf, &usLen);

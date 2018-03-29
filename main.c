@@ -27,6 +27,7 @@
 #include <math.h>
 #include "timeout_handle.h"
 #include "app_heartbeat.h"
+#include "app_handle.h"
 
 
 #define PACK_MEM_SIZE  10240
@@ -3608,7 +3609,76 @@ eMtErr test_pack_afn04f10()
     pscmPacket->sData[0].eCmd  = CMD_AFN_4_F10_TML_POWER_CFG;
     pscmPacket->sData[0].bApp  = TRUE;
     pscmPacket->sData[0].usPN  = 1;
+
     
+    pscmPacket->sData[0].uApp.sTmlPowerCfg.aeStateInput[0] = MT_INPUT1_OFF;
+    pscmPacket->sData[0].uApp.sTmlPowerCfg.aeStateInput[1] = MT_INPUT1_ON;
+    pscmPacket->sData[0].uApp.sTmlPowerCfg.aeStateInput[2] = MT_INPUT1_ON;
+    pscmPacket->sData[0].uApp.sTmlPowerCfg.aeStateInput[3] = MT_INPUT1_ON;
+    pscmPacket->sData[0].uApp.sTmlPowerCfg.aeStateInput[4] = MT_INPUT1_ON;
+    pscmPacket->sData[0].uApp.sTmlPowerCfg.aeStateInput[5] = MT_INPUT1_ON;
+    pscmPacket->sData[0].uApp.sTmlPowerCfg.aeStateInput[6] = MT_INPUT1_ON;
+    pscmPacket->sData[0].uApp.sTmlPowerCfg.aeStateInput[7] = MT_INPUT1_ON;
+    pscmPacket->sData[0].uApp.sTmlPowerCfg.aeStateInput[8] = MT_INPUT1_ON;
+    pscmPacket->sData[0].uApp.sTmlPowerCfg.aeStateInput[9] = MT_INPUT1_ON;
+    pscmPacket->sData[0].uApp.sTmlPowerCfg.aeStateInput[10] = MT_INPUT1_ON;
+    pscmPacket->sData[0].uApp.sTmlPowerCfg.aeStateInput[11] = MT_INPUT1_ON;
+    pscmPacket->sData[0].uApp.sTmlPowerCfg.aeStateInput[12] = MT_INPUT1_ON;
+    pscmPacket->sData[0].uApp.sTmlPowerCfg.aeStateInput[13] = MT_INPUT1_ON;
+    pscmPacket->sData[0].uApp.sTmlPowerCfg.aeStateInput[14] = MT_INPUT1_ON;
+    pscmPacket->sData[0].uApp.sTmlPowerCfg.aeStateInput[15] = MT_INPUT1_ON;
+    pscmPacket->sData[0].uApp.sTmlPowerCfg.aeStateInput[16] = MT_INPUT1_ON;
+    pscmPacket->sData[0].uApp.sTmlPowerCfg.aeStateInput[17] = MT_INPUT1_ON;
+    pscmPacket->sData[0].uApp.sTmlPowerCfg.aeStateInput[18] = MT_INPUT1_ON;
+    pscmPacket->sData[0].uApp.sTmlPowerCfg.aeStateInput[19] = MT_INPUT1_ON;
+    pscmPacket->sData[0].uApp.sTmlPowerCfg.aeStateInput[20] = MT_INPUT1_ON;
+    pscmPacket->sData[0].uApp.sTmlPowerCfg.aeStateInput[21] = MT_INPUT1_ON;
+    pscmPacket->sData[0].uApp.sTmlPowerCfg.aeStateInput[22] = MT_INPUT1_ON;
+    pscmPacket->sData[0].uApp.sTmlPowerCfg.aeStateInput[23] = MT_INPUT1_ON;
+    pscmPacket->sData[0].uApp.sTmlPowerCfg.aeStateInput[24] = MT_INPUT1_ON;
+    pscmPacket->sData[0].uApp.sTmlPowerCfg.aeStateInput[25] = MT_INPUT1_ON;
+    pscmPacket->sData[0].uApp.sTmlPowerCfg.aeStateInput[26] = MT_INPUT1_ON;
+    pscmPacket->sData[0].uApp.sTmlPowerCfg.aeStateInput[27] = MT_INPUT1_ON;
+    pscmPacket->sData[0].uApp.sTmlPowerCfg.aeStateInput[28] = MT_INPUT1_ON;
+    pscmPacket->sData[0].uApp.sTmlPowerCfg.aeStateInput[29] = MT_INPUT1_ON;
+    pscmPacket->sData[0].uApp.sTmlPowerCfg.aeStateInput[30] = MT_INPUT1_ON;
+    pscmPacket->sData[0].uApp.sTmlPowerCfg.aeStateInput[31] = MT_INPUT1_ON;
+
+    pscmPacket->sData[0].uApp.sTmlPowerCfg.aeStateAttr[0] = MT_ATTR1_ON;
+    pscmPacket->sData[0].uApp.sTmlPowerCfg.aeStateAttr[1] = MT_ATTR1_ON;
+    pscmPacket->sData[0].uApp.sTmlPowerCfg.aeStateAttr[2] = MT_ATTR1_ON;
+    pscmPacket->sData[0].uApp.sTmlPowerCfg.aeStateAttr[3] = MT_ATTR1_ON;
+    pscmPacket->sData[0].uApp.sTmlPowerCfg.aeStateAttr[4] = MT_ATTR1_ON;
+    pscmPacket->sData[0].uApp.sTmlPowerCfg.aeStateAttr[5] = MT_ATTR1_ON;
+    pscmPacket->sData[0].uApp.sTmlPowerCfg.aeStateAttr[6] = MT_ATTR1_ON;
+    pscmPacket->sData[0].uApp.sTmlPowerCfg.aeStateAttr[7] = MT_ATTR1_ON;
+    pscmPacket->sData[0].uApp.sTmlPowerCfg.aeStateAttr[8] = MT_ATTR1_ON;
+    pscmPacket->sData[0].uApp.sTmlPowerCfg.aeStateAttr[9] = MT_ATTR1_ON;
+    pscmPacket->sData[0].uApp.sTmlPowerCfg.aeStateAttr[10] = MT_ATTR1_ON;
+    pscmPacket->sData[0].uApp.sTmlPowerCfg.aeStateAttr[11] = MT_ATTR1_ON;
+    pscmPacket->sData[0].uApp.sTmlPowerCfg.aeStateAttr[12] = MT_ATTR1_ON;
+    pscmPacket->sData[0].uApp.sTmlPowerCfg.aeStateAttr[13] = MT_ATTR1_ON;
+    pscmPacket->sData[0].uApp.sTmlPowerCfg.aeStateAttr[14] = MT_ATTR1_ON;
+    pscmPacket->sData[0].uApp.sTmlPowerCfg.aeStateAttr[15] = MT_ATTR1_ON;
+    pscmPacket->sData[0].uApp.sTmlPowerCfg.aeStateAttr[16] = MT_ATTR1_ON;
+    pscmPacket->sData[0].uApp.sTmlPowerCfg.aeStateAttr[17] = MT_ATTR1_ON;
+    pscmPacket->sData[0].uApp.sTmlPowerCfg.aeStateAttr[18] = MT_ATTR1_ON;
+    pscmPacket->sData[0].uApp.sTmlPowerCfg.aeStateAttr[19] = MT_ATTR1_ON;
+    pscmPacket->sData[0].uApp.sTmlPowerCfg.aeStateAttr[20] = MT_ATTR1_ON;
+    pscmPacket->sData[0].uApp.sTmlPowerCfg.aeStateAttr[21] = MT_ATTR1_ON;
+    pscmPacket->sData[0].uApp.sTmlPowerCfg.aeStateAttr[22] = MT_ATTR1_ON;
+    pscmPacket->sData[0].uApp.sTmlPowerCfg.aeStateAttr[23] = MT_ATTR1_ON;
+    pscmPacket->sData[0].uApp.sTmlPowerCfg.aeStateAttr[24] = MT_ATTR1_ON;
+    pscmPacket->sData[0].uApp.sTmlPowerCfg.aeStateAttr[25] = MT_ATTR1_ON;
+    pscmPacket->sData[0].uApp.sTmlPowerCfg.aeStateAttr[26] = MT_ATTR1_ON;
+    pscmPacket->sData[0].uApp.sTmlPowerCfg.aeStateAttr[27] = MT_ATTR1_ON;
+    pscmPacket->sData[0].uApp.sTmlPowerCfg.aeStateAttr[28] = MT_ATTR1_ON;
+    pscmPacket->sData[0].uApp.sTmlPowerCfg.aeStateAttr[29] = MT_ATTR1_ON;
+    pscmPacket->sData[0].uApp.sTmlPowerCfg.aeStateAttr[30] = MT_ATTR1_ON;
+    pscmPacket->sData[0].uApp.sTmlPowerCfg.aeStateAttr[31] = MT_ATTR1_ON;
+
+
+#if 0
     pscmPacket->sData[0].uApp.sTmlPowerCfg.usNum = 2;
     
     pscmPacket->sData[0].uApp.sTmlPowerCfg.sOne[0].busMeterID = TRUE;
@@ -3685,6 +3755,7 @@ eMtErr test_pack_afn04f10()
     pscmPacket->sData[1].uApp.sTmlUpCfg.ucHeartBeat = 1;
     pscmPacket->sData[1].uApp.sTmlUpCfg.usTmWaitTimeoutS = 1;
 */
+#endif
 
     /* 4 调用函数 */
     eRet = emtPack(pscmPacket, &usBuflen, (UINT8*)g_ucOutBuf);
@@ -3699,7 +3770,6 @@ eMtErr test_pack_afn04f10()
     return MT_OK;
 
 }
-
 
 
 /*****************************************************************************
@@ -3759,7 +3829,7 @@ eMtErr test_pack_afn04f13()
     // 数据1
     pscmPacket->sData[0].eCmd  = CMD_AFN_4_F13_TML_SIMULA_CFG;
     pscmPacket->sData[0].bApp  = TRUE;
-    pscmPacket->sData[0].usPN  = 1;
+    pscmPacket->sData[0].usPN  = 2;
 
 
     pscmPacket->sData[0].uApp.sTmTerminalCfg.Type = 0x02;
@@ -3774,21 +3844,26 @@ eMtErr test_pack_afn04f13()
     pscmPacket->sData[0].uApp.sTmTerminalCfg.address[4] = 0x55;
     pscmPacket->sData[0].uApp.sTmTerminalCfg.address[5] = 0x66;
 
-    pscmPacket->sData[0].uApp.sTmTerminalCfg.Group = 0x11223344;
+    pscmPacket->sData[0].uApp.sTmTerminalCfg.Group[0] = 0x11;
+    pscmPacket->sData[0].uApp.sTmTerminalCfg.Group[1] = 0x22;
+    pscmPacket->sData[0].uApp.sTmTerminalCfg.Group[2] = 0x33;
+    pscmPacket->sData[0].uApp.sTmTerminalCfg.Group[3] = 0x44;
+
+
 
 
     pscmPacket->sData[0].uApp.sTmTerminalCfg.Num = 0x11;
 
 
-	 pscmPacket->sData[0].uApp.sTmTerminalCfg.PosLong.Flag = 0x11;
-	 pscmPacket->sData[0].uApp.sTmTerminalCfg.PosLong.Degree = 0x11;
-	 pscmPacket->sData[0].uApp.sTmTerminalCfg.PosLong.Min = 0x33;
-	 pscmPacket->sData[0].uApp.sTmTerminalCfg.PosLong.Sec = 0x1122;
+     pscmPacket->sData[0].uApp.sTmTerminalCfg.PosLong.Flag = 0x11;
+     pscmPacket->sData[0].uApp.sTmTerminalCfg.PosLong.Degree = 0x11;
+     pscmPacket->sData[0].uApp.sTmTerminalCfg.PosLong.Min = 0x33;
+     pscmPacket->sData[0].uApp.sTmTerminalCfg.PosLong.Sec = 0x1122;
 
-	 pscmPacket->sData[0].uApp.sTmTerminalCfg.PosLat.Flag = 0x11;
-	 pscmPacket->sData[0].uApp.sTmTerminalCfg.PosLat.Degree = 0x11;
-	 pscmPacket->sData[0].uApp.sTmTerminalCfg.PosLat.Min = 0x33;
-	 pscmPacket->sData[0].uApp.sTmTerminalCfg.PosLat.Sec = 0x1122;
+     pscmPacket->sData[0].uApp.sTmTerminalCfg.PosLat.Flag = 0x11;
+     pscmPacket->sData[0].uApp.sTmTerminalCfg.PosLat.Degree = 0x11;
+     pscmPacket->sData[0].uApp.sTmTerminalCfg.PosLat.Min = 0x33;
+     pscmPacket->sData[0].uApp.sTmTerminalCfg.PosLat.Sec = 0x1122;
 
 
     /* 4 调用函数 */
@@ -3804,7 +3879,6 @@ eMtErr test_pack_afn04f13()
     return MT_OK;
 
 }
-
 
 
 
@@ -4331,6 +4405,7 @@ eMtErr test_pack_afn0af3_s2m()
     修改内容   : 新生成函数
 
 *****************************************************************************/
+#if 1
 eMtErr test_pack_afn0af13_s2m()
 {
    /* 1 定义变量 */
@@ -4379,7 +4454,10 @@ eMtErr test_pack_afn0af13_s2m()
     pscmPacket->sCmdData[0].uAppData.sTmTerminalCfg.address[3] = 0x44;
     pscmPacket->sCmdData[0].uAppData.sTmTerminalCfg.address[4] = 0x55;
     pscmPacket->sCmdData[0].uAppData.sTmTerminalCfg.address[5] = 0x66;
-    pscmPacket->sCmdData[0].uAppData.sTmTerminalCfg.Group = 0x11223344;
+    pscmPacket->sCmdData[0].uAppData.sTmTerminalCfg.Group[0] = 0x11;
+    pscmPacket->sCmdData[0].uAppData.sTmTerminalCfg.Group[1] = 0x22;
+    pscmPacket->sCmdData[0].uAppData.sTmTerminalCfg.Group[2] = 0x33;
+    pscmPacket->sCmdData[0].uAppData.sTmTerminalCfg.Group[3]= 0x44;
     pscmPacket->sCmdData[0].uAppData.sTmTerminalCfg.Num = 0x11;
     pscmPacket->sCmdData[0].uAppData.sTmTerminalCfg.PosLong.Flag = 0x11;
     pscmPacket->sCmdData[0].uAppData.sTmTerminalCfg.PosLong.Degree = 0x11;
@@ -4406,7 +4484,7 @@ eMtErr test_pack_afn0af13_s2m()
 
     return MT_OK;
 }
-
+#endif
 /*****************************************************************************
  函 数 名  : test_pack_afn0af15_s2m
  功能描述  : 测试封装登录命令
@@ -5886,7 +5964,7 @@ eMtErr test_pack_afn05f35()
 }
 
 
-eMtErr test_pack_afn09f1_s2m()
+eMtErr test_pack_afn09f1_s2m(void)
 {
    /* 1 定义变量 */ 
    eCmErr eRet;
@@ -5916,31 +5994,41 @@ eMtErr test_pack_afn09f1_s2m()
     pscmPacket->sAddress.ucMAddress = 1;
     pscmPacket->bReSend = FALSE;
 
-    pscmPacket->ucCmdNum = 2;
+    pscmPacket->ucCmdNum = 1;
     pscmPacket->sCmdData[0].eCmd  = CMD_AFN_TML_VERSION;
+    //pscmPacket->sCmdData[0].eCmd  = CMD_AFN_9_F1_TML_VERSION;
     pscmPacket->sCmdData[0].bApp  = TRUE;
     pscmPacket->sCmdData[0].usPN  = 0;
 
     // app
     memcpy(pscmPacket->sCmdData[0].uAppData.sTmlVersion.ucFactoryID, "fact", 4);
     memcpy(pscmPacket->sCmdData[0].uAppData.sTmlVersion.ucDeviceID, "devciced", 8);
-    memcpy(pscmPacket->sCmdData[0].uAppData.sTmlVersion.ucSoftwareID, "soft", 4);
-    memcpy(pscmPacket->sCmdData[0].uAppData.sTmlVersion.ucInfoCodeCap, "12345678901", 11);
-    memcpy(pscmPacket->sCmdData[0].uAppData.sTmlVersion.ucProtolID, "prot", 4);
-    memcpy(pscmPacket->sCmdData[0].uAppData.sTmlVersion.ucHardWareID, "hard", 4);
+    memcpy(pscmPacket->sCmdData[0].uAppData.sTmlVersion.ucSoftwareID, "soft_dalitek", 8);
 
-
-    
     pscmPacket->sCmdData[0].uAppData.sTmlVersion.sDateSoftware.ucYY = 13;
     pscmPacket->sCmdData[0].uAppData.sTmlVersion.sDateSoftware.ucMM = 8;
     pscmPacket->sCmdData[0].uAppData.sTmlVersion.sDateSoftware.ucDD = 23;
-    
+
+    memcpy(pscmPacket->sCmdData[0].uAppData.sTmlVersion.ucInfoCodeCap, "123456789987654321", 16);
+    //memcpy(pscmPacket->sCmdData[0].uAppData.sTmlVersion.ucProtolID, "prot", 4);
+   
+    memcpy(pscmPacket->sCmdData[0].uAppData.sTmlVersion.ucHardWareID, "hardware", 8);
     pscmPacket->sCmdData[0].uAppData.sTmlVersion.sDateHardware.ucYY = 13;
     pscmPacket->sCmdData[0].uAppData.sTmlVersion.sDateHardware.ucMM = 8;
     pscmPacket->sCmdData[0].uAppData.sTmlVersion.sDateHardware.ucDD = 23;
 
+    memcpy(pscmPacket->sCmdData[0].uAppData.sTmlVersion.ucRemoteID, "hardware", 8);
+    pscmPacket->sCmdData[0].uAppData.sTmlVersion.sRemote.ucYY = 13;
+    pscmPacket->sCmdData[0].uAppData.sTmlVersion.sRemote.ucMM = 8;
+    pscmPacket->sCmdData[0].uAppData.sTmlVersion.sRemote.ucDD = 23;
 
-    #if 1
+    memcpy(pscmPacket->sCmdData[0].uAppData.sTmlVersion.ucLocalID, "hardware", 8);
+    pscmPacket->sCmdData[0].uAppData.sTmlVersion.sLocal.ucYY = 13;
+    pscmPacket->sCmdData[0].uAppData.sTmlVersion.sLocal.ucMM = 8;
+    pscmPacket->sCmdData[0].uAppData.sTmlVersion.sLocal.ucDD = 23;
+
+
+    #if 0
     pscmPacket->sCmdData[1].eCmd  = CMD_AFN_TML_INPUT_OUT;
     pscmPacket->sCmdData[1].bApp  = TRUE;
     pscmPacket->sCmdData[1].usPN  = 0;
@@ -6467,7 +6555,6 @@ eMtErr test_pack_afn0cf01_s2m_analog()
 {
     /* 1 定义变量 */ 
    eCmErr eRet;
-   UINT8 i = 0;
    UINT16 usBuflen = 0;
    sCmPacket *pscmPacket = (sCmPacket*)g_ucPackMem;
    
@@ -6487,6 +6574,10 @@ eMtErr test_pack_afn0cf01_s2m_analog()
     bCmSetPw(str);
   
     
+
+   //pscmPacket = &packdata->pscmPacket;
+
+#if 1
     /* 3 封装参数 */
     memcpy(pscmPacket->sAddress.acRegionCode, "1100", 4);
     pscmPacket->sAddress.usTAddress = 1;
@@ -6498,9 +6589,9 @@ eMtErr test_pack_afn0cf01_s2m_analog()
     pscmPacket->ucCmdNum = 1;
     pscmPacket->sCmdData[0].eCmd  = CMD_ANALOG_DATA;
     pscmPacket->sCmdData[0].bApp  = TRUE;
-    pscmPacket->sCmdData[0].usPN  = 10;
+    //pscmPacket->sCmdData[0].usPN  = 0;
+    pscmPacket->sCmdData[0].usPN  = 0;
 
-    #if 1
     // app
     /*抄读时间*/
     pscmPacket->sCmdData[0].uAppData.sTmAnalog.sReadTime.ucYY = 18;
@@ -6508,50 +6599,104 @@ eMtErr test_pack_afn0cf01_s2m_analog()
     pscmPacket->sCmdData[0].uAppData.sTmAnalog.sReadTime.ucDD = 21;
     pscmPacket->sCmdData[0].uAppData.sTmAnalog.sReadTime.ucHH = 16;
     pscmPacket->sCmdData[0].uAppData.sTmAnalog.sReadTime.ucmm = 12;
-
-    pscmPacket->sCmdData[0].uAppData.sTmAnalog.anaglogNum = 3;
+    /*模拟量路数*/
+    pscmPacket->sCmdData[0].uAppData.sTmAnalog.anaglogNum = 1;
     /*1路当前电压*/
-    pscmPacket->sCmdData[0].uAppData.sTmAnalog.data[0].fU = 123.4;
+    pscmPacket->sCmdData[0].uAppData.sTmAnalog.fU[0] = 111.1;
     /*1路当前电流*/
-    pscmPacket->sCmdData[0].uAppData.sTmAnalog.data[0].fI = -123.456;
+    pscmPacket->sCmdData[0].uAppData.sTmAnalog.fI[0] = 222.222;
     /*1路当前有功功率*/
-    pscmPacket->sCmdData[0].uAppData.sTmAnalog.data[0].fP = -12.345;
+    pscmPacket->sCmdData[0].uAppData.sTmAnalog.fP[0] = 33.333;
     /*1路当前无功功率*/
-    pscmPacket->sCmdData[0].uAppData.sTmAnalog.data[0].fQ = -12.345;
+    pscmPacket->sCmdData[0].uAppData.sTmAnalog.fQ[0] = 44.444;
     /*1路当前功率因数*/
-    pscmPacket->sCmdData[0].uAppData.sTmAnalog.data[0].fPf = -123.4;
+    pscmPacket->sCmdData[0].uAppData.sTmAnalog.fPf[0] = 555.5;
     /*1路当前光控值*/
-    pscmPacket->sCmdData[0].uAppData.sTmAnalog.data[0].fLc = -123.4;
+    pscmPacket->sCmdData[0].uAppData.sTmAnalog.fLc[0] = 666.6;
+
+
+#if 0
+    /*1路当前电压*/
+    pscmPacket->sCmdData[0].uAppData.sTmAnalog.fU[1] = 111.1;
+    /*1路当前电流*/
+    pscmPacket->sCmdData[0].uAppData.sTmAnalog.fI[1] = 222.222;
+    /*1路当前有功功率*/
+    pscmPacket->sCmdData[0].uAppData.sTmAnalog.fP[1] = 33.333;
+    /*1路当前无功功率*/
+    pscmPacket->sCmdData[0].uAppData.sTmAnalog.fQ[1] = 44.444;
+    /*1路当前功率因数*/
+    pscmPacket->sCmdData[0].uAppData.sTmAnalog.fPf[1] = 555.5;
+    /*1路当前光控值*/
+    pscmPacket->sCmdData[0].uAppData.sTmAnalog.fLc[1] = 666.6;
+
 
     /*1路当前电压*/
-    pscmPacket->sCmdData[0].uAppData.sTmAnalog.data[1].fU = 123.4;
+    pscmPacket->sCmdData[0].uAppData.sTmAnalog.fU[2] = 111.1;
     /*1路当前电流*/
-    pscmPacket->sCmdData[0].uAppData.sTmAnalog.data[1].fI = 123.456;
+    pscmPacket->sCmdData[0].uAppData.sTmAnalog.fI[2] = 222.222;
     /*1路当前有功功率*/
-    pscmPacket->sCmdData[0].uAppData.sTmAnalog.data[1].fP = 12.345;
+    pscmPacket->sCmdData[0].uAppData.sTmAnalog.fP[2] = 33.333;
     /*1路当前无功功率*/
-    pscmPacket->sCmdData[0].uAppData.sTmAnalog.data[1].fQ = 12.345;
+    pscmPacket->sCmdData[0].uAppData.sTmAnalog.fQ[2] = 44.444;
     /*1路当前功率因数*/
-    pscmPacket->sCmdData[0].uAppData.sTmAnalog.data[1].fPf = 123.4;
+    pscmPacket->sCmdData[0].uAppData.sTmAnalog.fPf[2] = 555.5;
     /*1路当前光控值*/
-    pscmPacket->sCmdData[0].uAppData.sTmAnalog.data[1].fLc = 123.4;
-    
- /*1路当前电压*/
-    pscmPacket->sCmdData[0].uAppData.sTmAnalog.data[2].fU = 123.4;
+    pscmPacket->sCmdData[0].uAppData.sTmAnalog.fLc[2] = 666.6;
+
+
+
+    /*1路当前电压*/
+    pscmPacket->sCmdData[0].uAppData.sTmAnalog.fU[3] = 111.1;
     /*1路当前电流*/
-    pscmPacket->sCmdData[0].uAppData.sTmAnalog.data[2].fI = 123.456;
+    pscmPacket->sCmdData[0].uAppData.sTmAnalog.fI[3] = 222.222;
     /*1路当前有功功率*/
-    pscmPacket->sCmdData[0].uAppData.sTmAnalog.data[2].fP = 12.345;
+    pscmPacket->sCmdData[0].uAppData.sTmAnalog.fP[3] = 33.333;
     /*1路当前无功功率*/
-    pscmPacket->sCmdData[0].uAppData.sTmAnalog.data[2].fQ = 12.345;
+    pscmPacket->sCmdData[0].uAppData.sTmAnalog.fQ[3] = 44.444;
     /*1路当前功率因数*/
-    pscmPacket->sCmdData[0].uAppData.sTmAnalog.data[2].fPf = 123.4;
+    pscmPacket->sCmdData[0].uAppData.sTmAnalog.fPf[3] = 555.5;
     /*1路当前光控值*/
-    pscmPacket->sCmdData[0].uAppData.sTmAnalog.data[2].fLc = 123.4;
-    #endif
-  
+    pscmPacket->sCmdData[0].uAppData.sTmAnalog.fLc[3] = 666.6;
+#endif
+
+
+#if 1
+    //开关灯状态
+   pscmPacket->sCmdData[0].uAppData.sTmAnalog.state = 0xff;
+    /*1路视在功率*/
+    pscmPacket->sCmdData[0].uAppData.sTmAnalog.fS[0] = 22.222;
+    /*累计开灯时间*/
+    pscmPacket->sCmdData[0].uAppData.sTmAnalog.Time = 444.4;
+
+    /*漏电流*/
+    pscmPacket->sCmdData[0].uAppData.sTmAnalog.Lc[0] = 1234;
+
+    /*1路当前有功能量寄存器 */
+    pscmPacket->sCmdData[0].uAppData.sTmAnalog.EP[0] = 777.7;
+    /*1路正向有功能量寄存器*/
+    pscmPacket->sCmdData[0].uAppData.sTmAnalog.PosEP[0] = 888.8;
+    /*1路反向有功能量寄存器 */
+    pscmPacket->sCmdData[0].uAppData.sTmAnalog.NegEP[0] = 999.9;
+    /*1路无功能量寄存器*/
+    pscmPacket->sCmdData[0].uAppData.sTmAnalog.EQ[0] = 111.1;
+    /*正向无功能量寄存器*/
+    pscmPacket->sCmdData[0].uAppData.sTmAnalog.PosEQ[0] = 222.2;
+    /*反向无功能量寄存器*/
+    pscmPacket->sCmdData[0].uAppData.sTmAnalog.NegEQ[0] = 222.2;
+
+    /*1路视在能量寄存器*/
+    pscmPacket->sCmdData[0].uAppData.sTmAnalog.ES[0] = 333.3;
+
+
+#endif
+
+#endif
+
+
+
     /* 4 调用函数 */
     eRet = ecm_3761_pack(pscmPacket, (UINT8*)g_ucOutBuf, &usBuflen);
+    //eRet = ecm_3761_pack(pscmPacket, (UINT8*)packdata->data, &packdata->length);
     if(eRet != MT_OK)
     {
         printf("ecm_3761_pack error %d\n", eRet);
@@ -6559,12 +6704,15 @@ eMtErr test_pack_afn0cf01_s2m_analog()
     }
     
     /* 5 输出结果 */ 
-    printf_buffer_color((char*)g_ucOutBuf, usBuflen);
+   printf_buffer_color((char*)g_ucOutBuf, usBuflen);
+   //printf_buffer_color((char*)packdata->data, packdata->length);
+
   
 
 
     return MT_OK;
 }
+
 
 eMtErr test_pack_afn0cf02_s2m_auto()
 {
@@ -7130,8 +7278,8 @@ eMtErr test_pack_afn0cf08_s2m()
   
     /* 2 环境初始化 */
     sCmInit  sInit;
-    sInit.eRole = MT_ROLE_CONTOR;
     //sInit.eRole = MT_ROLE_CONTOR;
+    sInit.eRole = MT_ROLE_CONTOR;
     sInit.ucPermitDelayMinutes = 255;
     eRet = ecm_3761_init(&sInit);
     if(eRet != MT_OK)
@@ -7144,7 +7292,7 @@ eMtErr test_pack_afn0cf08_s2m()
     memcpy(pscmPacket->sAddress.acRegionCode, "1100", 4);
     pscmPacket->sAddress.usTAddress = 1;
     pscmPacket->sAddress.bTeamAddr  = FALSE;
-    pscmPacket->sAddress.ucMAddress = 123;
+    pscmPacket->sAddress.ucMAddress = 1;
 
     pscmPacket->eAFN = AFN_0C_ASK1;
     pscmPacket->eDir = MT_DIR_S2M;
@@ -12348,65 +12496,86 @@ eMtErr test_pack_afn11df3_m2s()
    smtPack *pscmPacket = (smtPack*)g_ucPackMem;
 
 
-	/* 2 \u73af\u5883\u521d\u59cb\u5316 */
-	sCmInit  sInit;
-	sInit.eRole = MT_ROLE_MASTER;
-	//sInit.eRole = MT_ROLE_CONTOR;
-	sInit.ucPermitDelayMinutes = 255;
-	eRet = ecm_3761_init(&sInit);
-	if(eRet != MT_OK)
-	{
-		//printf("\u521d\u59cb\u5316\u5931\u8d25\n");
-		return eRet;
-	}
-	char *str = "0123456789ABCDEF";
-	bCmSetPw(str);
+    /* 2 \u73af\u5883\u521d\u59cb\u5316 */
+    sCmInit  sInit;
+    sInit.eRole = MT_ROLE_MASTER;
+    //sInit.eRole = MT_ROLE_CONTOR;
+    sInit.ucPermitDelayMinutes = 255;
+    eRet = ecm_3761_init(&sInit);
+    if(eRet != MT_OK)
+    {
+        //printf("\u521d\u59cb\u5316\u5931\u8d25\n");
+        return eRet;
+    }
+    char *str = "0123456789ABCDEF";
+    bCmSetPw(str);
 
 
-	/* 3 \u5c01\u88c5\u53c2\u6570 */
-	memcpy(pscmPacket->sAddress.acRegionCode, "1100", 4);
-	pscmPacket->sAddress.usTAddress = 1;
-	pscmPacket->sAddress.bTeamAddr  = FALSE;
-	pscmPacket->sAddress.ucMAddress = 1;
+    /* 3 \u5c01\u88c5\u53c2\u6570 */
+    memcpy(pscmPacket->sAddress.acRegionCode, "1100", 4);
+    pscmPacket->sAddress.usTAddress = 1;
+    pscmPacket->sAddress.bTeamAddr  = FALSE;
+    pscmPacket->sAddress.ucMAddress = 1;
 
-	pscmPacket->eAFN = AFN_11_LED;
-	pscmPacket->eDir = MT_DIR_M2S;
-	pscmPacket->ePRM = MT_PRM_ACTIVE;
+    pscmPacket->eAFN = AFN_11_LED;
+    pscmPacket->eDir = MT_DIR_M2S;
+    pscmPacket->ePRM = MT_PRM_ACTIVE;
 
-	pscmPacket->ePos = MT_POS_SIGLE;
-	pscmPacket->ucSeq = 0;
-	pscmPacket->bAcdFcb = TRUE;
-
-
-	pscmPacket->usDataNum = 1;
-	pscmPacket->sData[0].eCmd  = CMD_AFN_11_F3;
-	pscmPacket->sData[0].bApp  = TRUE;
-	pscmPacket->sData[0].usPN  = 1;
+    pscmPacket->ePos = MT_POS_SIGLE;
+    pscmPacket->ucSeq = 0;
+    pscmPacket->bAcdFcb = TRUE;
 
 
-
-	pscmPacket->sData[0].uApp.std_11f3.ucTaskFormat = 0x1105;
-	pscmPacket->sData[0].uApp.std_11f3.ucTaskType = 0x06;
-	pscmPacket->sData[0].uApp.std_11f3.ucTaskLen = 0x1207;
-	pscmPacket->sData[0].uApp.std_11f3.ucData = 0x08;
-	pscmPacket->sData[0].uApp.std_11f3.ucNum = 0x1301;
-	pscmPacket->sData[0].uApp.std_11f3.ucPara[0].ucOperate =0x09;
-	memcpy(pscmPacket->sData[0].uApp.std_11f3.ucPara[0].ucPassword,"12345678",7);
-	memcpy(pscmPacket->sData[0].uApp.std_11f3.ucPara[0].ucKey,"1234567891234567891234567899876",31);
+    pscmPacket->usDataNum = 1;
+    pscmPacket->sData[0].eCmd  = CMD_AFN_11_F3;
+    pscmPacket->sData[0].bApp  = TRUE;
+    pscmPacket->sData[0].usPN  = 1;
 
 
 
-	/* 4 \u8c03\u7528\u51fd\u6570 */
-	eRet = emtPack(pscmPacket, &usBuflen, (UINT8*)g_ucOutBuf);
-	if(eRet != MT_OK)
-	{
-		printf("ecm_3761_pack error %d\n", eRet);
-		return eRet;
-	}
+    pscmPacket->sData[0].uApp.std_11f3.ucTaskFormat = 0x1105;
+    pscmPacket->sData[0].uApp.std_11f3.ucTaskType = 0x06;
+    pscmPacket->sData[0].uApp.std_11f3.ucTaskLen = 0x000e;
+    pscmPacket->sData[0].uApp.std_11f3.ucData[0].Time.ucYY = 0x01;
+    pscmPacket->sData[0].uApp.std_11f3.ucData[0].Time.ucMM = 0x02;
+    pscmPacket->sData[0].uApp.std_11f3.ucData[0].Time.ucDD = 0x03;
+    pscmPacket->sData[0].uApp.std_11f3.ucData[0].Time.ucHH = 0x04;
+    pscmPacket->sData[0].uApp.std_11f3.ucData[0].Time.ucmm = 0x05;
 
-	/* 5 \u8f93\u51fa\u7ed3\u679c */
-	printf_buffer_color((char*)g_ucOutBuf, usBuflen);
-	return MT_OK;
+    pscmPacket->sData[0].uApp.std_11f3.ucData[0].Status = 0x05;
+    pscmPacket->sData[0].uApp.std_11f3.ucData[0].Light = 0x06;
+
+    pscmPacket->sData[0].uApp.std_11f3.ucData[1].Time.ucYY = 0x02;
+    pscmPacket->sData[0].uApp.std_11f3.ucData[1].Time.ucMM = 0x02;
+    pscmPacket->sData[0].uApp.std_11f3.ucData[1].Time.ucDD = 0x03;
+    pscmPacket->sData[0].uApp.std_11f3.ucData[1].Time.ucHH = 0x03;
+    pscmPacket->sData[0].uApp.std_11f3.ucData[1].Time.ucmm = 0x03;
+
+    pscmPacket->sData[0].uApp.std_11f3.ucData[1].Status = 0x05;
+    pscmPacket->sData[0].uApp.std_11f3.ucData[1].Light = 0x06;
+
+    pscmPacket->sData[0].uApp.std_11f3.ucNum = 0x0002;
+    pscmPacket->sData[0].uApp.std_11f3.ucPara[0].ucOperate =0x09;
+    memcpy(pscmPacket->sData[0].uApp.std_11f3.ucPara[0].ucAddress,"12345678",7);
+    memcpy(pscmPacket->sData[0].uApp.std_11f3.ucPara[0].ucKey,"1234567891234567891234567899876",31);
+
+    pscmPacket->sData[0].uApp.std_11f3.ucPara[1].ucOperate =0x08;
+    memcpy(pscmPacket->sData[0].uApp.std_11f3.ucPara[1].ucAddress,"12345678",7);
+    memcpy(pscmPacket->sData[0].uApp.std_11f3.ucPara[1].ucKey,"1234567891234567891234567899876",31);
+
+
+
+    /* 4 \u8c03\u7528\u51fd\u6570 */
+    eRet = emtPack(pscmPacket, &usBuflen, (UINT8*)g_ucOutBuf);
+    if(eRet != MT_OK)
+    {
+        printf("ecm_3761_pack error %d\n", eRet);
+        return eRet;
+    }
+
+    /* 5 \u8f93\u51fa\u7ed3\u679c */
+    printf_buffer_color((char*)g_ucOutBuf, usBuflen);
+    return MT_OK;
 }
 
 
@@ -12702,7 +12871,7 @@ sTestPack  g_test_pack[] =
 
 	 {CMD_AFN_A_F1_TML_UP_CFG,         test_pack_afn0af1_s2m},
 	 {CMD_AFN_A_F3_MST_IP_PORT,        test_pack_afn0af3_s2m},
-	 {CMD_AFN_A_F13_LED_UP_CFG,        test_pack_afn0af13_s2m},
+	 //{CMD_AFN_A_F13_LED_UP_CFG,        test_pack_afn0af13_s2m},
 	 {CMD_AFN_A_F15_HAVE_DIFF_EVENT,   test_pack_afn0af15_s2m},
 
     {CMD_AFN_A_F38_CFG_ASK_1,         test_pack_afn0af38_s2m},
@@ -12951,49 +13120,6 @@ void show_app_sub_data(eMtDir eDir,eMtCmd emtCmd, uMtApp *puAppData)
             sMtTmlPowerCfg * pData = (sMtTmlPowerCfg*)puAppData;
             char addr[13] = {0};
             char pwd[7] = {0};
-            
-            printf("usNum = %d\n", pData->usNum);
-            for(i = 0; i < pData->usNum; i++)
-            {
-                printf("---------num %d:--------------\n", i+1);
-                printf("busMeterID = %s\n", pData->sOne[i].busMeterID == TRUE ? "true":"false");
-                printf("busPn = %s\n", pData->sOne[i].busPn == TRUE ? "true":"false");
-                printf("bsBaudPort = %s\n", pData->sOne[i].bsBaudPort == TRUE ? "true":"false");
-                printf("beProto = %s\n", pData->sOne[i].beProto == TRUE ? "true":"false");
-                printf("bacMeterAddr = %s\n", pData->sOne[i].bacMeterAddr == TRUE ? "true":"false");
-                printf("bacPwd = %s\n", pData->sOne[i].bacPwd == TRUE ? "true":"false");
-                printf("bucPayRateNum = %s\n", pData->sOne[i].bucPayRateNum == TRUE ? "true":"false");
-                printf("bsDigit = %s\n", pData->sOne[i].bsDigit == TRUE ? "true":"false");
-                printf("bacGathrAddr = %s\n", pData->sOne[i].bacGathrAddr == TRUE ? "true":"false");
-                printf("bsUserClass = %s\n", pData->sOne[i].bsUserClass == TRUE ? "true":"false");
-
-
-                printf("Data:\n");
-                printf("usMeterID = %d\n", pData->sOne[i].usMeterID);
-                printf("usPn = %d\n", pData->sOne[i].usPn);
-                printf("sBaudPort.eBaudRate = %d\n", pData->sOne[i].sBaudPort.eBaudRate);
-                printf("sBaudPort.ucPort = %d\n", pData->sOne[i].sBaudPort.ucPort);
-                printf("eProto = %d\n", pData->sOne[i].eProto);
-
-                memcpy(addr, pData->sOne[i].acMeterAddr, 12);
-                printf("acMeterAddr = %s\n",addr);
-                memcpy(pwd,pData->sOne[i].acPwd, 6);
-                printf("acPwd = %s\n",pwd);
-
-                printf("ucPayRateNum = %d\n", pData->sOne[i].ucPayRateNum);
-                
-                printf("sDigit.ucInteger = %d\n", pData->sOne[i].sDigit.ucInteger);
-                printf("sDigit.ucDecimal = %d\n", pData->sOne[i].sDigit.ucDecimal);
-                memcpy(addr, pData->sOne[i].acGathrAddr, 12);
-                printf("acMeterAddr = %s\n",addr);
-                
-                printf("sUserClass.ucBig = %d\n", pData->sOne[i].sUserClass.ucBig);
-                printf("sUserClass.ucSmall = %d\n", pData->sOne[i].sUserClass.ucSmall);
-              
-
-                
-            }
-
            
         }
 
@@ -13169,6 +13295,7 @@ void show_app_sub_data(eMtDir eDir,eMtCmd emtCmd, uMtApp *puAppData)
         case CMD_AFN_C_F1_ANALOG_DATA:
         {
             printf("CMD_AFN_C_F1_ANALOG_DATA\n");
+            app_req_handle(CMD_AFN_C_F1_ANALOG_DATA, puAppData);
         }
         break;
 
@@ -13276,6 +13403,8 @@ void show_app_sub_data(eMtDir eDir,eMtCmd emtCmd, uMtApp *puAppData)
             char buf[12] = {0};
             sMtTmlVersion * pData = (sMtTmlVersion*)puAppData;
 
+            app_req_handle(CMD_AFN_9_F1_TML_VERSION, puAppData);
+            #if 0
             memcpy(buf, pData->ucFactoryID, 4);
             printf("ucFactoryID = %s\n", buf);
             
@@ -13290,9 +13419,9 @@ void show_app_sub_data(eMtDir eDir,eMtCmd emtCmd, uMtApp *puAppData)
             memcpy(buf, pData->ucInfoCodeCap, 11);
             printf("ucInfoCodeCap = %s\n", buf);
             
-            memset(buf, 0x00, sizeof(buf));
-            memcpy(buf, pData->ucProtolID, 8);
-            printf("ucProtolID = %s\n", buf);
+            // memset(buf, 0x00, sizeof(buf));
+            // memcpy(buf, pData->ucProtolID, 8);
+            // printf("ucProtolID = %s\n", buf);
 
             memset(buf, 0x00, sizeof(buf));
             memcpy(buf, pData->ucHardWareID, 4);
@@ -13307,7 +13436,7 @@ void show_app_sub_data(eMtDir eDir,eMtCmd emtCmd, uMtApp *puAppData)
             printf("%d年%d月%d日\n", pData->sDateHardware.ucYY,
                                       pData->sDateHardware.ucMM,
                                       pData->sDateHardware.ucDD);
-            
+            #endif
         }
         break;
             
@@ -13685,13 +13814,28 @@ void show_app_sub_data(eMtDir eDir,eMtCmd emtCmd, uMtApp *puAppData)
                 }
 
                 break;
-        
+            case CMD_AFN_A_F1_TML_UP_CFG:
+                printf("CMD_AFN_A_F1_TML_UP_CFG\n");
+                app_req_handle(CMD_AFN_A_F1_TML_UP_CFG, puAppData);
+            break;
+            case CMD_AFN_A_F3_MST_IP_PORT:
+                printf("CMD_AFN_A_F3_MST_IP_PORT\n");
+                app_req_handle(CMD_AFN_A_F3_MST_IP_PORT, puAppData);
+            break;
+            case CMD_AFN_A_F13_LED_UP_CFG:
+                printf("CMD_AFN_A_F13_LED_UP_CFG\n");
+                app_req_handle(CMD_AFN_A_F13_LED_UP_CFG, puAppData);
+            break;
             case CMD_AFN_C_F2_TML_CLOCK:
             {
+                printf("CMD_AFN_C_F2_TML_CLOCK\n");
+                app_req_handle(CMD_AFN_C_F2_TML_CLOCK,puAppData);
+                #if 0
                 sMtUserClock * psTmlClock = (sMtUserClock*)puAppData;
                 printf("%d年%d月%d日\n",psTmlClock->ucYear,psTmlClock->ucMonth,psTmlClock->ucDay);
                 //printf("星期 %d \n",psTmlClock->ucWeek);
                 printf("%d时%d分%d秒\n",psTmlClock->ucHour,psTmlClock->ucMinute,psTmlClock->ucSecond);
+                #endif
             }
             break;
             
@@ -13832,6 +13976,9 @@ void show_app_sub_data(eMtDir eDir,eMtCmd emtCmd, uMtApp *puAppData)
 
             case CMD_AFN_C_F8_TML_EVNT_FLAG:
             {
+                printf("CMD_AFN_C_F8_TML_EVNT_FLAG\n");
+                app_req_handle(CMD_AFN_C_F8_TML_EVNT_FLAG, puAppData);
+                #if 0
                 sMtAfn0cF08 *psAfn0cF08 = (sMtAfn0cF08 *)puAppData;
                 INT32 i;
                 char *pStr;
@@ -13992,6 +14139,7 @@ void show_app_sub_data(eMtDir eDir,eMtCmd emtCmd, uMtApp *puAppData)
                         printf("%s: 有事件\n",pStr);
                     }
                 }
+            #endif
                 
             }
             break;
@@ -14696,103 +14844,23 @@ void show_app_sub_data(eMtDir eDir,eMtCmd emtCmd, uMtApp *puAppData)
                
              }
             break;  
-
-#if 0
-
-            case CMD_AFN_4_FN_33_CFG_NOT_ELEC:
-            {
-                sMtCfgNotElec *psUser  =(sMtCfgNotElec*)puAppData;
-
-                switch(psUser->eType)
-                {
-                    case MT_NELEC_TEMP:
-                        pStr = "MT_NELEC_TEMP 温度";
-                        break;
-                    case MT_NELEC_FLOW:
-                        pStr = "MT_NELEC_FLOW 流量";
-                        break;
-                    case MT_NELEC_FLOW_V:
-                        pStr = "MT_NELEC_FLOW_V 流速";
-                        break;
-                    case MT_NELEC_PRESS:
-                        pStr = "MT_NELEC_PRESS 压力";
-                        break;
-                    case MT_NELEC_HUMID:
-                        pStr = "MT_NELEC_HUMID 湿度";
-                        break;
-                    case MT_NELEC_ILLUM:
-                        pStr = "MT_NELEC_ILLUM 照度";
-                        break;
-                    case MT_NELEC_ROTATE:
-                        pStr = "MT_NELEC_ROTATE 转速";
-                        break;
-                    default:
-                        pStr = "未知类型";
-                        break;
-                }
-    
-                printf("eType =  %s\n", pStr);
-                printf("dMin  =  %lf\n", psUser->dMin);
-                printf("dMax  =  %lf\n", psUser->dMax);
-            }
-            break;
-
-            case CMD_AFN_C_FN_90_NOT_ELEC:
-                {
-                    sMtNotElec *psUser  =(sMtNotElec*)puAppData;
-                    switch(psUser->eType)
-                    {
-                        case MT_NELEC_TEMP:
-                            pStr = "MT_NELEC_TEMP 温度";
-                            break;
-                        case MT_NELEC_FLOW:
-                            pStr = "MT_NELEC_FLOW 流量";
-                            break;
-                        case MT_NELEC_FLOW_V:
-                            pStr = "MT_NELEC_FLOW_V 流速";
-                            break;
-                        case MT_NELEC_PRESS:
-                            pStr = "MT_NELEC_PRESS 压力";
-                            break;
-                        case MT_NELEC_HUMID:
-                            pStr = "MT_NELEC_HUMID 湿度";
-                            break;
-                        case MT_NELEC_ILLUM:
-                            pStr = "MT_NELEC_ILLUM 照度";
-                            break;
-                        case MT_NELEC_ROTATE:
-                            pStr = "MT_NELEC_ROTATE 转速";
-                            break;
-                        default:
-                            pStr = "未知类型";
-                            break;
-                    }
-    
-                    printf("Type  =  %s\n",  pStr);
-                    printf("Value =  %lf\n", psUser->dValue);
-
-                }
-                break;
-
-          #endif
-
-
-    
-
+        case CMD_AFN_11_F2:
+            show_error("日控时段表\n");
+            pack_afn00f01(AFN_11_LED);
+        break;
 	    case CMD_AFN_11_F3:
-	    {
-		show_error("转发主站遥控命令\n");
-	    }
+		    show_error("转发主站遥控命令\n");
+            pack_afn00f01(AFN_11_LED);
+        break;
+	    
         case CMD_AFN_11_F4:
-        {
-            sMtData data;
-            data.usPN = 0;
-            data.eCmd = CMD_AFN_11_F4;
+        
             show_error("查询对路灯批量控制情况\n");
-            app_req_handle(&data);
-        }
+            app_req_handle(CMD_AFN_11_F4, puAppData);
+        
 	    break;
-            default:
+
+        default:
             {
                 show_error("没有数据域,或未实现显示\n");
             }
@@ -14909,7 +14977,7 @@ void show_app_data_adp(eMtDir eDir, sCmSub *pSub)
 
 
 
-extern void app_req_handle(sMtData* pSub);
+extern void app_req_handle(UINT16 eCmd, void* d);
 /*****************************************************************************
  函 数 名  : show_app_data
  功能描述  : 显示应用层数据
@@ -14925,6 +14993,7 @@ extern void app_req_handle(sMtData* pSub);
     修改内容   : 新生成函数
 
 *****************************************************************************/
+extern UINT16 appUsPN;
 void show_app_data(eMtDir eDir, sMtData *pSub)
 {
    if(!pSub)
@@ -14967,6 +15036,7 @@ void show_app_data(eMtDir eDir, sMtData *pSub)
         break;
        case MT_PN_MP:
         show_item_value("测量点号");
+        set_current_usPn(pSub->usPN);
         break;
        case MT_PN_GT:
         show_item_value("总加组号");
@@ -14992,14 +15062,15 @@ void show_app_data(eMtDir eDir, sMtData *pSub)
     {
        show_item_value("无数据单元\n");
        /*判断是否为请求数据包*/
-       app_req_handle(pSub);
+       app_req_handle(pSub->eCmd, NULL);
        return;
 
     }
 
     show_main_name("\n数据单元:\n");
     // 有应用层数据
-    show_app_sub_data(eDir, pSub->eCmd, &(pSub->uApp));
+    //show_app_sub_data(eDir, pSub->eCmd, &(pSub->uApp));
+    app_show_app_sub_data(eDir, pSub->eCmd, &(pSub->uApp));
     
 }
 
@@ -15111,7 +15182,7 @@ void show_pack(smtPack *psUnpack)
             break;
         case AFN_01_RSET:
             str = "复位";
-            pack_afn00f01(AFN_01_RSET);
+            //pack_afn00f01(AFN_01_RSET);
             break;
         case AFN_02_LINK:
             str = "接口检测";
@@ -15121,7 +15192,7 @@ void show_pack(smtPack *psUnpack)
             break;
         case AFN_04_SETP:
             str = "设置参数";
-            pack_afn00f01(AFN_01_RSET);
+            pack_afn00f01(AFN_04_SETP);
             break;
         case AFN_05_CTRL:
             str = "控制命令";
@@ -15336,26 +15407,6 @@ void show_pack(smtPack *psUnpack)
         
        #endif
        
-       
-       #if 0
-       printf("time  = \t");
-       
-       sprintf(str_reg,"%d", psUnpack->sTP.ucDD);
-       show_item_value(str_reg);
-       show_sub_name("日"); 
-       
-       sprintf(str_reg,"%d", psUnpack->sTP.ucHH);
-       show_item_value(str_reg);
-       show_sub_name("时"); 
-       
-       sprintf(str_reg, "%d", psUnpack->sTP.ucmm);
-       show_item_value(str_reg);
-       show_sub_name("分");
-       
-       sprintf(str_reg, "%d", psUnpack->sTP.ucss);
-       show_item_value(str_reg);
-       show_sub_name("秒\n"); 
-       #endif
        
     }
 
@@ -15961,21 +16012,38 @@ void test_unpack(int nstart, int argc, char *argv[])
 void heartbeat_timeout(void)
 {
     while(1){
-        //app_heartbeat();
+        app_heartbeat();
         app_timeout_handle();
         sleep(1);
     }
 }
 
-#if 0
+#if 1
 extern int tcp_client_connect(void);
 extern void socket_client_poll(void);
 extern void app_test_step(int step, void* data);
 int main(int argc, char *argv[])
 {
+    static int retryTimes = 3;
     pthread_t t1,t2;
-    tcp_client_connect();
-    app_test_step(1, NULL);
+    /*数据库初始化*/
+    app_sql_init();
+    /*创建数据库*/
+    //表已提前建好
+    //app_sql_create();
+    /*TCP connect*/
+    {
+        while((tcp_client_connect() != 1) && (retryTimes--))
+        {
+            printf("TCP connect error ! retry...\n");
+            sleep(3);
+        }    
+        if(retryTimes <= 0)
+            printf("connect failed\n");
+    }
+    /*发送登录包*/
+    app_login();
+
     pthread_create(&t1,NULL,socket_client_poll,NULL);
     pthread_create(&t2,NULL,heartbeat_timeout,NULL);
 

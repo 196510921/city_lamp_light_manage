@@ -285,7 +285,7 @@ typedef enum
     //CMD_AFN_4_F13_TML_SIMULA_CFG     = 0x040D,       // 终端电压/电流模拟量配置参数
 
 
-	//huyuxiang
+    //huyuxiang
     CMD_AFN_4_F13_TML_SIMULA_CFG     = 0x040D,       //终端电能表和路灯控制器配置参数
     CMD_AFN_4_F14_TML_GRUP_TOTL      = 0x040E,       // 终端总加组配置参数
     //CMD_AFN_4_F15_HAVE_DIFF_EVENT    = 0x040F,       // 有功总电能量差动超限事件参数设置
@@ -481,7 +481,7 @@ typedef enum
     CMD_AFN_A_F11_TML_PULSE_CFG      = 0x0A0B,       // 终端脉冲配置参数
     CMD_AFN_A_F12_TML_STATE_INPUT    = 0x0A0C,       // 终端/集中器状态量输入参数
     //CMD_AFN_A_F13_TML_SIMULA_CFG     = 0x0A0D,       // 终端电压/电流模拟量配置参数
-	 CMD_AFN_A_F13_LED_UP_CFG         = 0x0A0D,       //路灯控制器配置参数
+     CMD_AFN_A_F13_LED_UP_CFG         = 0x0A0D,       //路灯控制器配置参数
 
     CMD_AFN_A_F14_TML_GRUP_TOTL      = 0x0A0E,       // 终端总加组配置参数
     CMD_AFN_A_F15_HAVE_DIFF_EVENT    = 0x0A0F,       // 有功总电能量差动超限事件参数设置
@@ -1014,6 +1014,7 @@ typedef enum
      * 上行: 有
      * 下行: 有
     */
+    CMD_AFN_11_F2       = 0x1102,       //日控制时段表
     CMD_AFN_11_F3       = 0x1103,       //转发主站直接对电表的控制跳闸/允许合闸/保电命令
     CMD_AFN_11_F4       = 0x1104,       //查询对路灯控制器批量执行状况
     
@@ -1440,6 +1441,46 @@ typedef struct
 
 // 转换函数
 eMtErr emt_trans_sXXX_X(eMtTrans eTrans, float* psUser, sMtFmt05* psFrame);
+
+
+
+
+
+/*********************************************
+*  格式: (+)XXXXX.X
+*  字长: 5
+*   *  格式:
+*  +-------+------+------+------+------+------+------+------+------+
+*  *  |       |                       字节格式                        |
+*  *  + 名称  +------+------+------+------+------+------+------+------+
+*  *  |       |  D7  |  D6  |  D5  |  D4  |  D3  |  D2  |  D1  |  D0  |
+*  *  +-------+------+------+------+------+------+------+------+------+
+*  *  | BYTE1 |         BCD码个位         |         BCD码十分位       |
+*  *  +-------+------+------+------+------+------+------+------+------+
+*  *  | BYTE2 |         BCD码百位         |         BCD码十位         |
+*  *  +-------+------+------+------+------+------+------+------+------+
+*  *  | BYTE3 |        BCD码万位        |          BCD码千位          |
+*  *  +-------+------+------+------+------+------+------+------+------+
+*  {*/
+
+// 用户侧
+// double dXXXXX.X
+//
+// 帧侧
+typedef struct
+{
+
+    UINT8 BCD_0_1:4;  // BCD 十分位
+    UINT8 BCD_0  :4;  // BCD 个位
+    UINT8 BCD_1  :4;  // BCD 十位
+    UINT8 BCD_2  :4;  // BCD 百位
+    UINT8 BCD_3  :4;  // BCD 千位
+    UINT8 BCD_4  :4;  // BCD 万位
+}sMtFmt14_Hu, sMtFmt14_hu_f,sMtFmt_XXXXX_X;
+
+// 转换函数
+
+eMtErr emt_trans_XXXXX_X(eMtTrans eTrans, double* psUser, sMtFmt_XXXXX_X* psFrame);
 ///*} 
 
 /*********************************************
@@ -2277,6 +2318,10 @@ typedef struct
 // 转换函数
 eMtErr emt_trans_XXXXXXXX(eMtTrans eTrans, UINT32* psUser, sMtFmt_XXXXXXXX* psFrame);
 ///*} 
+//
+
+
+
 
 /******************************************************************************
  *  数据名称:数据冻结密度定义
@@ -3139,6 +3184,68 @@ eMtErr emtTrans_afn04f8(eMtTrans eTrans,void* psUser, void* psFrame, UINT16* pus
  * 结构说明: 与 CMD_AFN_A_F9_TML_EVENT_CFG 对应的上行结构相同
 {*///
 
+//huyuxiang
+// 用户侧
+typedef struct
+{
+    UINT8  Data[8]; 
+    UINT8  Priority[8]; 
+}sMtTmlEventCfg, sMtAfn04F9;   
+
+// 帧侧
+#pragma pack(1) 
+typedef struct
+{
+    UINT8  Data[8]; 
+    UINT8  Priority[8]; 
+}sMtTmlEventCfg_f, sMtAfn04F9_f;   
+#pragma pack() 
+
+// 转换函数
+eMtErr emtTrans_afn04f9(eMtTrans eTrans,void* psUser, void* psFrame, UINT16* pusfLen);
+
+
+typedef struct
+{
+    UINT8  Data[8]; 
+    UINT8  Priority[8]; 
+}sMtTmlEventCfg1, sMtAfn0aF9;   
+
+// 帧侧
+#pragma pack(1) 
+typedef struct
+{
+    UINT8  Data[8]; 
+    UINT8  Priority[8]; 
+}sMtTmlEventCfg1_f, sMtAfn0aF9_f;   
+#pragma pack() 
+
+// 转换函数
+eMtErr emtTrans_afn0af9(eMtTrans eTrans,void* psUser, void* psFrame, UINT16* pusfLen);
+
+
+
+//huyuxiang
+typedef struct
+{
+    UINT8  Data[8]; 
+}sMtTmlEventCfg2, sMtAfn0cF8;   
+
+// 帧侧
+#pragma pack(1) 
+typedef struct
+{
+    UINT8  Data[8]; 
+}sMtTmlEventCfg2_f, sMtAfn0cF8_f;   
+#pragma pack() 
+
+// 转换函数
+eMtErr emtTrans_afn0cf8(eMtTrans eTrans,void* psUser, void* psFrame, UINT16* pusfLen);
+
+
+#
+
+#if 0
 // 用户侧
 typedef struct
 {
@@ -3159,8 +3266,13 @@ typedef struct
 
 // 转换函数
 eMtErr emtTrans_afn04f9(eMtTrans eTrans,void* psUser, void* psFrame, UINT16* pusfLen);
-///*}
 
+#endif
+///*}
+//
+
+
+//huyuxiang
 /*******************************************
  * 数据结构: F10：终端电能表/交流采样装置配置参数
  * 对应AFN : AFN_04_SETP
@@ -3172,6 +3284,64 @@ eMtErr emtTrans_afn04f9(eMtTrans eTrans,void* psUser, void* psFrame, UINT16* pus
 #define  MT_PAYRATE_NUM_MIN     (1)  // 费率数最小值
 #define  MT_PAYRATE_NUM_MAX     (48) // 费率数最大值
 
+#define MT_USER_CLASS_MIN        (0)  // 用户大类名最小值 
+#define MT_USER_CLASS_MAX        (15) // 用户大类名最大值
+#define MT_USER_CLASS_NUM        (16)
+
+#define MT_METER_ID_MIN          (1)
+#define MT_METER_ID_MAX          (2040)
+
+typedef enum
+{
+    MT_INPUT1_UNKOWN,   // 未知
+    MT_INPUT1_ON,       // 接入
+    MT_INPUT1_OFF       // 未接入
+    
+}eMtStateInput1;        // 状态量接入标志
+
+typedef enum
+{
+    MT_ATTR1_UNKOWN,    // 未知
+    MT_ATTR1_ON,        // 常开触点
+    MT_ATTR1_OFF,       // 常闭触点
+    
+}eMtStateAttr1;         // 状态量属性标志位
+
+// 用户侧
+
+typedef struct
+{
+    eMtStateInput1 aeStateInput[32];  // 1～8路状态量输入，置"1"：接入    置"0"：未接入
+    eMtStateAttr1  aeStateAttr[32];   // 1～8路状态量输入，置"1"常开触点  置"0"：常闭触点
+
+}sMtTmlPowerCfg,sMtAfn04F10;
+
+// 帧侧
+typedef struct
+{
+    UINT32 ucStateInput;
+    UINT32 ucStateAttr;
+
+}sMtAfn04F10_f;
+
+// 转换函数
+eMtErr emtTrans_afn04f10(eMtTrans eTrans,void* psUser, void* psFrame, UINT16* pusfLen);
+
+
+#if 0
+/*******************************************
+ * 数据结构: F10：终端电能表/交流采样装置配置参数
+ * 对应AFN : AFN_04_SETP
+ * 对应CMD : CMD_AFN_4_F10_TML_POWER_CFG
+ * PN 类型 : P0
+ * 结构说明: 与 CMD_AFN_A_F10_TML_POWER_CFG 对应的上行结构相同
+{*///
+
+//huyuxiang
+#define  MT_PAYRATE_NUM_MIN     (1)  // 费率数最小值
+#define  MT_PAYRATE_NUM_MAX     (48) // 费率数最大值
+
+#
 typedef enum
 {
     MT_BAUD_DEFAULT,             // 0：表示无需设置或使用默认的
@@ -3321,6 +3491,12 @@ typedef struct
 
 // 转换函数
 eMtErr emtTrans_afn04f10(eMtTrans eTrans,void* psUser, void* psFrame, UINT16* pusfLen);
+
+#endif
+
+
+
+
 ///*}
 
 /*******************************************
@@ -3500,25 +3676,25 @@ eMtErr emtTrans_afn04f13(eMtTrans eTrans,void* psUser, void* psFrame, UINT16* pu
 #pragma pack(1) 
 
 typedef struct{
-	UINT8 	Flag;		//标识
-	UINT8 	Degree;		//度
-	UINT8 	Min;		//分
-	UINT16  	Sec;		//秒
-	
+    UINT8   Flag;       //标识
+    UINT8   Degree;     //度
+    UINT8   Min;        //分
+    UINT16      Sec;        //秒
+    
 }Position;
 
 typedef struct
 {
-    UINT8 	Type; 		//测量点类型
-    UINT8 	Nature;  	//测量点性质
-	UINT8 	Flag;		//启停用标志
-	UINT8	Port;		//接入端口号
-	UINT8 	PortType; 	//接入端口号属性
-	sMtFmt12    sAddress[1];  //通信地址
-	UINT8 	Group[4];	//分组码
-	UINT8	 Num;		//所属回路编号
-	Position PosLong;	//经度
-	Position PosLat;	//纬度	 
+    UINT8   Type;       //测量点类型
+    UINT8   Nature;     //测量点性质
+    UINT8   Flag;       //启停用标志
+    UINT8   Port;       //接入端口号
+    UINT8   PortType;   //接入端口号属性
+    sMtFmt12    sAddress[1];  //通信地址
+    UINT8   Group[4];   //分组码
+    UINT8    Num;       //所属回路编号
+    Position PosLong;   //经度
+    Position PosLat;    //纬度     
 } sMtAfn04F13_f;
 
 
@@ -3527,16 +3703,16 @@ typedef struct
 
 typedef struct
 {
-	UINT8 	Type; 		//测量点类型
-    UINT8 	Nature;  	//测量点性质
-	UINT8 	Flag;		//启停用标志
-	UINT8	Port;		//接入端口号
-	UINT8 	PortType; 	//接入端口号属性
-	UINT8 	address[6];	//通信地址
-	UINT32 	Group;	//分组码
-	UINT8	Num;		//所属回路编号
-	Position PosLong;	//经度
-	Position PosLat;	//纬度	 	
+    UINT8   Type;       //测量点类型
+    UINT8   Nature;     //测量点性质
+    UINT8   Flag;       //启停用标志
+    UINT8   Port;       //接入端口号
+    UINT8   PortType;   //接入端口号属性
+    UINT8   address[6]; //通信地址
+    UINT8   Group[4];   //分组码
+    UINT8   Num;        //所属回路编号
+    Position PosLong;   //经度
+    Position PosLat;    //纬度        
 } sMtAfn04F13;
 #pragma pack()
 // 转换函数
@@ -3692,12 +3868,12 @@ typedef struct
 }sMtBeginCtrlEnd;
  typedef struct
  {
-	sMtYYMMDD  BeginTime;            // 起始年月
-	UINT8		LastTime;		//持续时间
-	UINT16 		WayFlag;		//方案标志位
-	UINT8          ucM;                       // 允许抄表时段数m（0≤m≤24）
+    sMtYYMMDD  BeginTime;            // 起始年月
+    UINT8       LastTime;       //持续时间
+    UINT16      WayFlag;        //方案标志位
+    UINT8          ucM;                       // 允许抄表时段数m（0≤m≤24）
     sMtBeginCtrlEnd    sTime[1];                  // 0 ~ m个
-	
+    
  }sMtHaveDiffEvent, sMtAfn04F15;
  
  // 帧侧
@@ -3712,11 +3888,11 @@ typedef struct
  
  typedef struct
  {
-	sMtFmt20_f  BeginTime;		//起始年月
-	UINT8		LastTime;		//持续时间
-	UINT16 		WayFlag;		//方案标志位
-	UINT8		ucM;			//控制时间端(0<=ucM<=4)
-	sMtBeginCtrlEnd_f  sTime[1];	// 0 ~ m
+    sMtFmt20_f  BeginTime;      //起始年月
+    UINT8       LastTime;       //持续时间
+    UINT16      WayFlag;        //方案标志位
+    UINT8       ucM;            //控制时间端(0<=ucM<=4)
+    sMtBeginCtrlEnd_f  sTime[1];    // 0 ~ m
  
  }sMtHaveDiffEvent_f, sMtAfn04F15_f;
  #pragma pack() 
@@ -4594,7 +4770,6 @@ typedef struct
 }sMtTmlCascCfg_f, sMtAfn04f37_f;
 #pragma pack() 
 
-
 // 转换函数
 eMtErr emtTrans_afn04f37(eMtTrans eTrans,void* psUser, void* psFrame, UINT16* pusfLen);
 ///*}
@@ -5456,6 +5631,7 @@ eMtErr emtTrans_afn06f4(eMtTrans eTrans,void* psUser, void* psFrame, UINT16* pus
  * PN 类型 : p0
 {*///
 
+#if 0
 // 用户侧
 typedef struct
 {
@@ -5485,6 +5661,55 @@ typedef struct
   
 }sMtTmlVersion_f, sMtAfn09F1_f;
 #pragma pack()
+#endif
+
+// 用户侧
+typedef struct
+{
+    UINT8      ucFactoryID[4];           // 厂商代号 (ASCII)
+    UINT8      ucDeviceID[8];            // 设备编号 (ASCII)
+   
+    UINT8      ucSoftwareID[8];          // 终端软件版本号 
+    sMtYYMMDD  sDateSoftware;            // 终端软件发布日期：日月年
+    UINT8      ucInfoCodeCap[16];        // 终端配置容量信息码  (ASCII)  
+    
+    UINT8      ucHardWareID[8];          // 终端硬件版本号
+    sMtYYMMDD  sDateHardware;            // 终端硬件发布日期：日月年
+    
+    UINT8      ucRemoteID[8];          // 终端硬件版本号
+    sMtYYMMDD  sRemote;            // 终端硬件发布日期：日月年
+    
+    UINT8      ucLocalID[8];          // 终端硬件版本号
+    sMtYYMMDD  sLocal;            // 终端硬件发布日期：日月年
+    
+}sMtTmlVersion, sMtAfn09F1;
+
+// 帧侧
+#pragma pack(1) 
+typedef struct
+{
+    UINT8       ucFactoryID[4];           // 厂商代号 (ASCII)
+    UINT8       ucDeviceID[8];            // 设备编号 (ASCII)
+    
+    UINT8       ucSoftwareID[8];          // 终端软件版本号
+    sMtFmt20_f  sDateSoftware;            // 终端软件发布日期：日月年
+    UINT8       ucInfoCodeCap[16];        // 终端配置容量信息码  (ASCII)
+        
+    UINT8       ucHardWareID[8];          // 终端硬件版本号
+    sMtFmt20_f  sDateHardware;            // 终端硬件发布日期：日月年
+    
+    UINT8       ucRemoteID[8];          // 远程通信模块版本号
+    sMtFmt20_f  sRemote;            // 远程通信模块发布日期：日月年
+    
+    UINT8       ucLocalID[8];          // 本地通信模块版本号
+    sMtFmt20_f  sLocal;            // 本地通信模块发布日期：日月年
+  
+}sMtTmlVersion_f, sMtAfn09F1_f;
+#pragma pack()
+
+
+
+
 
 // 转换函数
 eMtErr emtTrans_afn09f1(eMtTrans eTrans,void* psUser, void* psFrame, UINT16* pusfLen);
@@ -5961,46 +6186,10 @@ eMtErr emtTrans_afn0af39(eMtTrans eTrans,void* psUser, void* psFrame, UINT16* pu
  * 对应AFN : AFN_0C_ASK1 
  * 对应CMD : CMD_AFN_C_F1_ANALOG_DATA
  * PN 类型 : 测量点号
-{*///
-#define MT_M_MAX  20
-#if 1
+{*/
+
+#if 0
 // 用户侧
-typedef struct
-{
-    float           fU;            // 当前电压     (V)       XXX.X
-    float           fI;            // 当前电流     (A)  (+/-)XXX.XXX      
-    float           fP;             // 当前有功功率  (KW) (+/-)XX.XXXX
-    float           fQ;             // 当前无功功率  (KW) (+/-)XX.XXXX 
-    float           fPf;            // 当前功率因数  (%)  (+/-)XXX.X
-    float           fLc;             // 当前光控值  (%)  (+/-)XXX.X
-    
-}sMtAnalogData;
-
-typedef struct
-{
-    sMtYYMMDDhhmm   sReadTime;      // 终端抄表时间    (分时日月年)
-    UINT8           anaglogNum;
-    sMtAnalogData   data[1];
-}sMtCurAnalog, sMtAfn0cF1;
-
-// 帧侧
-#pragma pack(1) 
-typedef struct
-{
-    sMtFmt_XXX_X              fU;   // 当前电压        XXX.X
-    sMtFmt_sXXX_XXX           fI;   // 当前电流     (A)  (+/-)XXX.XXX       
-    sMtFmt_sXX_XXXX           fP;   // 当前有功功率  (KW) (+/-)XX.XXXX 
-    sMtFmt_sXX_XXXX           fQ;   // 当前无功功率  (KW) (+/-)XX.XXXX 
-    sMtFmt_sXXX_X             fPf;  // 当前功率因数  (%)  (+/-)XXX.X
-    sMtFmt_sXXX_X             fLc;  // 当前光控值  (%)  (+/-)XXX.X
-}sMtAnalogData_f;
-
-typedef struct
-{
-    sMtYYMMDDhhmm_f           sReadTime;      // 终端抄表时间    (分时日月年)
-    UINT8                     anaglogNum;
-}sMtCurAnalog_f,sMtAfn0cF1_f;
-#else
 typedef struct
 {
     // 实际数据
@@ -6016,8 +6205,8 @@ typedef struct
 }sMtCurAnalog, sMtAfn0cF1;
 
 
-
-
+// 帧侧
+#pragma pack(1) 
 typedef struct
 {
     sMtYYMMDDhhmm_f           sReadTime;      // 终端抄表时间    (分时日月年)
@@ -6030,9 +6219,112 @@ typedef struct
     sMtFmt_sXXX_X             fLc[2];  // 当前光控值  (%)  (+/-)XXX.X
 }sMtCurAnalog_f, sMtAfn0cF1_f;
 #pragma pack()
-#endif
+
 // 转换函数
 eMtErr emtTrans_afn0cf01(eMtTrans eTrans,void* psUser, void* psFrame, UINT16* pusfLen);
+#endif
+
+
+//huyuxiang
+typedef struct
+{
+    
+    sMtYYMMDDhhmm   sReadTime;      // 终端抄表时间    (分时日月年)
+    UINT8           anaglogNum;
+
+    float           fU[4];          // 当前电压     (V)       XXX.X
+    float           fI[4];          // 当前电流     (A)  (+/-)XXX.XXX      
+    float           fP[4];          // 当前有功功率  (KW) (+/-)XX.XXXX
+    float           fQ[4];          // 当前无功功率  (KW) (+/-)XX.XXXX 
+    float           fPf[4];         // 当前功率因数  (%)  (+/-)XXX.X
+    float           fLc[4];         // 当前光控值  (%)  (+/-)XXX.X
+    UINT8             state;            //开关灯状态
+    float           fS[4];          // 当前视在功率  (%)  (+/-)XX.XXXX
+    double           EP[4];         //有功能量寄存器  (%)  (+/-)XXXXX.X
+    double           PosEP[4];      //正向有功能量寄存器 (%)  (+/-)XXXXX.X
+    double           NegEP[4];      //反向有功能量寄存器 (%)  (+/-)XXXXX.X
+    double           EQ[4];         //无功能量寄存器 (%)  (+/-)XXXXX.X
+    double           PosEQ[4];      //正向无功能量寄存器 (%)  (+/-)XXXXX.X
+    double           NegEQ[4];      //反向无功能量寄存器 (%)  (+/-)XXXXX.X
+    double           ES[4];         //视在能量寄存器 (%)  (+/-)XXXXX.X
+    double           Time;          //累计开灯时间 (%)  (+/-)XXXXX.X
+    UINT16           Lc[1];             //漏电流
+    UINT8           TPower[4];      //终端停上电  0xFF:上电,0x00:停电
+        
+}sMtCurAnalog, sMtAfn0cF1;
+
+
+#pragma pack(1) 
+
+typedef struct
+{
+    sMtYYMMDDhhmm_f           sReadTime;      // 终端抄表时间    (分时日月年)
+    UINT8                     anaglogNum;
+}sMtCurAnalog_head_f, sMtAfn0cF1_head_f;
+
+
+typedef struct
+{
+    sMtYYMMDDhhmm_f           sReadTime;      // 终端抄表时间    (分时日月年)
+    UINT8                     anaglogNum;
+    sMtFmt_XXX_X              fU[4];   // 当前电压        XXX.X
+    sMtFmt_sXXX_XXX           fI[4];   // 当前电流     (A)  (+/-)XXX.XXX       
+    sMtFmt_sXX_XXXX           fP[4];   // 当前有功功率  (KW) (+/-)XX.XXXX
+    sMtFmt_sXX_XXXX           fQ[4];   // 当前无功功率  (KW) (+/-)XX.XXXX 
+    sMtFmt_sXXX_X             fPf[4];  // 当前功率因数  (%)  (+/-)XXX.X
+    sMtFmt_sXXX_X             fLc[4];  // 当前光控值  (%)  (+/-)XXX.X
+}sMtCurAnalog_f, sMtAfn0cF1_f;
+
+
+typedef struct
+{
+    sMtFmt_XXX_X              fU[4];   // 当前电压        XXX.X
+    sMtFmt_sXXX_XXX           fI[4];   // 当前电流     (A)  (+/-)XXX.XXX       
+    sMtFmt_sXX_XXXX           fP[4];   // 当前有功功率  (KW) (+/-)XX.XXXX
+    sMtFmt_sXX_XXXX           fQ[4];   // 当前无功功率  (KW) (+/-)XX.XXXX 
+    sMtFmt_sXXX_X             fPf[4];  // 当前功率因数  (%)  (+/-)XXX.X
+    sMtFmt_sXXX_X             fLc[4];  // 当前光控值  (%)  (+/-)XXX.X
+    sMtFmt_sXX_XXXX           fS[4];   // 当前视在功率  (%)  (+/-)XX.XXXX
+    sMtFmt_XXXXX_X            EP[4];            //有功能量寄存器 (%)  (+/-)XXXXX.X
+    sMtFmt_XXXXX_X            PosEP[4];     //正向有功能量寄存器 (%)  (+/-)XXXXX.X
+    sMtFmt_XXXXX_X            NegEP[4];     //反向有功能量寄存器 (%)  (+/-)XXXXX.X
+    sMtFmt_XXXXX_X            EQ[4];            //无功能量寄存器 (%)  (+/-)XXXXX.X
+    sMtFmt_XXXXX_X            PosEQ[4];     //正向无功能量寄存器 (%)  (+/-)XXXXX.X
+    sMtFmt_XXXXX_X            NegEQ[4];     //反向无功能量寄存器 (%)  (+/-)XXXXX.X
+    sMtFmt_XXXXX_X            ES[4];            //视在能量寄存器 (%)  (+/-)XXXXX.X
+    UINT8                     TPower[4]; //终端停上电  0xFF:上电,0x00:停电
+}sMtCurAnalog_p0_f, sMtAfn0cF1_p0_f;
+
+
+typedef struct
+{
+    sMtFmt_XXX_X              fU;   // 当前电压        XXX.X
+    sMtFmt_sXXX_XXX           fI;   // 当前电流     (A)  (+/-)XXX.XXX        
+    sMtFmt_sXX_XXXX           fP;   // 当前有功功率  (KW) (+/-)XX.XXXX
+    sMtFmt_sXX_XXXX           fQ;   // 当前无功功率  (KW) (+/-)XX.XXXX 
+    sMtFmt_sXXX_X             fPf;  // 当前功率因数  (%)  (+/-)XXX.X
+    sMtFmt_sXXX_X             fLc;  // 当前光控值  (%)  (+/-)XXX.X
+    UINT8                     state;            //开关灯状态
+    sMtFmt_sXX_XXXX           fS;   // 当前视在功率  (%)  (+/-)XX.XXXX
+    sMtFmt_XXXXX_X        Time;         //累计开灯时间(+/-)XXXXX.XX
+    sMtFmt_XXXX           Lc;           //漏电流
+    sMtFmt_XXXXX_X        EP;           //有功能量寄存器 (%)  (+/-)XXXXX.X
+    sMtFmt_XXXXX_X        PosEP;        //正向有功能量寄存器 (%)  (+/-)XXXXX.X
+    sMtFmt_XXXXX_X        NegEP;        //反向有功能量寄存器 (%)  (+/-)XXXXX.X
+    sMtFmt_XXXXX_X        EQ;           //无功能量寄存器 (%)  (+/-)XXXXX.X
+    sMtFmt_XXXXX_X        PosEQ;        //正向无功能量寄存器 (%)  (+/-)XXXXX.X
+    sMtFmt_XXXXX_X        NegEQ;        //反向无功能量寄存器 (%)  (+/-)XXXXX.X
+    sMtFmt_XXXXX_X        ES;           //视在能量寄存器 (%)  (+/-)XXXXX.X
+
+}sMtCurAnalog_pn_f, sMtAfn0cF1_pn_f;
+
+#pragma pack()
+
+// 转换函数
+eMtErr emtTrans_afn0cf01(eMtTrans eTrans,void* psUser, void* psFrame, UINT16* pusfLen);
+
+
+
 
 
 
@@ -9374,7 +9666,7 @@ eMtErr emtTrans_td_m(eMtTrans eTrans, void* psUser, void* psFrame, UINT16* pusfL
 {*///
 
  #define MT_M_MIN      (1)                        // 费率数最小值
- #define MT_M_MAX      (20)                       // 费率数最大值
+ #define MT_M_MAX      (12)                       // 费率数最大值
 
 // 用户侧
 typedef struct
@@ -14286,7 +14578,7 @@ eMtErr emtTrans_rec_35(eMtTrans eTrans, void* psUser, void* psFrame, UINT16* pus
  * PN 类型 : P0
  * 规则说明:
  *     所请求的事件记录个数Y满足下列计算公式：
- *     (1)当Pm＜Pn时，Y= Pn-Pm	
+ *     (1)当Pm＜Pn时，Y= Pn-Pm  
  *     (2)当Pm＞Pn时，Y= 256＋Pn-Pm
  *   
 {*///
@@ -14350,7 +14642,7 @@ typedef struct
     UINT8  ucPm;     // 本帧报文传送的事件记录起始指针Pm
     UINT8  ucPn;     // 本帧报文传送的事件记录结束指针Pn
     uMtRec uRec[1];  // Y 个事件记录信息
-                     // * (1)当Pm＜Pn时，Y= Pn-Pm	
+                     // * (1)当Pm＜Pn时，Y= Pn-Pm   
                      // * (2)当Pm＞Pn时，Y= 256＋Pn-Pm
 }sMtResEvent1;
 
@@ -14364,7 +14656,7 @@ typedef struct
     UINT8  ucPm;     // 本帧报文传送的事件记录起始指针Pm
     UINT8  ucPn;     // 本帧报文传送的事件记录结束指针Pn
     UINT8  uRec[1];  // Y 个事件记录信息
-                     // * (1)当Pm＜Pn时，Y= Pn-Pm	
+                     // * (1)当Pm＜Pn时，Y= Pn-Pm   
                      // * (2)当Pm＞Pn时，Y= 256＋Pn-Pm
 }sMtResEvent1_f;
 #pragma pack() 
@@ -14384,7 +14676,7 @@ pMtFunc pMtGetRecTransFunc(UINT8 ucRecID);
  * PN 类型 : P0
  * 规则说明:
  *     所请求的事件记录个数Y满足下列计算公式：
- *     (1)当Pm＜Pn时，Y= Pn-Pm	
+ *     (1)当Pm＜Pn时，Y= Pn-Pm  
  *     (2)当Pm＞Pn时，Y= 256＋Pn-Pm
  *   
 {*///
@@ -14450,54 +14742,234 @@ eMtErr emt_read_uint32_small_endian(UINT8* pRead, UINT32* pUint32);
 ///*}
 
 //huyuxiang 3-16
+#pragma pack(1)
+
+typedef struct
+{
+    UINT8   Min;
+    UINT8   Hour;
+    UINT8   Status;
+    UINT8   Light;
+    
+}sMtTime;
+
+typedef struct
+{
+    UINT16  Time;
+    UINT8   Status;
+    UINT8   Light;
+}sMtTime_f;
+
+typedef struct
+{
+    UINT8       ucOperate;          // 操作类型
+    UINT8               ucAddress[8];      // 控制器地址
+    UINT8       ucKey[32];      //控制器密钥
+    
+}sMtPara1, sMtPara1_f;
 
 
+
+// 用户侧
+
+typedef struct
+{
+    UINT16      ucTaskFormat;    //任务格式
+        UINT8       ucTaskType;      //任务类型 
+    UINT16      ucTaskLen;       //任务长度
+        sMtYYMMDD   sT;              // 日月年
+    UINT8       LastTime;        //持续时间
+    UINT8       ucTimeNum;       //时段控制块数
+    sMtTime     Time[20];             //时段控制块
+    UINT16      ucDataNum;       //控制参数块数
+    sMtPara1    Data[36];            //控制参数块
+    
+}sMt11f2_u;
+
+typedef struct
+{
+    UINT16      ucTaskFormat;    //任务格式
+        UINT8       ucTaskType;      //任务类型 
+    UINT16      ucTaskLen;       //任务长度
+        sMtFmt20   sT;               // 日月年
+    UINT8       LastTime;        //持续时间
+    UINT8       ucTimeNum;       //时段控制块数
+    
+}sMt11f2_u_head;
+
+
+// 帧侧
+
+typedef struct
+{
+    UINT16          ucTaskFormat;   //任务格式
+        UINT8           ucTaskType;     //任务类型  
+    UINT16          ucTaskLen;      //任务长度
+        sMtFmt20_f      sT;             //日月年
+    UINT8           LastTime;       //持续时间
+    UINT8           ucTimeNum;      //时段控制块数
+    sMtTime_f       Time[4];        //时段控制块
+    UINT16          ucDataNum;      //控制参数块数
+    sMtPara1_f      Data[36];       //控制参数块
+ 
+}sMt11f2_f;
+
+
+
+typedef struct
+{
+    UINT16         ucTaskFormat;   //任务格式
+   UINT8          ucTaskType;       //任务类型
+    UINT16          ucTaskLen;      //任务长度
+   sMtFmt20_f     sT;               //日月年
+    UINT8               LastTime;       //持续时间
+    UINT8           ucTimeNum;      //时段控制块数
+ 
+}sMt11f2_f_head;
+
+
+eMtErr emtTrans_afn11hf2_m2s(eMtTrans eTrans, void* psUser, void* psFrame, UINT16* pusfLen);
+
+
+#pragma pack() 
+
+
+
+
+
+#if 0
 #pragma pack(1)
 
 //帧侧和用户侧
 typedef struct
 {
-    UINT8		ucOperate;          // 操作类型
-    UINT8               ucPassword[8];      // 控制器地址
-    UINT8 		ucKey[32];	    //控制器密钥
+    UINT8       ucOperate;          // 操作类型
+    UINT8               ucAddress[8];      // 控制器地址
+    UINT8       ucKey[32];      //控制器密钥
     
 }sMtPara, sMtPara_f;
 
 typedef struct
 {
-    UINT16              ucTaskFormat;   	//任务格式
-    UINT8          	ucTaskType;		//任务类型	 
-    UINT16     		ucTaskLen;              //任务长度
-    UINT8         	ucData;       	//控制内容
-    UINT16     		ucNum;         		//配置数量
-    sMtPara_f           ucPara[1];        	//配置控制器参数块n
+
+    UINT16              ucTaskFormat;       //任务格式
+    UINT8           ucTaskType;     //任务类型   
+    UINT16          ucTaskLen;              //任务长度
+    UINT8           ucData;                 //控制内容
+    UINT16          ucNum;              //配置数量
+    sMtPara_f           ucPara[1];          //配置控制器参数块n
     
 }sMtCtr_11hf3, sMtCtr_11hf3_f;
 #pragma pack() 
 // 转换函数
 eMtErr emtTrans_afn11hf3_m2s(eMtTrans eTrans, void* psUser, void* psFrame, UINT16* pusfLen);
 
+#endif
+
+#pragma pack(1)
+
+
+typedef struct
+{
+    UINT8               ucOperate;          // 操作类型
+    UINT8               ucAddress[8];      // 控制器地址
+    UINT8               ucKey[32];          //控制器密钥
+
+}sMtPara, sMtPara_f;
+
+typedef struct
+{
+    sMtFmt15 Time;
+    UINT8   Status;
+    UINT8   Light;
+
+}sMtTime_11hf3;
+
+typedef struct
+{
+    sMtFmt15_f  Time;
+    UINT8   Status;
+    UINT8   Light;
+}sMtTime_11hf3_f;
+
+
+
+
+
+//用户侧
+typedef struct
+{
+
+    UINT16              ucTaskFormat;           //任务格式
+    UINT8               ucTaskType;             //任务类型       
+    UINT16              ucTaskLen;              //任务长度
+    sMtTime_11hf3       ucData[12];             //控制内容
+    UINT16              ucNum;                  //配置数量
+    sMtPara             ucPara[36];             //配置控制器参数块n
+
+}sMtCtr_11hf3;
+
+//帧侧
+
+typedef struct
+{
+
+    UINT16              ucTaskFormat;           //任务格式
+    UINT8               ucTaskType;             //任务类型       
+    UINT16              ucTaskLen;              //任务长度
+}sMtCtr_11hf3_f_head;
+
+
+//帧侧
+typedef struct
+{
+
+    UINT16              ucTaskFormat;           //任务格式
+    UINT8               ucTaskType;             //任务类型       
+    UINT16              ucTaskLen;              //任务长度
+    sMtTime_11hf3_f     ucData[12];             //控制内容
+    UINT16              ucNum;                  //配置数量
+    sMtPara_f           ucPara[36];             //配置控制器参数块n
+
+}sMtCtr_11hf3_f;
+#pragma pack() 
+// 转换函数
+eMtErr emtTrans_afn11hf3_m2s(eMtTrans eTrans, void* psUser, void* psFrame, UINT16* pusfLen);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 #pragma pack(1)
 typedef struct
 {
-    UINT16          ucDataUnit;   		//控制器操作配置数据单元Fn
-    UINT8           ucTaskType;			//任务类型	     
+    UINT16          ucDataUnit;         //控制器操作配置数据单元Fn
+    UINT8           ucTaskType;         //任务类型       
 }sMt_m2s_11hf4, sMt_m2s_11hf4_f;
 #pragma pack() 
 eMtErr emtTrans_afn11hf4_m2s(eMtTrans eTrans, void* psUser, void* psFrame, UINT16* pusfLen);
 
 #pragma pack(1)
 typedef struct{
-	UINT8 address[8];
+    UINT8 address[8];
 }sMtCtrlAddress;
 
 typedef struct
 {
-    UINT16              ucDataUnit;   		//控制器操作配置数据单元Fn
-    UINT8          	ucTaskType;		//任务类型	 
-    UINT16     		ucCtrlNum;         	//控制总数量
-    UINT16     		ucExeNum;          	//成功执行数量
-    sMtCtrlAddress      addr[1];       		//控制内容  
+    UINT16              ucDataUnit;         //控制器操作配置数据单元Fn
+    UINT8           ucTaskType;     //任务类型   
+    UINT16          ucCtrlNum;          //控制总数量
+    UINT16          ucExeNum;           //成功执行数量
+    sMtCtrlAddress      addr[1];            //控制内容  
 }sMt_s2m_11hf4, sMt_s2m_11hf4_f;
 #pragma pack() 
 eMtErr emtTrans_afn11hf4_s2m(eMtTrans eTrans, void* psUser, void* psFrame, UINT16* pusfLen);
@@ -14523,14 +14995,16 @@ typedef union
      *  主站到从站 和 从站到主站
      *  双向同样的数据结构
     {*///
-    sMtSure	     sSure;             //确认或否认
+    sMtSure      sSure;             //确认或否认
     sMtOnebyOne      sOneByOne;        // 逐个确认或否认                  CMD_AFN_0_F3_ONE_BY_ONE
     sMtTmlUpCfg      sTmlUpCfg;        // 终端上行通信口通信参数设置      CMD_AFN_4_F1_TML_UP_CFG          CMD_AFN_A_F1_TML_UP_CFG
     //huyuxiang
     sMtMasterIpPort  sTmIpPort;       //主站IP地址和端口
+    sMtTmlEventCfg   sTmlEventCfg;    //终端事件记录配置
+    sMtTmlEventCfg1  sTmlEventCfg1;   //终端事件记录上报
     sMtTmlPowerCfg   sTmlPowerCfg;     // 终端电能表/交流采样装置配置参数 CMD_AFN_A_F10_TML_POWER_CFG
 
-    sMtAfn04F13 		sTmTerminalCfg;		//终端电能表和路灯控制器配置参数
+    sMtAfn04F13         sTmTerminalCfg;     //终端电能表和路灯控制器配置参数
     sMtHaveDiffEvent stmCtrlWaycfg;    //继电器输出控制方案
     float            fTmlSafeValue;    // 终端保安定值                    CMD_AFN_A_F17_TML_SAFE_VALUE
     sMtFloat         sTmlPCtrlFactor;  // 终端时段功控定值浮动系数        CMD_AFN_4_F19_TML_PCTRL_FACTOR   CMD_AFN_A_F19_TML_PCTRL_FACTOR
@@ -14559,9 +15033,7 @@ typedef union
     sMtSuptAsk1      sTmlSuptAsk1;       // 终端支持的1类数据配置   CMD_AFN_9_F6_SUPPORT_ASK1_CFG
     sMtSuptAsk2      sTmlSuptAsk2;       // 终端支持的2类数据配置   CMD_AFN_9_F7_SUPPORT_ASK2_CFG
     sMtSuptEvent     sTmlSuptEvent;      // 终端支持的事件记录配置  CMD_AFN_9_F8_SUPPORT_EVNT_CFG
-
     sMtUserClock     sTmlClock;          // 终端日历时钟            CMD_AFN_C_F2_TML_CLOCK
-    //sMtFrmClock      sTmlClock;
     sMtParaSta       sTmlParaStat;       // 终端参数状态            CMD_AFN_C_F3_TML_PARA_STATE 
     sMtTmlUpComState sTmlUpComStat;      // 终端上行通信状态        CMD_AFN_C_F4_TML_UPCOM_STATE 
     sMtAfn0cF05      sTmlCtrlStat;       // 终端控制设置状态        CMD_AFN_C_F5_TML_CTRL_SET
@@ -14610,8 +15082,9 @@ typedef union
     sMtTd_h          sTd_h;              // 小时冻结 命令参数
     sMtTd_d          sTd_d;              // 日冻结   命令参数
     sMtTd_m          sTd_m;              // 月冻结   命令参数  
-    sMtCtr_11hf3     std_11f3;		 // AFN=11H ,F3 控制配置命令
-    sMt_m2s_11hf4    std_11f4;            // AFN=11H ,F3 控制配置命令
+    sMtCtr_11hf3     std_11f3;       // AFN=11H ,F3 控制配置命令
+    sMt_m2s_11hf4    std_11f4;            // AFN=11H ,F4 控制配置命令
+    sMt11f2_u        std_11f2;           //AFN=11H,F2,日控制时段
 
 ///*}
 
@@ -14805,7 +15278,7 @@ typedef struct
     UINT8         s68;          // 0x68
     UINT8         C;            // 控制域
     UINT8         Ver:4;        //版本
-    UINT8	  Encry:4;      //加密
+    UINT8     Encry:4;      //加密
     sMtAddress_f  A;            // 地址域
     UINT8         AFN;          // 主功能码
     UINT8         SEQ;          // 帧序列
@@ -14911,6 +15384,8 @@ typedef struct
  *  用于封装
  *  变长结构
 {*///
+
+
 typedef struct
 {
     sMtAddress    sAddress;        // 地址域
@@ -14919,25 +15394,25 @@ typedef struct
     eMtPRM        ePRM;            // 标志该报文是来自启动站 还是从动站
     eMtPos        ePos;            // 位置
     UINT8         ucSeq;           // pseq/rseq (0~15) 
- 
+
     BOOL          bAcdFcb;         // FCB 帧计数位 在下行报文中有效
-                                   /*
+                    /*
                                       启动站向同一从动站传输新的发送/确认或请求/响应传输服务时，将FCB取相反值。
                                       启动站保存每一个从动站FCB值，若超时未收到从动站的报文，或接收出现差错，
                                       则启动站不改变FCB的状态，重复原来的发送/确认或者请求/响应服务。
                                       复位命令中的FCB=0，从动站接收复位命令后将FCB置"0"
-                                   */
-                           
-                                   // ACD 事件请求访问位, 如果有重要事件需要主站访问, 置真
+                                    */
+
+
+                           // ACD 事件请求访问位, 如果有重要事件需要主站访问, 置真
                                    // 只在上行报文中 有效
-    BOOL          bCon;            // 是否需要确认
+     BOOL          bCon;            // 是否需要确认
 
     // 附加域
     BOOL          bPW;             // 有没有Pw字段
     BOOL          bEC;             // 有没有EC 字段
     BOOL          bTP;             // 是否有Tp字段
-
-    
+ 
     UINT8         acPW[MT_PW_LEN]; // pw字段  消息认证码字段PW用于重要下行报文中，
                                    // 由16字节组成,PW是由主站按系统约定的认证算法产生
                                    // 并在主站发送的报文中下发给终端
@@ -14952,6 +15427,13 @@ typedef struct
     sMtData       sData[1];       // 数据单元组 变长 可能没有 可能多个
     
 }smtPack;
+
+
+
+
+
+
+
 
 // 封装函数
 eMtErr emtPackBase(smtPack* psPack, UINT16* pusLen, UINT8* pOutBuf);   

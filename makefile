@@ -19,9 +19,11 @@ INSIGHT     = /opt/insight-x86/bin/insight
 # ---------------------------------------------------------------------------
 # project specifics
 # ---------------------------------------------------------------------------
-CFLAGS	    = -MD -g3 -Wall
+CFLAGS	    = -MD -g3 -Wall 
 #LDFLAGS     = 
-LDFLAGS     = -pthread
+LDFLAGS     += -pthread  
+LDLIBS      += -ldl
+#LDFLAGS     += -ldl
 ifeq ($(CYGWIN_BUILD),YES)
 else
 #LDFLAGS     += -lpthread
@@ -31,7 +33,9 @@ TGT         = main
 OTHER_CSRC  = 
 OTHER_ASRC  = 
 CSRC        = qgdw_3761_api.c con3761adp.c fmprint.c tcp_client.c app_handle.c \
-			  timeout_handle.c app_heartbeat.c main.c
+			  timeout_handle.c app_heartbeat.c app_sql.c sqlite3.c app_rx_data_handle.c \
+			  main.c 
+
 ASRC        = 
 OBJS        = $(CSRC:.c=.o) $(ASRC:.S=.o)
 NOLINK_OBJS = $(OTHER_CSRC:.c=.o) $(OTHER_ASRC:.S=.o)

@@ -13,7 +13,7 @@ enum {
 	TIMEOUT_ON
 } timeoutFlag_t;
 
-UINT8 packageTimeout = 3;
+UINT16 packageTimeout = 3;
 UINT8 timeoutTimes = 3;
 static UINT8 timeoutFlag = TIMEOUT_OFF; 
 
@@ -31,13 +31,13 @@ typedef struct
 
 
 // 超时查询表
-#define TIMEOUT_NUM          3
+#define TIMEOUT_NUM          4
 sTimeoutHandle_t  g_timeout_handle[TIMEOUT_NUM] = 
 {   
 	{FALSE,        0,        0,        CMD_AFN_2_F1_LOG_IN,          pack_afn02f01},
 	{FALSE,        0,        0,        CMD_AFN_2_F2_LOG_OUT,         pack_afn02f2},
-	{FALSE,        0,        0,        CMD_AFN_2_F3_HEART_BEAT,      pack_afn02f3}
-	// {FALSE,        0,        0,        CMD_AFN_A_F1_TML_UP_CFG,      pack_afn0af1_s2m},
+	{FALSE,        0,        0,        CMD_AFN_2_F3_HEART_BEAT,      pack_afn02f3},
+    {FALSE,        0,        0,        CMD_AFN_C_F8_TML_EVNT_FLAG,   pack_afn0cf08_s2m},
 	// {FALSE,        0,        0,        CMD_AFN_A_F3_MST_IP_PORT,     pack_afn0af3_s2m},
 	// {FALSE,        0,        0,        CMD_AFN_A_F13_LED_UP_CFG,     pack_afn0af13_s2m},
 	// {FALSE,        0,        0,        CMD_AFN_A_F15_HAVE_DIFF_EVENT,pack_afn0af15_s2m},
@@ -46,6 +46,16 @@ sTimeoutHandle_t  g_timeout_handle[TIMEOUT_NUM] =
 	// {FALSE,        0,        0,        CMD_AFN_11_F4,                pack_afn11hf4_s2m}
 };
 
+/*重设超时时间*/
+void app_timtout_set_value(UINT16 d)
+{
+	packageTimeout = d;
+}
+/*重传次数*/
+void app_retry_times_set(UINT8 d)
+{
+	timeoutTimes = d;
+}
 
 void app_timeout_reset(UINT16 cmdId)
 {
