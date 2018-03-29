@@ -1,4 +1,4 @@
-﻿/******************************************************************************
+/******************************************************************************
 
                   版权所有 (C), 2010-2015, 国网电力通信与用电技术分公司
 
@@ -536,14 +536,6 @@ eCmErr ecm_3761_unpack(UINT8 * pBuf, UINT16 usBufLen, sCmPacket* psCmPacket)
     }
 
     psCmPacket->sAddress = psmtPack->sAddress;
-
-    /*PFC校准*/
-    {
-        ucPFC = psmtPack->sTP.ucPFC;
-        g_ucCmPFCRecv  = ucPFC;
-        g_ucCmPFCSend = g_ucCmPFCRecv;
-        printf("ecm_3761_unpack,g_ucCmPFCSend:%d\n",g_ucCmPFCSend);
-    }
 
       //ucPFC    = psmtPack->ucPFC;
 
