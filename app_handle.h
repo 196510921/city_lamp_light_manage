@@ -31,6 +31,8 @@ eMtErr app_logout(void);
 void set_current_usPn(UINT16 usPn);
 UINT16 get_current_usPn(void);
 int afn_11_f2_ctrl_table(sMt11f2_u* d);
+
+int app_groupInfo_unpack(UINT16* d, char* groupInfo);
 #endif //_APP_HANDLE_H_
 
 

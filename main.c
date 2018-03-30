@@ -15025,6 +15025,7 @@ void show_app_data(eMtDir eDir, sMtData *pSub)
 
    //pn 
    printf("usPN  = %d\t", pSub->usPN);
+   set_current_usPn(pSub->usPN);
    show_sub_name("信息点PN\t");
    switch(sCmdInfor.ePn)
    {
@@ -15036,7 +15037,6 @@ void show_app_data(eMtDir eDir, sMtData *pSub)
         break;
        case MT_PN_MP:
         show_item_value("测量点号");
-        set_current_usPn(pSub->usPN);
         break;
        case MT_PN_GT:
         show_item_value("总加组号");

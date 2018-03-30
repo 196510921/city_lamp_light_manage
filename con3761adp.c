@@ -51,6 +51,7 @@ sCmdMap g_cmdMap[] =
     {CMD_DATA_INIT,            CMD_AFN_1_F2_DATA_INIT,          MT_PRM_ACTIVE},
     {CMD_FACTORY_RESET,        CMD_AFN_1_F3_FACTORY_RESET,      MT_PRM_ACTIVE},
     {CMD_PARA_INIT,            CMD_AFN_1_F4_PARA_INIT,          MT_PRM_ACTIVE},
+    {CMD_UPDATE,               CMD_AFN_1_F5_UPDATE,             MT_PRM_ACTIVE},
 
     //(2) 链路接口检测（AFN=02H）
     {CMD_LOG_IN,               CMD_AFN_2_F1_LOG_IN,             MT_PRM_ACTIVE},

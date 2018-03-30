@@ -233,6 +233,7 @@ typedef enum
     CMD_AFN_1_F2_DATA_INIT           = 0x0102,       // 数据区初始化
     CMD_AFN_1_F3_FACTORY_RESET       = 0x0103,       // 参数及全体数据区初始化（即恢复至出厂配置）
     CMD_AFN_1_F4_PARA_INIT           = 0x0104,       // 参数（除与系统主站通信有关的）及全体数据区初始化
+    CMD_AFN_1_F5_UPDATE              = 0x0105,       // 升级
     ///*}                                            // F5 - F248 备用
     
     /**********************************

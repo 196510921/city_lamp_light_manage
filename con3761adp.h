@@ -47,6 +47,7 @@ typedef enum
     CMD_DATA_INIT,                  // 数据区初始化
     CMD_FACTORY_RESET,              // 参数及全体数据区初始化（即恢复至出厂配置）
     CMD_PARA_INIT,                  // 参数（除与系统主站通信有关的）及全体数据区初始化
+    CMD_UPDATE,                  // 参数（除与系统主站通信有关的）及全体数据区初始化
 
 
     /* 链路接口检测（AFN=02H） */

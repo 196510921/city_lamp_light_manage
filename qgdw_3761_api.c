@@ -247,6 +247,7 @@ const sMtCmdInfor gmt_cmdinfor[] =
     {CMD_AFN_1_F2_DATA_INIT,         MT_DIR_M2S, MT_PN_P0,  NULL,                  "数据区初始化"},
     {CMD_AFN_1_F3_FACTORY_RESET,     MT_DIR_M2S, MT_PN_P0,  NULL,                  "参数及全体数据区初始化（即恢复至出厂配置）"},
     {CMD_AFN_1_F4_PARA_INIT,         MT_DIR_M2S, MT_PN_P0,  NULL,                  "参数（除与系统主站通信有关的）及全体数据区初始化"},
+    {CMD_AFN_1_F5_UPDATE,             MT_DIR_M2S, MT_PN_P0,  NULL,                  "升级"},
     ///*}
  
      /*******************************
@@ -3128,7 +3129,8 @@ eMtErr emt_dadt_to_pnfn(sMtDaDt* psDaDt, sMtPnFn* psPnFn)
             ucTmp = ucMask << i;
             if(psDaDt->ucDA1 & ucTmp)
             {
-                usPn = (psDaDt->ucDA2-1) * 8 + i + 1;
+                //usPn = (psDaDt->ucDA2-1) * 8 + i + 1;
+                usPn = (psDaDt->ucDA2) * 8 + i + 1;
             }
             else
             {
