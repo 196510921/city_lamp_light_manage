@@ -16014,6 +16014,7 @@ void heartbeat_timeout(void)
     while(1){
         app_heartbeat();
         app_timeout_handle();
+        afn_11_f2_ctrl_period();
         sleep(1);
     }
 }
@@ -16022,10 +16023,12 @@ void heartbeat_timeout(void)
 extern int tcp_client_connect(void);
 extern void socket_client_poll(void);
 extern void app_test_step(int step, void* data);
+extern int afn_11_f2_ctrl_period(void);
 int main(int argc, char *argv[])
 {
     static int retryTimes = 3;
     pthread_t t1,t2;
+
     /*数据库初始化*/
     app_sql_init();
     /*创建数据库*/

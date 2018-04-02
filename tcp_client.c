@@ -37,11 +37,13 @@ extern UINT8 g_ucInBuf[OUT_BUF_LEN];
 #define SERVER_IP  "192.168.1.210"
 #define SERV_PORT 14000
 #else
-#define SERVER_IP  "101.132.91.12"
-#define SERV_PORT 14100
-//#define SERVER_IP  "172.16.200.1"
-//#define SERV_PORT 6666
-
+	#if 1
+	#define SERVER_IP  "101.132.91.12"
+	#define SERV_PORT 14100
+	#else
+	#define SERVER_IP  "172.16.200.1"
+	#define SERV_PORT 6666
+#endif
 #endif
 
 static int conn_flag = TCP_DISCONNECTED;

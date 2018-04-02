@@ -807,8 +807,10 @@ eMtErr pack_afn0af15_s2m(void)
 *****************************************************************************/
 eMtErr pack_afn0cf01_s2m_analog()
 {
-       /* 1 定义变量 */ 
+   /* 1 定义变量 */ 
    eCmErr eRet;
+   int    i = 0;
+   UINT16 usPN = 0;
    UINT16 usBuflen = 0;
    UINT8 g_ucPackMem[PACK_MEM_SIZE];
    UINT8 g_ucOutBuf[OUT_BUF_LEN];
@@ -828,12 +830,8 @@ eMtErr pack_afn0cf01_s2m_analog()
     }
     char *str = "1234567890";
     bCmSetPw(str);
-  
-    
 
-   //pscmPacket = &packdata->pscmPacket;
-
-
+    usPN = get_current_usPn();
     /* 3 封装参数 */
     memcpy(pscmPacket->sAddress.acRegionCode, "1100", 4);
     pscmPacket->sAddress.usTAddress = 1;
@@ -845,187 +843,99 @@ eMtErr pack_afn0cf01_s2m_analog()
     pscmPacket->ucCmdNum = 1;
     pscmPacket->sCmdData[0].eCmd  = CMD_ANALOG_DATA;
     pscmPacket->sCmdData[0].bApp  = TRUE;
-    pscmPacket->sCmdData[0].usPN  = 0;
+    pscmPacket->sCmdData[0].usPN  = usPN;
     //pscmPacket->sCmdData[0].usPN  = 100;
 
-    // app
-    /*抄读时间*/
-    pscmPacket->sCmdData[0].uAppData.sTmAnalog.sReadTime.ucYY = 18;
-    pscmPacket->sCmdData[0].uAppData.sTmAnalog.sReadTime.ucMM = 3;
-    pscmPacket->sCmdData[0].uAppData.sTmAnalog.sReadTime.ucDD = 21;
-    pscmPacket->sCmdData[0].uAppData.sTmAnalog.sReadTime.ucHH = 16;
-    pscmPacket->sCmdData[0].uAppData.sTmAnalog.sReadTime.ucmm = 12;
-    /*模拟量路数*/
-    pscmPacket->sCmdData[0].uAppData.sTmAnalog.anaglogNum = 4;
-    /*1路当前电压*/
-    pscmPacket->sCmdData[0].uAppData.sTmAnalog.fU[0] = 111.2;
-    /*1路当前电压*/
-    pscmPacket->sCmdData[0].uAppData.sTmAnalog.fU[0] = 111.2;
-    /*1路当前电流*/
-    pscmPacket->sCmdData[0].uAppData.sTmAnalog.fI[0] = 222.222;
-    /*1路当前有功功率*/
-    pscmPacket->sCmdData[0].uAppData.sTmAnalog.fP[0] = 33.333;
-    /*1路当前无功功率*/
-    pscmPacket->sCmdData[0].uAppData.sTmAnalog.fQ[0] = 44.444;
-    /*1路当前功率因数*/
-    pscmPacket->sCmdData[0].uAppData.sTmAnalog.fPf[0] = 555.5;
-    /*1路当前光控值*/
-    pscmPacket->sCmdData[0].uAppData.sTmAnalog.fLc[0] = 666.6;
+    /*Pn/P0共有部分*/
+    {
+        /*抄读时间*/
+        pscmPacket->sCmdData[0].uAppData.sTmAnalog.sReadTime.ucYY = 18;
+        pscmPacket->sCmdData[0].uAppData.sTmAnalog.sReadTime.ucMM = 3;
+        pscmPacket->sCmdData[0].uAppData.sTmAnalog.sReadTime.ucDD = 21;
+        pscmPacket->sCmdData[0].uAppData.sTmAnalog.sReadTime.ucHH = 16;
+        pscmPacket->sCmdData[0].uAppData.sTmAnalog.sReadTime.ucmm = 12;
+        /*模拟量路数*/
+        pscmPacket->sCmdData[0].uAppData.sTmAnalog.anaglogNum = 4;
+        /*1路当前电压*/
+        pscmPacket->sCmdData[0].uAppData.sTmAnalog.fU[0] = 111.2;
+        /*1路当前电流*/
+        pscmPacket->sCmdData[0].uAppData.sTmAnalog.fI[0] = 222.222;
+        /*1路当前有功功率*/
+        pscmPacket->sCmdData[0].uAppData.sTmAnalog.fP[0] = 33.333;
+        /*1路当前无功功率*/
+        pscmPacket->sCmdData[0].uAppData.sTmAnalog.fQ[0] = 44.444;
+        /*1路当前功率因数*/
+        pscmPacket->sCmdData[0].uAppData.sTmAnalog.fPf[0] = 555.5;
+        /*1路当前光控值*/
+        pscmPacket->sCmdData[0].uAppData.sTmAnalog.fLc[0] = 666.6;
+        /*当前视在功率*/
+        pscmPacket->sCmdData[0].uAppData.sTmAnalog.fS[0] = 33.333;
+        /*有功能量寄存器*/
+        pscmPacket->sCmdData[0].uAppData.sTmAnalog.EP[0] = 232.323;
+                /*正向有功能量寄存器*/
+        pscmPacket->sCmdData[0].uAppData.sTmAnalog.PosEP[0] = 34.3;
+                /*反向有功能量寄存器*/
+        pscmPacket->sCmdData[0].uAppData.sTmAnalog.NegEP[0] = 45.4;
+                /*无功能量寄存器*/
+        pscmPacket->sCmdData[0].uAppData.sTmAnalog.EQ[0] = 565.6;
+         /*正向无功能量寄存器*/
+        pscmPacket->sCmdData[0].uAppData.sTmAnalog.PosEQ[0] = 676.7;
+        /*反向无功能量寄存器*/
+        pscmPacket->sCmdData[0].uAppData.sTmAnalog.NegEQ[0] = 676.6;
+        /*视在能量寄存器*/
+        pscmPacket->sCmdData[0].uAppData.sTmAnalog.ES[0] = 585.8;
+    
+    }
+    /*pn = 0部分*/
+    if(usPN == 0){
+          //开关灯状态
+        pscmPacket->sCmdData[0].uAppData.sTmAnalog.state = 0xff;
+        /*累计开灯时间*/
+        pscmPacket->sCmdData[0].uAppData.sTmAnalog.Time = 444.4;
+        /*漏电流*/
+        pscmPacket->sCmdData[0].uAppData.sTmAnalog.Lc[0] = 1234;
+    }
+    else
+    /*测量点部分配置*/    
+    {
+        /*1路*/
+        /*终端停上电/*/
+        pscmPacket->sCmdData[0].uAppData.sTmAnalog.TPower[0] = 0xFF;
+        
+        for(i = 1; i < 4; i++){
+            /*终端停上电*/
+            pscmPacket->sCmdData[0].uAppData.sTmAnalog.TPower[i] = 0xFF;
+            /*当前电压*/
+            pscmPacket->sCmdData[0].uAppData.sTmAnalog.fU[i] = 111.1;
+            /*2路当前电流*/
+            pscmPacket->sCmdData[0].uAppData.sTmAnalog.fI[i] = 222.222;
+            /*2路当前有功功率*/
+            pscmPacket->sCmdData[0].uAppData.sTmAnalog.fP[i] = 33.333;
+            /*2路当前无功功率*/
+            pscmPacket->sCmdData[0].uAppData.sTmAnalog.fQ[i] = 44.444;
+            /*2路当前功率因数*/
+            pscmPacket->sCmdData[0].uAppData.sTmAnalog.fPf[i] = 555.5;
+            /*2路当前光控值*/
+            pscmPacket->sCmdData[0].uAppData.sTmAnalog.fLc[i] = 666.6;
+            /*当前视在功率*/
+            pscmPacket->sCmdData[0].uAppData.sTmAnalog.fS[i] = 33.333;
+            /*有功能量寄存器*/
+            pscmPacket->sCmdData[0].uAppData.sTmAnalog.EP[i] = 232.323;
+            /*正向有功能量寄存器*/
+            pscmPacket->sCmdData[0].uAppData.sTmAnalog.PosEP[i] = 34.3;
+            /*反向有功能量寄存器*/
+            pscmPacket->sCmdData[0].uAppData.sTmAnalog.NegEP[i] = 45.4;
+            /*无功能量寄存器*/
+            pscmPacket->sCmdData[0].uAppData.sTmAnalog.EQ[i] = 565.6;
+            /*正向无功能量寄存器*/
+            pscmPacket->sCmdData[0].uAppData.sTmAnalog.PosEQ[i] = 676.7;
+            /*反向无功能量寄存器*/
+            pscmPacket->sCmdData[0].uAppData.sTmAnalog.NegEQ[i] = 676.6;
+            /*视在能量寄存器*/
+            pscmPacket->sCmdData[0].uAppData.sTmAnalog.ES[i] = 585.8;
+        }
 
-
-#if 1
-    /*终端停上电*/
-    pscmPacket->sCmdData[0].uAppData.sTmAnalog.TPower[0] = 0xFF;
-    pscmPacket->sCmdData[0].uAppData.sTmAnalog.TPower[1] = 0xFF;
-    pscmPacket->sCmdData[0].uAppData.sTmAnalog.TPower[2] = 0xFF;
-    pscmPacket->sCmdData[0].uAppData.sTmAnalog.TPower[3] = 0xFF;
-
-    /*1路当前电压*/
-    pscmPacket->sCmdData[0].uAppData.sTmAnalog.fU[1] = 111.1;
-    /*1路当前电流*/
-    pscmPacket->sCmdData[0].uAppData.sTmAnalog.fI[1] = 222.222;
-    /*1路当前有功功率*/
-    pscmPacket->sCmdData[0].uAppData.sTmAnalog.fP[1] = 33.333;
-    /*1路当前无功功率*/
-    pscmPacket->sCmdData[0].uAppData.sTmAnalog.fQ[1] = 44.444;
-    /*1路当前功率因数*/
-    pscmPacket->sCmdData[0].uAppData.sTmAnalog.fPf[1] = 555.5;
-    /*1路当前光控值*/
-    pscmPacket->sCmdData[0].uAppData.sTmAnalog.fLc[1] = 666.6;
-
-
-    /*1路当前电压*/
-    pscmPacket->sCmdData[0].uAppData.sTmAnalog.fU[2] = 111.1;
-    /*1路当前电流*/
-    pscmPacket->sCmdData[0].uAppData.sTmAnalog.fI[2] = 222.222;
-    /*1路当前有功功率*/
-    pscmPacket->sCmdData[0].uAppData.sTmAnalog.fP[2] = 33.333;
-    /*1路当前无功功率*/
-    pscmPacket->sCmdData[0].uAppData.sTmAnalog.fQ[2] = 44.444;
-    /*1路当前功率因数*/
-    pscmPacket->sCmdData[0].uAppData.sTmAnalog.fPf[2] = 555.5;
-    /*1路当前光控值*/
-    pscmPacket->sCmdData[0].uAppData.sTmAnalog.fLc[2] = 666.6;
-
-
-
-    /*1路当前电压*/
-    pscmPacket->sCmdData[0].uAppData.sTmAnalog.fU[3] = 111.1;
-    /*1路当前电流*/
-    pscmPacket->sCmdData[0].uAppData.sTmAnalog.fI[3] = 222.222;
-    /*1路当前有功功率*/
-    pscmPacket->sCmdData[0].uAppData.sTmAnalog.fP[3] = 33.333;
-    /*1路当前无功功率*/
-    pscmPacket->sCmdData[0].uAppData.sTmAnalog.fQ[3] = 44.444;
-    /*1路当前功率因数*/
-    pscmPacket->sCmdData[0].uAppData.sTmAnalog.fPf[3] = 555.5;
-    /*1路当前光控值*/
-    pscmPacket->sCmdData[0].uAppData.sTmAnalog.fLc[3] = 666.6;
-
-
-/*1路当前电压*/
-pscmPacket->sCmdData[0].uAppData.sTmAnalog.fS[0] = 33.333;
-/*1路当前电流*/
-pscmPacket->sCmdData[0].uAppData.sTmAnalog.EP[0] = 232.323;
-/*1路当前有功功率*/
-pscmPacket->sCmdData[0].uAppData.sTmAnalog.PosEP[0] = 34.3;
-/*1路当前无功功率*/
-pscmPacket->sCmdData[0].uAppData.sTmAnalog.NegEP[0] = 45.4;
-/*1路当前功率因数*/
-pscmPacket->sCmdData[0].uAppData.sTmAnalog.EQ[0] = 565.6;
-/*1路当前光控值*/
-pscmPacket->sCmdData[0].uAppData.sTmAnalog.PosEQ[0] = 676.7;
-/*1路当前光控值*/
-pscmPacket->sCmdData[0].uAppData.sTmAnalog.NegEQ[0] = 676.6;
-/*1路当前功率因数*/
-pscmPacket->sCmdData[0].uAppData.sTmAnalog.ES[0] = 585.8;
-
-
-/*1路当前电压*/
-pscmPacket->sCmdData[0].uAppData.sTmAnalog.fS[1] = 33.333;
-/*1路当前电流*/
-pscmPacket->sCmdData[0].uAppData.sTmAnalog.EP[1] = 232.3;
-/*1路当前有功功率*/
-pscmPacket->sCmdData[0].uAppData.sTmAnalog.PosEP[1] = 34.3;
-/*1路当前无功功率*/
-pscmPacket->sCmdData[0].uAppData.sTmAnalog.NegEP[1] = 45.4;
-/*1路当前功率因数*/
-pscmPacket->sCmdData[0].uAppData.sTmAnalog.EQ[1] = 565.6;
-/*1路当前光控值*/
-pscmPacket->sCmdData[0].uAppData.sTmAnalog.PosEQ[1] = 676.7;
-/*1路当前光控值*/
-pscmPacket->sCmdData[0].uAppData.sTmAnalog.NegEQ[1] = 676.7;
-/*1路当前功率因数*/
-pscmPacket->sCmdData[0].uAppData.sTmAnalog.ES[1] = 585.8;
-
-
-/*1路当前电压*/
-pscmPacket->sCmdData[0].uAppData.sTmAnalog.fS[2] = 33.3;
-/*1路当前电流*/
-pscmPacket->sCmdData[0].uAppData.sTmAnalog.EP[2] = 232.3;
-/*1路当前有功功率*/
-pscmPacket->sCmdData[0].uAppData.sTmAnalog.PosEP[2] = 34.3;
-/*1路当前无功功率*/
-pscmPacket->sCmdData[0].uAppData.sTmAnalog.NegEP[2] = 45.4;
-/*1路当前功率因数*/
-pscmPacket->sCmdData[0].uAppData.sTmAnalog.EQ[2] = 565.6;
-/*1路当前光控值*/
-pscmPacket->sCmdData[0].uAppData.sTmAnalog.PosEQ[2] = 676.7;
-/*1路当前光控值*/
-pscmPacket->sCmdData[0].uAppData.sTmAnalog.NegEQ[2] = 676.7;
-/*1路当前功率因数*/
-pscmPacket->sCmdData[0].uAppData.sTmAnalog.ES[2] = 585.8;
-
-
-/*1路当前电压*/
-pscmPacket->sCmdData[0].uAppData.sTmAnalog.fS[3] = 33.333;
-/*1路当前电流*/
-pscmPacket->sCmdData[0].uAppData.sTmAnalog.EP[3] = 232.3;
-/*1路当前有功功率*/
-pscmPacket->sCmdData[0].uAppData.sTmAnalog.PosEP[3] = 34.3;
-/*1路当前无功功率*/
-pscmPacket->sCmdData[0].uAppData.sTmAnalog.NegEP[3] = 45.4;
-/*1路当前功率因数*/
-pscmPacket->sCmdData[0].uAppData.sTmAnalog.EQ[3] = 565.6;
-/*1路当前光控值*/
-pscmPacket->sCmdData[0].uAppData.sTmAnalog.PosEQ[3] = 676.7;
-/*1路当前光控值*/
-pscmPacket->sCmdData[0].uAppData.sTmAnalog.NegEQ[3] = 676.67;
-/*1路当前功率因数*/
-pscmPacket->sCmdData[0].uAppData.sTmAnalog.ES[3] = 585.8;
-
-#endif
-
-
-#if 1
-    //开关灯状态
-   pscmPacket->sCmdData[0].uAppData.sTmAnalog.state = 0xff;
-    /*1路视在功率*/
-    pscmPacket->sCmdData[0].uAppData.sTmAnalog.fS[0] = 22.222;
-    /*累计开灯时间*/
-    pscmPacket->sCmdData[0].uAppData.sTmAnalog.Time = 444.4;
-
-    /*漏电流*/
-    pscmPacket->sCmdData[0].uAppData.sTmAnalog.Lc[0] = 1234;
-
-    /*1路当前有功能量寄存器 */
-    pscmPacket->sCmdData[0].uAppData.sTmAnalog.EP[0] = 777.7;
-    /*1路正向有功能量寄存器*/
-    pscmPacket->sCmdData[0].uAppData.sTmAnalog.PosEP[0] = 888.8;
-    /*1路反向有功能量寄存器 */
-    pscmPacket->sCmdData[0].uAppData.sTmAnalog.NegEP[0] = 999.9;
-    /*1路无功能量寄存器*/
-    pscmPacket->sCmdData[0].uAppData.sTmAnalog.EQ[0] = 111.1;
-    /*正向无功能量寄存器*/
-    pscmPacket->sCmdData[0].uAppData.sTmAnalog.PosEQ[0] = 222.2;
-    /*反向无功能量寄存器*/
-    pscmPacket->sCmdData[0].uAppData.sTmAnalog.NegEQ[0] = 222.2;
-
-    /*1路视在能量寄存器*/
-    pscmPacket->sCmdData[0].uAppData.sTmAnalog.ES[0] = 333.3;
-
-
-#endif
+    }
 
     /* 4 调用函数 */
     eRet = ecm_3761_pack(pscmPacket, (UINT8*)g_ucOutBuf, &usBuflen);
@@ -1215,6 +1125,9 @@ void app_req_handle(UINT16 eCmd, void* d)
         break;
         case CMD_AFN_1_F4_PARA_INIT:
             afn_1_f4_para_init_handle();
+        break;
+       case CMD_AFN_1_F5_UPDATE:
+            afn_1_f5_update_handle();
         break;
         case CMD_AFN_9_F1_TML_VERSION:
             pack_afn09f1_s2m();

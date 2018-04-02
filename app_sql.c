@@ -35,12 +35,14 @@ int app_sql_open()
 
 int app_sql_close()
 {
+	int ret = SQL_SUCCESS;
+
     if ( sqlite3_close(DCS003_db) == SQLITE_BUSY ){
-        return SQL_FAILED;
+        ret = SQL_FAILED;
     }
 
     pthread_mutex_unlock(&mutex_lock);
-	return SQL_SUCCESS;
+	return ret;
 }
 
 #if 0

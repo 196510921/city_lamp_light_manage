@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 #include "sqlite3.h"
 #include "app_handle.h"
 #include "app_sql.h"
@@ -10,6 +11,7 @@ extern sqlite3 *DCS003_db;
 
 static int UINT8_to_ascii(int d, char* buf);
 static void app_groupInfo_pack(UINT16 d, char* groupInfo);
+static int afn_11_f3_group_ctrl(UINT8* groupid, UINT8 state);
 /*AFN:0x01*******************************************************************************/
 /*硬件初始化*/
 void afn_1_f1_hard_init_handle(void)
@@ -231,7 +233,7 @@ int afn_04_f13_ctrl_table(sMtAfn04F13* d)
                 rc = sqlite3_step(stmt);   
                 printf("step() return %s, number:%03d\n", rc == SQLITE_DONE ? \
                     "SQLITE_DONE": rc == SQLITE_ROW ? "SQLITE_ROW" : "SQLITE_ERROR",rc);
-                if((rc != SQLITE_ROW) && (rc!= SQLITE_DONE)){
+                if((rc != SQLITE_ROW) && (rc!= SQLITE_DONE) && (rc != SQLITE_OK)){
                     printf("step() return %s, number:%03d\n", "SQLITE_ERROR",rc);
                 }
 
@@ -262,9 +264,103 @@ int afn_05_f31_clock(sMtUserClock* d)
     printf("ucHour : %d\n", d->ucHour);
     printf("ucMinute : %d\n", d->ucMinute);
     printf("ucSecond : %d\n", d->ucSecond);    
-
 }
 
+/*时段控制检查*/
+int afn_11_f2_ctrl_period(void)
+{
+    static int preTimeMin = 0;
+    UINT8 state = 0;
+    char currTime[5] = {0};
+    int rc;
+    int i = 0;
+    int ret = APP_HANDLE_SUCCESS;
+    char* groupid = 0;
+    char groupid_1[8] = {0};
+    char sql[300] = {0};
+    sqlite3_stmt* stmt = NULL;
+
+    // 获取系统当前时间
+    {
+        time_t now;
+        struct tm* timenow;
+        time(&now);
+        timenow = localtime(&now);
+        
+        printf("年:%03d 月:%03d 日:%03d 时:%03d 分:%03d\n",timenow->tm_year, \
+            timenow->tm_mon,timenow->tm_mday,timenow->tm_hour,timenow->tm_min);
+
+        /*检查的最小时间刻度为Min*/
+        if(preTimeMin != timenow->tm_min)
+        {
+            preTimeMin = timenow->tm_min; 
+
+            currTime[0] = (timenow->tm_year - 100) + '0';
+            currTime[1] = (timenow->tm_mon + 1) + '0';
+            currTime[2] = timenow->tm_mday + '0';
+            currTime[3] = timenow->tm_hour + '0';
+            currTime[4] = timenow->tm_min + '0';
+            printf("currTime:%x,%x,%x,%x,%x\n",currTime[0],currTime[1],currTime[2], \
+                currTime[3],currTime[4]);
+        }else{
+
+            return ret;
+        }
+    }
+
+    {
+        rc = app_sql_open();
+        if(rc != APP_HANDLE_SUCCESS)
+        {
+            ret = APP_HANDLE_FAILED;
+            goto Finish;
+        }
+
+        sprintf(sql,"select groupid,state from dal_cbt_clock where startdate = \"%s\";",currTime);
+        printf("sql:%s\n",sql);
+
+        if(sqlite3_prepare_v2(DCS003_db, sql, strlen(sql), &stmt, NULL) != SQLITE_OK)
+        {
+            printf( "sqlite3_prepare_v2:error %s\n", sqlite3_errmsg(DCS003_db));   
+            ret = APP_HANDLE_FAILED;
+            goto Finish; 
+        }
+
+        while(rc = sqlite3_step(stmt) == SQLITE_ROW) 
+        {  
+            groupid = sqlite3_column_text(stmt, 0);
+            if(groupid == NULL)
+            {
+                printf("groupid NULL");
+                continue;
+            }else
+            {
+                /*组id转换*/
+                for(i = 0; i < 4; i++)
+                    groupid_1[i] = groupid[i+4] - '0';
+            }
+            printf("groupid_1:%x,%x,%x,%x\n",groupid_1[0],groupid_1[1],groupid_1[2],groupid_1[3]);
+            sqlite3_column_int(stmt, 1);
+            printf("state:%x\n",state);
+            /*根据组id查询box号与通道*/
+            {
+                if(afn_11_f3_group_ctrl((UINT8*)groupid_1, state) != APP_HANDLE_SUCCESS)
+                    printf("afn_11_f3_group_ctrl failed\n");
+            }
+        }
+        if((rc != SQLITE_ROW) && (rc!= SQLITE_DONE) && (rc != SQLITE_OK)){
+            printf("step() return %s, number:%03d\n", "SQLITE_ERROR",rc);
+        }
+
+    }
+
+    Finish:
+    if(stmt != NULL)
+        sqlite3_finalize(stmt);
+     app_sql_close();
+
+    return ret;
+}
 
 /*日控时段*/
 int afn_11_f2_ctrl_table(sMt11f2_u* d)
@@ -272,8 +368,8 @@ int afn_11_f2_ctrl_table(sMt11f2_u* d)
 	printf("afn_11_f2_ctrl_table\n");
 
 	int i,j,k,rc,ret = APP_HANDLE_SUCCESS;
-	char startdate[20];
-	char ucAddress[20];
+	char startdate[20] = {0};
+	char ucAddress[20] = {0};
 	char* state = NULL;
 	char* sql =	"insert or replace into dal_cbt_clock(id,groupid,startdate,state,percent)values(NULL,?,?,?,?);";	
 	sqlite3_stmt* stmt = NULL;
@@ -306,12 +402,9 @@ int afn_11_f2_ctrl_table(sMt11f2_u* d)
 								 d->sT.ucDD, d->LastTime, d->ucTimeNum);
 	{
 		/*添加年月日*/
-		startdate[0] = d->sT.ucYY;
-		startdate[1] = d->sT.ucMM;
-		startdate[2] = d->sT.ucDD;
-		//UINT8_to_ascii(d->sT.ucYY, &startdate[0]);
-        //UINT8_to_ascii(d->sT.ucMM, &startdate[2]);
-        //UINT8_to_ascii(d->sT.ucDD, &startdate[4]);
+		startdate[0] = d->sT.ucYY +'0';
+		startdate[1] = d->sT.ucMM + '0';
+		startdate[2] = d->sT.ucDD + '0';
 	}
 	for(i = 0; i < d->ucTimeNum; i++)
 	{
@@ -321,11 +414,9 @@ int afn_11_f2_ctrl_table(sMt11f2_u* d)
 				",i,d->Time[i].Min, d->Time[i].Hour, d->Time[i].Status, d->Time[i].Light);
 		{
 			/*时*/
-			startdate[3] = d->Time[i].Hour;
+			startdate[3] = d->Time[i].Hour + '0';
 			/*分*/
-			startdate[5] = d->Time[i].Min;
-		    //UINT8_to_ascii(d->Time[i].Hour, &startdate[6]);
-            //UINT8_to_ascii(d->Time[i].Min, &startdate[8]);
+			startdate[4] = d->Time[i].Min + '0';
         }
 
 		{
@@ -343,11 +434,7 @@ int afn_11_f2_ctrl_table(sMt11f2_u* d)
 			for(k = 0; k < 8; k++)
 			{
 				printf("控制器地址:%X, ",d->Data[j].ucAddress[k]);
-				//UINT8_to_ascii(d->Data[j].ucAddress[k], &ucAddress[k*2]);
-			}
-			/*地址*/
-			{
-				memcpy(ucAddress, d->Data[j].ucAddress[0], 8);
+                ucAddress[k] = d->Data[j].ucAddress[k] + '0';
 			}
 			printf("\n");
 			for(k = 0; k < 32; k++)
@@ -356,8 +443,8 @@ int afn_11_f2_ctrl_table(sMt11f2_u* d)
 			}
 			printf("\n");
 			{
-	            sqlite3_bind_text(stmt, 1, ucAddress, 16, NULL);
-	            sqlite3_bind_text(stmt, 2, startdate, 10, NULL);
+	            sqlite3_bind_text(stmt, 1, ucAddress, -1, NULL);
+	            sqlite3_bind_text(stmt, 2, startdate, -1, NULL);
 	            sqlite3_bind_text(stmt, 3, state, -1, NULL);
 	            sqlite3_bind_int(stmt, 4, d->Time[i].Light);
 	            rc = sqlite3_step(stmt);   
@@ -402,13 +489,6 @@ static int afn_11_f3_group_ctrl(UINT8* groupid, UINT8 state)
             groupid_1[i] = groupid[i] + '0';
         }
         printf("\n");
-    }
-
-    rc = app_sql_open();
-    if(rc != APP_HANDLE_SUCCESS)
-    {
-        ret = APP_HANDLE_FAILED;
-        goto Finish;
     }
 
     /*从group表中获取组内的pn*/
@@ -483,14 +563,13 @@ static int afn_11_f3_group_ctrl(UINT8* groupid, UINT8 state)
     Finish:
     // if(stmt != NULL)
     //     sqlite3_finalize(stmt);
-     app_sql_close();
 
     return ret;
 }
 
 int afn_11_f3_ctrl_table(sMtCtr_11hf3* d)
 {
-    int i,j;
+    int i,j,rc,ret = APP_HANDLE_SUCCESS;
 
     printf("任务格式:%02X,任务类型:%X,任务长度:%X\n",d->ucTaskFormat,d->ucTaskType,d->ucTaskLen);
     
@@ -505,6 +584,14 @@ int afn_11_f3_ctrl_table(sMtCtr_11hf3* d)
         if(i > 12)
             break;
     }
+
+    rc = app_sql_open();
+    if(rc != APP_HANDLE_SUCCESS)
+    {
+        ret = APP_HANDLE_FAILED;
+        goto Finish;
+    }
+
     printf("配置数量:%X\n",d->ucNum);
     for(i = 0; i < d->ucNum; i++)
     {
@@ -517,6 +604,11 @@ int afn_11_f3_ctrl_table(sMtCtr_11hf3* d)
             afn_11_f3_group_ctrl(&d->ucPara[i].ucAddress[4], d->ucData[i].Status);
         }
     }
+
+    Finish:
+    app_sql_close();
+
+    return APP_HANDLE_SUCCESS;
 }
 
 
@@ -617,8 +709,6 @@ void app_show_app_sub_data(eMtDir eDir,eMtCmd emtCmd, uMtApp *puAppData)
             printf("bAutoReportAsk_3 = %s\n", psTmlUpCfg->bAutoReportAsk_3 == TRUE ? "true":"false");
         }
         break;
-
-
         case CMD_AFN_4_F10_TML_POWER_CFG:
         {
             sMtTmlPowerCfg * pData = (sMtTmlPowerCfg*)puAppData;
@@ -721,16 +811,13 @@ void app_show_app_sub_data(eMtDir eDir,eMtCmd emtCmd, uMtApp *puAppData)
             app_req_handle(CMD_AFN_C_F2_TML_CLOCK, puAppData);
             sMt11f2_u * pData = (sMt11f2_u*)puAppData;
             printf("任务格式");
-            
-            
         }
         break;
         
         case CMD_AFN_C_F8_TML_EVNT_FLAG:
         {
             printf("CMD_AFN_C_F8_TML_EVNT_FLAG\n");
-            app_req_handle(CMD_AFN_C_F8_TML_EVNT_FLAG, puAppData);
-                
+            app_req_handle(CMD_AFN_C_F8_TML_EVNT_FLAG, puAppData);  
         }
         break;
             
@@ -810,7 +897,7 @@ static void app_groupInfo_pack(UINT16 d, char* groupInfo)
     {
         groupInfo[0] = 1 + '0';
         groupInfo[1] = '0';
-        d += '0';
+        d = d + '0';
         memcpy(&groupInfo[2], (UINT8*)&d, 2);
         return;
     }else{
@@ -823,6 +910,11 @@ static void app_groupInfo_pack(UINT16 d, char* groupInfo)
         printf("pn:");
         for(i = 0; i < num ; i++)
         {
+            if(*(UINT16*)&groupInfo[i*2 + 2] == (d+'0'))
+            {
+                printf("Pn重复：%03d\n",d+'0');
+                return;
+            }
             pn[i] = *(UINT16*)&groupInfo[i*2 + 2];
             printf(" %03d,",pn[i]-'0');
         }
