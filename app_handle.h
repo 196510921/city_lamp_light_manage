@@ -8,6 +8,14 @@ enum {
 }app_handle_state_t;
 
 
+#define TASK_TYPE_YEAR    		0x13
+#define TASK_TYPE_MON     		0x14
+#define TASK_TYPE_DAY     		0x15
+#define TASK_TYPE_WEEK    		0x16
+#define TASK_TYPE_HOUR    		0x17
+
+#define TASK_TYPE_COMMON_MASK  0x0F
+
 eMtErr pack_afn00f01(UINT8 afn);
 eMtErr pack_afn02f01(void);
 eMtErr pack_afn02f2(void);

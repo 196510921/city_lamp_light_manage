@@ -4261,6 +4261,8 @@ eMtErr emtTrans_afn11hf2_m2s(eMtTrans eTrans, void* psUser, void* psFrame, UINT1
      psAfn11f2->LastTime     =psAfn11f2_f_head->LastTime;         
      psAfn11f2->ucTimeNum    =psAfn11f2_f_head->ucTimeNum;    
      emt_trans_YYMMDD(MT_TRANS_F2U,&(psAfn11f2->sT),&(psAfn11f2_f_head->sT));
+     /*周*/
+     psAfn11f2->sT.ucWW      = psAfn11f2_f_head->sT.bcd_ww;
     
     
      for(i=0; i<psAfn11f2_f_head->ucTimeNum; i++)
@@ -4303,6 +4305,8 @@ eMtErr emtTrans_afn11hf2_m2s(eMtTrans eTrans, void* psUser, void* psFrame, UINT1
      psAfn11f2_f_head->ucTimeNum    =psAfn11f2->ucTimeNum;  
     //emt_trans_YYMMDD(MT_TRANS_U2F,&(psAfn11f2->sT),&(psAfn11f2_f->sT));
      emt_trans_YYMMDD(MT_TRANS_U2F,&(psAfn11f2->sT),&(psAfn11f2_f_head->sT));
+     /*周*/
+     psAfn11f2_f_head->sT.bcd_ww    = psAfn11f2->sT.ucWW;
     
     // *Frame = psAfn11f2->ucTimeNum;
      //Frame++;
@@ -4338,7 +4342,8 @@ eMtErr emtTrans_afn11hf2_m2s(eMtTrans eTrans, void* psUser, void* psFrame, UINT1
 
    // 计算在帧侧的字节长度
 
-    *pusfLen = 12 + sizeof(sMtTime_f) * psAfn11f2->ucTimeNum + sizeof(sMtPara_f) * psAfn11f2->ucDataNum;
+    //*pusfLen = 12 + sizeof(sMtTime_f) * psAfn11f2->ucTimeNum + sizeof(sMtPara_f) * psAfn11f2->ucDataNum;
+   *pusfLen = 13 + sizeof(sMtTime_f) * psAfn11f2->ucTimeNum + sizeof(sMtPara_f) * psAfn11f2->ucDataNum;
     printf("pusfLen:%d\n",*pusfLen);
     //printf("sMt11f2_f:%d\n",sizeof(sMt11f2_f));
 
@@ -39404,7 +39409,8 @@ eMtErr emt_trans_YYMMDD(eMtTrans eTrans, sMtYYMMDD* psUser, sMtYYMMDD_f* psFrame
         {
             psFrame->bcd_DD_0 = ucmt_get_bcd_0(psUser->ucDD);
             psFrame->bcd_DD_1 = ucmt_get_bcd_1(psUser->ucDD);
-        }       
+        }   
+
     }
     else if(MT_TRANS_F2U == eTrans)
     {

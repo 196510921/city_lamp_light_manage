@@ -2087,7 +2087,7 @@ typedef struct
     UINT8  ucYY;        // 年
     UINT8  ucMM;        // 月
     UINT8  ucDD;        // 日
-}sMtFmt20, sMtYYMMDD;
+}sMtFmt20,sMtYYMMDD;
 
 // 帧侧
 typedef struct
@@ -2103,6 +2103,7 @@ typedef struct
 // 转换函数
 eMtErr emt_trans_YYMMDD(eMtTrans eTrans, sMtYYMMDD* psUser, sMtYYMMDD_f* psFrame);
 ///*} 
+
 
 /*********************************************
  *  数据格式21 对于表A.22
@@ -6239,8 +6240,8 @@ typedef struct
     float           fQ[4];          // 当前无功功率  (KW) (+/-)XX.XXXX 
     float           fPf[4];         // 当前功率因数  (%)  (+/-)XXX.X
     float           fLc[4];         // 当前光控值  (%)  (+/-)XXX.X
-    UINT8             state;            //开关灯状态
-    float           fS[4];          // 当前视在功率  (%)  (+/-)XX.XXXX
+    UINT8            state;        //开关灯状态
+    float            fS[4];          // 当前视在功率  (%)  (+/-)XX.XXXX
     double           EP[4];         //有功能量寄存器  (%)  (+/-)XXXXX.X
     double           PosEP[4];      //正向有功能量寄存器 (%)  (+/-)XXXXX.X
     double           NegEP[4];      //反向有功能量寄存器 (%)  (+/-)XXXXX.X
@@ -14745,6 +14746,27 @@ eMtErr emt_read_uint32_small_endian(UINT8* pRead, UINT32* pUint32);
 //huyuxiang 3-16
 #pragma pack(1)
 
+// 用户侧
+typedef struct
+{
+    UINT8  ucYY;        // 年
+    UINT8  ucMM;        // 月
+    UINT8  ucDD;        // 日
+    UINT8  ucWW;        //周
+}sMtFmt11F2Time;
+
+// 帧侧
+typedef struct
+{
+    UINT8  bcd_DD_0:4;  // 日
+    UINT8  bcd_DD_1:4;
+    UINT8  bcd_MM_0:4;  // 月
+    UINT8  bcd_MM_1:4;
+    UINT8  bcd_YY_0:4;  // 年
+    UINT8  bcd_YY_1:4;
+    UINT8  bcd_ww;      //周
+}sMtFmt11F2Time_f;
+
 typedef struct
 {
     UINT8   Min;
@@ -14778,7 +14800,8 @@ typedef struct
     UINT16      ucTaskFormat;    //任务格式
         UINT8       ucTaskType;      //任务类型 
     UINT16      ucTaskLen;       //任务长度
-        sMtYYMMDD   sT;              // 日月年
+    //    sMtYYMMDD   sT;              // 日月年
+    sMtFmt11F2Time  sT;          //日月年周
     UINT8       LastTime;        //持续时间
     UINT8       ucTimeNum;       //时段控制块数
     sMtTime     Time[20];             //时段控制块
@@ -14790,9 +14813,9 @@ typedef struct
 typedef struct
 {
     UINT16      ucTaskFormat;    //任务格式
-        UINT8       ucTaskType;      //任务类型 
+    UINT8       ucTaskType;      //任务类型 
     UINT16      ucTaskLen;       //任务长度
-        sMtFmt20   sT;               // 日月年
+    sMtFmt11F2Time   sT;               // 日月年
     UINT8       LastTime;        //持续时间
     UINT8       ucTimeNum;       //时段控制块数
     
@@ -14804,9 +14827,9 @@ typedef struct
 typedef struct
 {
     UINT16          ucTaskFormat;   //任务格式
-        UINT8           ucTaskType;     //任务类型  
+    UINT8           ucTaskType;     //任务类型  
     UINT16          ucTaskLen;      //任务长度
-        sMtFmt20_f      sT;             //日月年
+    sMtFmt11F2Time_f      sT;             //日月年周
     UINT8           LastTime;       //持续时间
     UINT8           ucTimeNum;      //时段控制块数
     sMtTime_f       Time[4];        //时段控制块
@@ -14822,7 +14845,8 @@ typedef struct
     UINT16         ucTaskFormat;   //任务格式
    UINT8          ucTaskType;       //任务类型
     UINT16          ucTaskLen;      //任务长度
-   sMtFmt20_f     sT;               //日月年
+   //sMtFmt20_f     sT;               //日月年
+    sMtFmt11F2Time_f sT;            //日月年周
     UINT8               LastTime;       //持续时间
     UINT8           ucTimeNum;      //时段控制块数
  

@@ -33,5 +33,5 @@ app_handle.o: app_handle.c /usr/include/stdc-predef.h \
  /usr/include/x86_64-linux-gnu/bits/inf.h \
  /usr/include/x86_64-linux-gnu/bits/nan.h \
  /usr/include/x86_64-linux-gnu/bits/mathdef.h \
- /usr/include/x86_64-linux-gnu/bits/mathcalls.h con3761adp.h \
- qgdw_3761_api.h
+ /usr/include/x86_64-linux-gnu/bits/mathcalls.h sqlite3.h app_handle.h \
+ qgdw_3761_api.h con3761adp.h

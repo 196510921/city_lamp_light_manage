@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#include "sqlite3.h"
+#include "app_handle.h"
 #include "con3761adp.h"
 #include "qgdw_3761_api.h"
 
@@ -11,7 +13,7 @@
 // extern UINT8 g_ucPackMem[PACK_MEM_SIZE]; // 测试封装命令的参数的内存空间
 // extern UINT8 g_ucOutBuf[OUT_BUF_LEN];
 extern void socket_client_send(UINT8* data, UINT16* len);
-
+extern sqlite3 *DCS003_db;
 /*****************************************************************************
  函 数 名  : pack_0001
  功能描述  : 全部确认
@@ -807,16 +809,41 @@ eMtErr pack_afn0af15_s2m(void)
 *****************************************************************************/
 eMtErr pack_afn0cf01_s2m_analog()
 {
-   /* 1 定义变量 */ 
-   eCmErr eRet;
-   int    i = 0;
-   UINT16 usPN = 0;
-   UINT16 usBuflen = 0;
-   UINT8 g_ucPackMem[PACK_MEM_SIZE];
-   UINT8 g_ucOutBuf[OUT_BUF_LEN];
-   sCmPacket *pscmPacket = (sCmPacket*)g_ucPackMem;
-   
+    /*1 定义变量*/ 
+    eCmErr eRet;
+    int    i = 0;
+    int    rc = 0;
+    int    ret = APP_HANDLE_SUCCESS;
+    UINT16 usPN = 0;
+    UINT16 usBuflen = 0;
+    UINT8  anaglogNum = 0;
+    UINT8  g_ucPackMem[PACK_MEM_SIZE];
+    UINT8  g_ucOutBuf[OUT_BUF_LEN];
+    UINT8 dpOffset;
+    UINT8 timeOffset;
+    UINT8 voltageOffset;
+    UINT8 currentOffset;
+    UINT8 activePowerOffset;
+    UINT8 reactivePowerOffset;
+    UINT8 powerFactorOffset;
+    UINT8 opticalControlOffset;
+    UINT8 swicthStateOffset;
+    UINT8 apparentPowerOffset;
+    UINT8 lampOnTimeOffset;
+    UINT8 leakageCurrentOffset;
+    UINT8 activeEnergyOffset;
+    UINT8 positiveActiveEnergyOffset;
+    UINT8 reverseActiveEnergyOffset;
+    UINT8 reactiveEnergyOffset;
+    UINT8 positiveReactiveEnergyOffset;
+    UINT8 reverseReactiveEnergyOffset;
+    UINT8 apparentEnergyOffset;
+    UINT8 terminatePowerOffset;
 
+    char   sql[500] = {0};
+    sqlite3_stmt* stmt = NULL;
+    sCmPacket*    pscmPacket = (sCmPacket*)g_ucPackMem;
+   
     /* 2 环境初始化 */
     sCmInit  sInit;
     //sInit.eRole = MT_ROLE_MASTER;
@@ -844,9 +871,201 @@ eMtErr pack_afn0cf01_s2m_analog()
     pscmPacket->sCmdData[0].eCmd  = CMD_ANALOG_DATA;
     pscmPacket->sCmdData[0].bApp  = TRUE;
     pscmPacket->sCmdData[0].usPN  = usPN;
-    //pscmPacket->sCmdData[0].usPN  = 100;
 
     /*Pn/P0共有部分*/
+    {
+        rc = app_sql_open();
+        if(rc != 1)
+        {
+            goto Finish;
+        }        
+    }
+
+    /*pn = 0部分*/
+    if(usPN == 0){
+        /*数据库字段位置相对偏移量*/
+        {
+            dpOffset = 0;
+            timeOffset = 1;
+            voltageOffset = 2;
+            currentOffset = 6;
+            activePowerOffset = 10;
+            reactivePowerOffset = 14;
+            powerFactorOffset = 18;
+            opticalControlOffset = 22;
+            apparentPowerOffset = 26;
+            leakageCurrentOffset = 30;
+            activeEnergyOffset = 31;
+            positiveActiveEnergyOffset = 35;
+            reverseActiveEnergyOffset = 39;
+            reactiveEnergyOffset = 43;
+            positiveReactiveEnergyOffset = 47;
+            reverseReactiveEnergyOffset = 51;
+            apparentEnergyOffset = 55;
+            terminatePowerOffset = 59;
+        }
+
+        sprintf(sql,\
+        "select \
+            dp, \
+            time, \
+            voltageA,voltageB,voltageC,voltageALL, \
+            currentA,currentB,currentC,currentALL, \
+            activePowerA,activePowerB,activePowerC,activePowerALL, \
+            reactivePowerA,reactivePowerB,reactivePowerC,reactivePowerALL, \
+            powerFactorA,powerFactorB,powerFactorC,powerFactorALL, \
+            opticalControlA,opticalControlB,opticalControlC,opticalControlALL, \
+            apparentPowerA,apparentPowerB,apparentPowerC,apparentPowerALL, \
+            leakageCurrent, \
+            activeEnergyA,activeEnergyB,activeEnergyC,activeEnergyALL, \
+            positiveActiveEnergyA,positiveActiveEnergyB,positiveActiveEnergyC,positiveActiveEnergyALL, \
+            reverseActiveEnergyA,reverseActiveEnergyB,reverseActiveEnergyC,reverseActiveEnergyALL, \
+            reactiveEnergyA,reactiveEnergyB,reactiveEnergyC,reactiveEnergyALL, \
+            positiveReactiveEnergyA,positiveReactiveEnergyB,positiveReactiveEnergyC,positiveReactiveEnergyALL, \
+            reverseReactiveEnergyA,reverseReactiveEnergyB,reverseReactiveEnergyC,reverseReactiveEnergyALL, \
+            apparentEnergyA,apparentEnergyB,apparentEnergyC,apparentEnergyALL, \
+            terminatePowerA,terminatePowerB,terminatePowerC,terminatePowerALL \
+        from dal_cbt_simulate_ec where dp = %d;",usPN);
+
+        printf("sql:%s\n",sql);
+        if(sqlite3_prepare_v2(DCS003_db, sql, strlen(sql), &stmt, NULL) != SQLITE_OK)
+        {
+            printf( "sqlite3_prepare_v2:error %s\n", sqlite3_errmsg(DCS003_db));   
+            ret = APP_HANDLE_FAILED;
+            goto Finish; 
+        }
+
+        rc = sqlite3_step(stmt);   
+        if((rc != SQLITE_ROW) && (rc!= SQLITE_DONE)){
+            printf("step() return %s, number:%03d\n", "SQLITE_ERROR",rc);
+        }
+
+        anaglogNum = 4;
+        for(i = 0; i < anaglogNum; i++)
+        {   /*终端停上电*/
+            pscmPacket->sCmdData[0].uAppData.sTmAnalog.TPower[i] = \
+            sqlite3_column_int(stmt, terminatePowerOffset + i);    
+        }
+
+    }
+    else
+    /*测量点部分配置*/    
+    {
+        {
+            dpOffset = 0;
+            timeOffset = 1;
+            voltageOffset = 2;
+            currentOffset = 3;
+            activePowerOffset = 4;
+            reactivePowerOffset = 5;
+            powerFactorOffset = 6;
+            opticalControlOffset = 7;
+            swicthStateOffset = 8;
+            apparentPowerOffset = 9;
+            lampOnTimeOffset = 10;
+            leakageCurrentOffset = 11;
+            activeEnergyOffset = 12;
+            positiveActiveEnergyOffset = 13;
+            reverseActiveEnergyOffset = 14;
+            reactiveEnergyOffset = 15;
+            positiveReactiveEnergyOffset = 16;
+            reverseReactiveEnergyOffset = 17;
+            apparentEnergyOffset = 18;
+        }
+
+        sprintf(sql,\
+        "select \
+            dp, \
+            time, \
+            voltage, \
+            current, \
+            activePower, \
+            reactivePower, \
+            powerFactor, \
+            opticalControl, \
+            swicthState, \
+            apparentPower, \
+            lampOnTime, \
+            leakageCurrent, \
+            activeEnergy, \
+            positiveActiveEnergy, \
+            reverseActiveEnergy, \
+            reactiveEnergy, \
+            positiveReactiveEnergy, \
+            reverseReactiveEnergy, \
+            apparentEnergy \
+        from dal_cbt_simulate_dp where dp = %d;",usPN);
+
+        printf("sql:%s\n",sql);
+        if(sqlite3_prepare_v2(DCS003_db, sql, strlen(sql), &stmt, NULL) != SQLITE_OK)
+        {
+            printf( "sqlite3_prepare_v2:error %s\n", sqlite3_errmsg(DCS003_db));   
+            ret = APP_HANDLE_FAILED;
+            goto Finish; 
+        }
+
+        anaglogNum = 1;
+        /*模拟量路数*/
+        pscmPacket->sCmdData[0].uAppData.sTmAnalog.anaglogNum = anaglogNum;
+        //开关灯状态
+        pscmPacket->sCmdData[0].uAppData.sTmAnalog.state = \
+        sqlite3_column_int(stmt, swicthStateOffset);
+        /*累计开灯时间*/
+        pscmPacket->sCmdData[0].uAppData.sTmAnalog.Time = \
+        sqlite3_column_double(stmt, lampOnTimeOffset);
+        /*漏电流*/
+        pscmPacket->sCmdData[0].uAppData.sTmAnalog.Lc[0] = \
+        sqlite3_column_double(stmt, leakageCurrentOffset);
+        
+    }
+
+    for(i = 0; i < anaglogNum; i++)
+    {
+        //sqlite3_column_double();
+        /*当前电压*/
+        pscmPacket->sCmdData[0].uAppData.sTmAnalog.fU[i] = \
+        sqlite3_column_double(stmt, voltageOffset + i);
+        /*2路当前电流*/
+        pscmPacket->sCmdData[0].uAppData.sTmAnalog.fI[i] = \
+        sqlite3_column_double(stmt, currentOffset + i);
+        /*2路当前有功功率*/
+        pscmPacket->sCmdData[0].uAppData.sTmAnalog.fP[i] = \
+        sqlite3_column_double(stmt, activePowerOffset + i);
+        /*2路当前无功功率*/
+        pscmPacket->sCmdData[0].uAppData.sTmAnalog.fQ[i] = \
+        sqlite3_column_double(stmt, reactivePowerOffset + i);
+        /*2路当前功率因数*/
+        pscmPacket->sCmdData[0].uAppData.sTmAnalog.fPf[i] = \
+        sqlite3_column_double(stmt, powerFactorOffset + i);
+        /*2路当前光控值*/
+        pscmPacket->sCmdData[0].uAppData.sTmAnalog.fLc[i] = \
+        sqlite3_column_double(stmt, opticalControlOffset + i);
+        /*当前视在功率*/
+        pscmPacket->sCmdData[0].uAppData.sTmAnalog.fS[i] = \
+        sqlite3_column_double(stmt, apparentPowerOffset + i);
+        /*有功能量寄存器*/
+        pscmPacket->sCmdData[0].uAppData.sTmAnalog.EP[i] = \
+        sqlite3_column_double(stmt, activeEnergyOffset + i);
+        /*正向有功能量寄存器*/
+        pscmPacket->sCmdData[0].uAppData.sTmAnalog.PosEP[i] = \
+        sqlite3_column_double(stmt, positiveActiveEnergyOffset + i);
+        /*反向有功能量寄存器*/
+        pscmPacket->sCmdData[0].uAppData.sTmAnalog.NegEP[i] = \
+        sqlite3_column_double(stmt, reverseActiveEnergyOffset + i);
+        /*无功能量寄存器*/
+        pscmPacket->sCmdData[0].uAppData.sTmAnalog.EQ[i] = \
+        sqlite3_column_double(stmt, reactiveEnergyOffset + i);
+        /*正向无功能量寄存器*/
+        pscmPacket->sCmdData[0].uAppData.sTmAnalog.PosEQ[i] = \
+        sqlite3_column_double(stmt, positiveReactiveEnergyOffset + i);
+        /*反向无功能量寄存器*/
+        pscmPacket->sCmdData[0].uAppData.sTmAnalog.NegEQ[i] = \
+        sqlite3_column_double(stmt, reverseReactiveEnergyOffset + i);
+        /*视在能量寄存器*/
+        pscmPacket->sCmdData[0].uAppData.sTmAnalog.ES[i] = \
+        sqlite3_column_double(stmt, apparentEnergyOffset + i);
+    }
+
     {
         /*抄读时间*/
         pscmPacket->sCmdData[0].uAppData.sTmAnalog.sReadTime.ucYY = 18;
@@ -854,89 +1073,8 @@ eMtErr pack_afn0cf01_s2m_analog()
         pscmPacket->sCmdData[0].uAppData.sTmAnalog.sReadTime.ucDD = 21;
         pscmPacket->sCmdData[0].uAppData.sTmAnalog.sReadTime.ucHH = 16;
         pscmPacket->sCmdData[0].uAppData.sTmAnalog.sReadTime.ucmm = 12;
-        /*模拟量路数*/
-        pscmPacket->sCmdData[0].uAppData.sTmAnalog.anaglogNum = 4;
-        /*1路当前电压*/
-        pscmPacket->sCmdData[0].uAppData.sTmAnalog.fU[0] = 111.2;
-        /*1路当前电流*/
-        pscmPacket->sCmdData[0].uAppData.sTmAnalog.fI[0] = 222.222;
-        /*1路当前有功功率*/
-        pscmPacket->sCmdData[0].uAppData.sTmAnalog.fP[0] = 33.333;
-        /*1路当前无功功率*/
-        pscmPacket->sCmdData[0].uAppData.sTmAnalog.fQ[0] = 44.444;
-        /*1路当前功率因数*/
-        pscmPacket->sCmdData[0].uAppData.sTmAnalog.fPf[0] = 555.5;
-        /*1路当前光控值*/
-        pscmPacket->sCmdData[0].uAppData.sTmAnalog.fLc[0] = 666.6;
-        /*当前视在功率*/
-        pscmPacket->sCmdData[0].uAppData.sTmAnalog.fS[0] = 33.333;
-        /*有功能量寄存器*/
-        pscmPacket->sCmdData[0].uAppData.sTmAnalog.EP[0] = 232.323;
-                /*正向有功能量寄存器*/
-        pscmPacket->sCmdData[0].uAppData.sTmAnalog.PosEP[0] = 34.3;
-                /*反向有功能量寄存器*/
-        pscmPacket->sCmdData[0].uAppData.sTmAnalog.NegEP[0] = 45.4;
-                /*无功能量寄存器*/
-        pscmPacket->sCmdData[0].uAppData.sTmAnalog.EQ[0] = 565.6;
-         /*正向无功能量寄存器*/
-        pscmPacket->sCmdData[0].uAppData.sTmAnalog.PosEQ[0] = 676.7;
-        /*反向无功能量寄存器*/
-        pscmPacket->sCmdData[0].uAppData.sTmAnalog.NegEQ[0] = 676.6;
-        /*视在能量寄存器*/
-        pscmPacket->sCmdData[0].uAppData.sTmAnalog.ES[0] = 585.8;
-    
-    }
-    /*pn = 0部分*/
-    if(usPN == 0){
-          //开关灯状态
-        pscmPacket->sCmdData[0].uAppData.sTmAnalog.state = 0xff;
-        /*累计开灯时间*/
-        pscmPacket->sCmdData[0].uAppData.sTmAnalog.Time = 444.4;
-        /*漏电流*/
-        pscmPacket->sCmdData[0].uAppData.sTmAnalog.Lc[0] = 1234;
-    }
-    else
-    /*测量点部分配置*/    
-    {
-        /*1路*/
-        /*终端停上电/*/
-        pscmPacket->sCmdData[0].uAppData.sTmAnalog.TPower[0] = 0xFF;
-        
-        for(i = 1; i < 4; i++){
-            /*终端停上电*/
-            pscmPacket->sCmdData[0].uAppData.sTmAnalog.TPower[i] = 0xFF;
-            /*当前电压*/
-            pscmPacket->sCmdData[0].uAppData.sTmAnalog.fU[i] = 111.1;
-            /*2路当前电流*/
-            pscmPacket->sCmdData[0].uAppData.sTmAnalog.fI[i] = 222.222;
-            /*2路当前有功功率*/
-            pscmPacket->sCmdData[0].uAppData.sTmAnalog.fP[i] = 33.333;
-            /*2路当前无功功率*/
-            pscmPacket->sCmdData[0].uAppData.sTmAnalog.fQ[i] = 44.444;
-            /*2路当前功率因数*/
-            pscmPacket->sCmdData[0].uAppData.sTmAnalog.fPf[i] = 555.5;
-            /*2路当前光控值*/
-            pscmPacket->sCmdData[0].uAppData.sTmAnalog.fLc[i] = 666.6;
-            /*当前视在功率*/
-            pscmPacket->sCmdData[0].uAppData.sTmAnalog.fS[i] = 33.333;
-            /*有功能量寄存器*/
-            pscmPacket->sCmdData[0].uAppData.sTmAnalog.EP[i] = 232.323;
-            /*正向有功能量寄存器*/
-            pscmPacket->sCmdData[0].uAppData.sTmAnalog.PosEP[i] = 34.3;
-            /*反向有功能量寄存器*/
-            pscmPacket->sCmdData[0].uAppData.sTmAnalog.NegEP[i] = 45.4;
-            /*无功能量寄存器*/
-            pscmPacket->sCmdData[0].uAppData.sTmAnalog.EQ[i] = 565.6;
-            /*正向无功能量寄存器*/
-            pscmPacket->sCmdData[0].uAppData.sTmAnalog.PosEQ[i] = 676.7;
-            /*反向无功能量寄存器*/
-            pscmPacket->sCmdData[0].uAppData.sTmAnalog.NegEQ[i] = 676.6;
-            /*视在能量寄存器*/
-            pscmPacket->sCmdData[0].uAppData.sTmAnalog.ES[i] = 585.8;
-        }
 
     }
-
     /* 4 调用函数 */
     eRet = ecm_3761_pack(pscmPacket, (UINT8*)g_ucOutBuf, &usBuflen);
     //eRet = ecm_3761_pack(pscmPacket, (UINT8*)packdata->data, &packdata->length);
@@ -945,15 +1083,17 @@ eMtErr pack_afn0cf01_s2m_analog()
         printf("ecm_3761_pack error %d\n", eRet);
         return eRet;
     }
-    
-    /* 5 输出结果 */ 
-   printf_buffer_color((char*)g_ucOutBuf, usBuflen);
-   socket_client_send((UINT8*)(g_ucOutBuf), usBuflen);
 
+    Finish:
+    if(stmt != NULL)
+        sqlite3_finalize(stmt);
+
+    app_sql_close();
+    /* 5 输出结果 */ 
+    printf_buffer_color((char*)g_ucOutBuf, usBuflen);
+    socket_client_send((UINT8*)(g_ucOutBuf), usBuflen);
     return MT_OK;
 }
-
-
 /*****************************************************************************
  函 数 名  : pack_afn0cf02_s2m_analog
  功能描述  : 查询时钟
@@ -1133,7 +1273,7 @@ void app_req_handle(UINT16 eCmd, void* d)
             pack_afn09f1_s2m();
         break;
         case CMD_AFN_C_F1_ANALOG_DATA:
-            pack_afn0cf01_s2m_analog(d);
+            pack_afn0cf01_s2m_analog();
         break;
         case CMD_AFN_C_F2_TML_CLOCK:
             pack_afn0cf02_s2m_auto();

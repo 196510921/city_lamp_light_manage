@@ -12472,6 +12472,112 @@ eMtErr test_pack_afn0ef1_m2s()
     return MT_OK;
 }
 
+/*****************************************************************************
+ 函 数 名  : test_pack_afn11df2_m2s
+ 功能描述  : 转发主站直接对电表的遥控
+ 输入参数  : 无
+ 输出参数  : 无
+ 返 回 值  :
+ 调用函数  :
+ 被调函数  :
+
+ 修改历史      :
+  1.日    期   : 2013年6月9日
+    作    者   : 李明
+    修改内容   : 新生成函数
+
+*****************************************************************************/
+
+eMtErr test_pack_afn11df2_m2s()
+{
+    printf("test_pack_afn11df2_m2s\n");
+    eCmErr eRet;
+    UINT16 usBuflen = 0;
+    smtPack *pscmPacket = (smtPack*)g_ucPackMem;
+
+
+    /* 2 \u73af\u5883\u521d\u59cb\u5316 */
+    sCmInit  sInit;
+    sInit.eRole = MT_ROLE_MASTER;
+    //sInit.eRole = MT_ROLE_CONTOR;
+    sInit.ucPermitDelayMinutes = 255;
+    eRet = ecm_3761_init(&sInit);
+    if(eRet != MT_OK)
+    {
+        //printf("\u521d\u59cb\u5316\u5931\u8d25\n");
+        return eRet;
+    }
+    char *str = "0123456789ABCDEF";
+    bCmSetPw(str);
+
+
+    /* 3 \u5c01\u88c5\u53c2\u6570 */
+    memcpy(pscmPacket->sAddress.acRegionCode, "1100", 4);
+    pscmPacket->sAddress.usTAddress = 1;
+    pscmPacket->sAddress.bTeamAddr  = FALSE;
+    pscmPacket->sAddress.ucMAddress = 1;
+
+    pscmPacket->eAFN = AFN_11_LED;
+    pscmPacket->eDir = MT_DIR_M2S;
+    pscmPacket->ePRM = MT_PRM_ACTIVE;
+
+    pscmPacket->ePos = MT_POS_SIGLE;
+    pscmPacket->ucSeq = 0;
+    pscmPacket->bAcdFcb = TRUE;
+
+
+    pscmPacket->usDataNum = 1;
+    pscmPacket->sData[0].eCmd  = CMD_AFN_11_F2;
+    pscmPacket->sData[0].bApp  = TRUE;
+    pscmPacket->sData[0].usPN  = 0;
+
+
+
+    pscmPacket->sData[0].uApp.std_11f2.ucTaskFormat = 0x1105;
+    pscmPacket->sData[0].uApp.std_11f2.ucTaskType = 0x05;
+    pscmPacket->sData[0].uApp.std_11f2.ucTaskLen = 0x1207;
+    pscmPacket->sData[0].uApp.std_11f2.sT.ucYY = 00;
+    pscmPacket->sData[0].uApp.std_11f2.sT.ucMM = 00;
+    pscmPacket->sData[0].uApp.std_11f2.sT.ucDD = 10;
+    pscmPacket->sData[0].uApp.std_11f2.sT.ucWW = 2;
+    pscmPacket->sData[0].uApp.std_11f2.LastTime = 0x12;
+    pscmPacket->sData[0].uApp.std_11f2.ucTimeNum = 0x2;
+
+    pscmPacket->sData[0].uApp.std_11f2.Time[0].Min = 1;
+    pscmPacket->sData[0].uApp.std_11f2.Time[0].Hour = 13;
+    pscmPacket->sData[0].uApp.std_11f2.Time[0].Status = 0x03;
+    pscmPacket->sData[0].uApp.std_11f2.Time[0].Light = 0x04;
+
+    pscmPacket->sData[0].uApp.std_11f2.Time[1].Min = 2;
+    pscmPacket->sData[0].uApp.std_11f2.Time[1].Hour = 13;
+    pscmPacket->sData[0].uApp.std_11f2.Time[1].Status = 0x03;
+    pscmPacket->sData[0].uApp.std_11f2.Time[1].Light = 0x04;
+
+    pscmPacket->sData[0].uApp.std_11f2.ucDataNum = 0x01;
+
+    pscmPacket->sData[0].uApp.std_11f2.Data[0].ucOperate =0x09;
+    memcpy(pscmPacket->sData[0].uApp.std_11f2.Data[0].ucAddress,"12345678",7);
+    memcpy(pscmPacket->sData[0].uApp.std_11f2.Data[0].ucKey,"12345678912345678912345678998761234556",32);
+
+    pscmPacket->sData[0].uApp.std_11f2.Data[1].ucOperate =0x09;
+    memcpy(pscmPacket->sData[0].uApp.std_11f2.Data[1].ucAddress,"12345678",7);
+    memcpy(pscmPacket->sData[0].uApp.std_11f2.Data[1].ucKey,"12345678912345678912345678998761234556",32);
+
+
+
+    /* 4 \u8c03\u7528\u51fd\u6570 */
+    eRet = emtPack(pscmPacket, &usBuflen, (UINT8*)g_ucOutBuf);
+    if(eRet != MT_OK)
+    {
+        printf("ecm_3761_pack error %d\n", eRet);
+        return eRet;
+    }
+
+    /* 5 \u8f93\u51fa\u7ed3\u679c */
+    printf_buffer_color((char*)g_ucOutBuf, usBuflen);
+    return MT_OK;
+}
+
 
 /*****************************************************************************
  函 数 名  : test_pack_afn11df3_m2s
@@ -12562,8 +12668,6 @@ eMtErr test_pack_afn11df3_m2s()
     pscmPacket->sData[0].uApp.std_11f3.ucPara[1].ucOperate =0x08;
     memcpy(pscmPacket->sData[0].uApp.std_11f3.ucPara[1].ucAddress,"12345678",7);
     memcpy(pscmPacket->sData[0].uApp.std_11f3.ucPara[1].ucKey,"1234567891234567891234567899876",31);
-
-
 
     /* 4 \u8c03\u7528\u51fd\u6570 */
     eRet = emtPack(pscmPacket, &usBuflen, (UINT8*)g_ucOutBuf);
@@ -12821,8 +12925,9 @@ sTestPack  g_test_pack_down[] =
     {CMD_AFN_D_F216_METR_BALANCE,     test_pack_afn0df216_m2s},
     {CMD_AFN_D_F28_UBLN_OVER_D,       test_pack_afn0df28_m2s},
     {CMD_AFN_D_F36_UBLN_OVER_M,       test_pack_afn0df36_m2s},
-    {CMD_AFN_11_F3,       	      test_pack_afn11df3_m2s},
-    {CMD_AFN_11_F4,       	      test_pack_afn11hf4_m2s},
+    {CMD_AFN_11_F2,                   test_pack_afn11df2_m2s},
+    {CMD_AFN_11_F3,       	          test_pack_afn11df3_m2s},
+    {CMD_AFN_11_F4,       	          test_pack_afn11hf4_m2s},
 
 
     // 事件
@@ -16029,6 +16134,7 @@ int main(int argc, char *argv[])
     static int retryTimes = 3;
     pthread_t t1,t2;
 
+    afn_11_f2_ctrl_period();
     /*数据库初始化*/
     app_sql_init();
     /*创建数据库*/

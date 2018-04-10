@@ -61,7 +61,7 @@ int afn_04_f13_ctrl_table(sMtAfn04F13* d)
     char* sql = NULL;
     char sql_1[300] = {0};
     char groupInfoNew[512] = {0};
-    char box[6] = {0};
+    char box[7] = {0};
     char Group[5] = {0};
     char* groupInfoOld = NULL;
     UINT16 usPn = 0;
@@ -264,20 +264,24 @@ int afn_05_f31_clock(sMtUserClock* d)
     printf("ucHour : %d\n", d->ucHour);
     printf("ucMinute : %d\n", d->ucMinute);
     printf("ucSecond : %d\n", d->ucSecond);    
+
+    return APP_HANDLE_SUCCESS;
 }
 
 /*时段控制检查*/
 int afn_11_f2_ctrl_period(void)
 {
     static int preTimeMin = 0;
-    UINT8 state = 0;
-    char currTime[5] = {0};
+    UINT8 state = NULL;
+    char* taskExecTime = NULL;
+    char currTime[7] = {0};
     int rc;
     int i = 0;
     int ret = APP_HANDLE_SUCCESS;
     char* groupid = 0;
     char groupid_1[8] = {0};
     char sql[300] = {0};
+    char sql_1[300] = {0};
     sqlite3_stmt* stmt = NULL;
 
     // 获取系统当前时间
@@ -287,8 +291,8 @@ int afn_11_f2_ctrl_period(void)
         time(&now);
         timenow = localtime(&now);
         
-        printf("年:%03d 月:%03d 日:%03d 时:%03d 分:%03d\n",timenow->tm_year, \
-            timenow->tm_mon,timenow->tm_mday,timenow->tm_hour,timenow->tm_min);
+        printf("年:%03d 月:%03d 日:%03d 周:%03d 时:%03d 分:%03d\n",timenow->tm_year, \
+            timenow->tm_mon,timenow->tm_mday,timenow->tm_wday,timenow->tm_hour,timenow->tm_min);
 
         /*检查的最小时间刻度为Min*/
         if(preTimeMin != timenow->tm_min)
@@ -298,10 +302,11 @@ int afn_11_f2_ctrl_period(void)
             currTime[0] = (timenow->tm_year - 100) + '0';
             currTime[1] = (timenow->tm_mon + 1) + '0';
             currTime[2] = timenow->tm_mday + '0';
-            currTime[3] = timenow->tm_hour + '0';
-            currTime[4] = timenow->tm_min + '0';
+            currTime[3] = timenow->tm_wday + '0';
+            currTime[4] = timenow->tm_hour + '0';
+            currTime[5] = timenow->tm_min + '0';
             printf("currTime:%x,%x,%x,%x,%x\n",currTime[0],currTime[1],currTime[2], \
-                currTime[3],currTime[4]);
+                currTime[3],currTime[4],currTime[5]);
         }else{
 
             return ret;
@@ -316,40 +321,452 @@ int afn_11_f2_ctrl_period(void)
             goto Finish;
         }
 
-        sprintf(sql,"select groupid,state from dal_cbt_clock where startdate = \"%s\";",currTime);
-        printf("sql:%s\n",sql);
-
-        if(sqlite3_prepare_v2(DCS003_db, sql, strlen(sql), &stmt, NULL) != SQLITE_OK)
+        /*特定任务年*/
         {
-            printf( "sqlite3_prepare_v2:error %s\n", sqlite3_errmsg(DCS003_db));   
-            ret = APP_HANDLE_FAILED;
-            goto Finish; 
-        }
+            
+            sprintf(sql,"select groupid,state from dal_cbt_clock where tasktype = %d and startdate = \"%s\";"\
+                ,TASK_TYPE_YEAR, currTime);
+            printf("sql:%s\n",sql);
 
-        while(rc = sqlite3_step(stmt) == SQLITE_ROW) 
-        {  
-            groupid = sqlite3_column_text(stmt, 0);
-            if(groupid == NULL)
+            if(sqlite3_prepare_v2(DCS003_db, sql, strlen(sql), &stmt, NULL) != SQLITE_OK)
             {
-                printf("groupid NULL");
-                continue;
-            }else
-            {
+                printf( "sqlite3_prepare_v2:error %s\n", sqlite3_errmsg(DCS003_db));   
+                ret = APP_HANDLE_FAILED;
+                goto Finish; 
+            }
+
+            while(rc = sqlite3_step(stmt) == SQLITE_ROW) 
+            {  
+                groupid = sqlite3_column_text(stmt, 0);
+                if(groupid == NULL)
+                {
+                    printf("groupid NULL");
+                    continue;
+                }
                 /*组id转换*/
                 for(i = 0; i < 4; i++)
                     groupid_1[i] = groupid[i+4] - '0';
+                
+                printf("groupid_1:%x,%x,%x,%x\n",groupid_1[0],groupid_1[1],groupid_1[2],groupid_1[3]);
+                state = sqlite3_column_int(stmt, 1);
+                printf("state:%x\n",state);
+                /*根据组id查询box号与通道*/
+                {
+                    if(afn_11_f3_group_ctrl((UINT8*)groupid_1, state) != APP_HANDLE_SUCCESS)
+                        printf("afn_11_f3_group_ctrl failed\n");
+                }
+
+                goto Finish;
             }
-            printf("groupid_1:%x,%x,%x,%x\n",groupid_1[0],groupid_1[1],groupid_1[2],groupid_1[3]);
-            sqlite3_column_int(stmt, 1);
-            printf("state:%x\n",state);
-            /*根据组id查询box号与通道*/
-            {
-                if(afn_11_f3_group_ctrl((UINT8*)groupid_1, state) != APP_HANDLE_SUCCESS)
-                    printf("afn_11_f3_group_ctrl failed\n");
+            if((rc != SQLITE_ROW) && (rc!= SQLITE_DONE) && (rc != SQLITE_OK)){
+                printf("step() return %s, number:%03d\n", "SQLITE_ERROR",rc);
             }
         }
-        if((rc != SQLITE_ROW) && (rc!= SQLITE_DONE) && (rc != SQLITE_OK)){
-            printf("step() return %s, number:%03d\n", "SQLITE_ERROR",rc);
+
+        /*特定任务月*/
+        {
+            
+            sprintf(sql,"select groupid,state from dal_cbt_clock where tasktype = %d and startdate = \"0%s\";"\
+                ,TASK_TYPE_MON, &currTime[1]);
+            printf("sql:%s\n",sql);
+
+            if(sqlite3_prepare_v2(DCS003_db, sql, strlen(sql), &stmt, NULL) != SQLITE_OK)
+            {
+                printf( "sqlite3_prepare_v2:error %s\n", sqlite3_errmsg(DCS003_db));   
+                ret = APP_HANDLE_FAILED;
+                goto Finish; 
+            }
+
+            while(rc = sqlite3_step(stmt) == SQLITE_ROW) 
+            {  
+                groupid = sqlite3_column_text(stmt, 0);
+                if(groupid == NULL)
+                {
+                    printf("groupid NULL");
+                    continue;
+                }
+                /*组id转换*/
+                for(i = 0; i < 4; i++)
+                    groupid_1[i] = groupid[i+4] - '0';
+                
+                printf("groupid_1:%x,%x,%x,%x\n",groupid_1[0],groupid_1[1],groupid_1[2],groupid_1[3]);
+                state = sqlite3_column_int(stmt, 1);
+                printf("state:%x\n",state);
+                /*根据组id查询box号与通道*/
+                {
+                    if(afn_11_f3_group_ctrl((UINT8*)groupid_1, state) != APP_HANDLE_SUCCESS)
+                        printf("afn_11_f3_group_ctrl failed\n");
+                }
+
+                goto Finish;
+            }
+            if((rc != SQLITE_ROW) && (rc!= SQLITE_DONE) && (rc != SQLITE_OK)){
+                printf("step() return %s, number:%03d\n", "SQLITE_ERROR",rc);
+            }
+        }
+
+        /*特定任务日*/
+        {
+            sprintf(sql,"select groupid,state from dal_cbt_clock where tasktype = %d and startdate = \"00%s\";"\
+                ,TASK_TYPE_DAY, &currTime[2]);
+            printf("sql:%s\n",sql);
+
+            if(sqlite3_prepare_v2(DCS003_db, sql, strlen(sql), &stmt, NULL) != SQLITE_OK)
+            {
+                printf( "sqlite3_prepare_v2:error %s\n", sqlite3_errmsg(DCS003_db));   
+                ret = APP_HANDLE_FAILED;
+                goto Finish; 
+            }
+
+            while(rc = sqlite3_step(stmt) == SQLITE_ROW) 
+            {  
+                groupid = sqlite3_column_text(stmt, 0);
+                if(groupid == NULL)
+                {
+                    printf("groupid NULL");
+                    continue;
+                }
+                /*组id转换*/
+                for(i = 0; i < 4; i++)
+                    groupid_1[i] = groupid[i+4] - '0';
+                
+                printf("groupid_1:%x,%x,%x,%x\n",groupid_1[0],groupid_1[1],groupid_1[2],groupid_1[3]);
+                state = sqlite3_column_int(stmt, 1);
+                printf("state:%x\n",state);
+                /*根据组id查询box号与通道*/
+                {
+                    if(afn_11_f3_group_ctrl((UINT8*)groupid_1, state) != APP_HANDLE_SUCCESS)
+                        printf("afn_11_f3_group_ctrl failed\n");
+                }
+
+                goto Finish;
+            }
+            if((rc != SQLITE_ROW) && (rc!= SQLITE_DONE) && (rc != SQLITE_OK)){
+                printf("step() return %s, number:%03d\n", "SQLITE_ERROR",rc);
+            }
+        }
+
+        /*特定任务周*/
+        {
+            sprintf(sql,"select groupid,state,startdate from dal_cbt_clock where tasktype = %d;"\
+                ,TASK_TYPE_WEEK);
+            printf("sql:%s\n",sql);
+
+            if(sqlite3_prepare_v2(DCS003_db, sql, strlen(sql), &stmt, NULL) != SQLITE_OK)
+            {
+                printf( "sqlite3_prepare_v2:error %s\n", sqlite3_errmsg(DCS003_db));   
+                ret = APP_HANDLE_FAILED;
+                goto Finish; 
+            }
+
+            while(rc = sqlite3_step(stmt) == SQLITE_ROW) 
+            {  
+                taskExecTime = sqlite3_column_text(stmt, 2);
+                if(taskExecTime == NULL)
+                {
+                    printf("taskExecTime NULL");
+                    continue;
+                }
+                printf("taskExecTime:%s\n",taskExecTime);
+                /*判断是否属于该周*/
+                if((taskExecTime[3] - '0') & ((1 << (currTime[3] - '0'))&0xff))
+                {
+                    if(strncmp(&taskExecTime[4], &currTime[4],2) == 0)
+                    {
+                        printf("同一周,同一时段\n");
+                        groupid = sqlite3_column_text(stmt, 0);
+                        if(groupid == NULL)
+                        {
+                            printf("groupid NULL");
+                            continue;
+                        }
+                        /*组id转换*/
+                        for(i = 0; i < 4; i++)
+                            groupid_1[i] = groupid[i+4] - '0';
+                        
+                        printf("groupid_1:%x,%x,%x,%x\n",groupid_1[0],groupid_1[1],groupid_1[2],groupid_1[3]);
+                        state = sqlite3_column_int(stmt, 1);
+                        printf("state:%x\n",state);
+                        /*根据组id查询box号与通道*/
+                        {
+                            if(afn_11_f3_group_ctrl((UINT8*)groupid_1, state) != APP_HANDLE_SUCCESS)
+                                printf("afn_11_f3_group_ctrl failed\n");
+                        }
+        
+                        goto Finish;
+                    }
+                }
+
+            }
+            if((rc != SQLITE_ROW) && (rc!= SQLITE_DONE) && (rc != SQLITE_OK))
+            {
+                printf("step() return %s, number:%03d\n", "SQLITE_ERROR",rc);
+            }
+        }
+
+        /*特定任务时*/
+        {
+            sprintf(sql,"select groupid,state from dal_cbt_clock where tasktype = %d and startdate = \"0000%s\";"\
+                ,TASK_TYPE_HOUR, &currTime[4]);
+            printf("sql:%s\n",sql);
+
+            if(sqlite3_prepare_v2(DCS003_db, sql, strlen(sql), &stmt, NULL) != SQLITE_OK)
+            {
+                printf( "sqlite3_prepare_v2:error %s\n", sqlite3_errmsg(DCS003_db));   
+                ret = APP_HANDLE_FAILED;
+                goto Finish; 
+            }
+
+            while(rc = sqlite3_step(stmt) == SQLITE_ROW) 
+            {  
+                groupid = sqlite3_column_text(stmt, 0);
+                if(groupid == NULL)
+                {
+                    printf("groupid NULL");
+                    continue;
+                }
+                /*组id转换*/
+                for(i = 0; i < 4; i++)
+                    groupid_1[i] = groupid[i+4] - '0';
+                
+                printf("groupid_1:%x,%x,%x,%x\n",groupid_1[0],groupid_1[1],groupid_1[2],groupid_1[3]);
+                state = sqlite3_column_int(stmt, 1);
+                printf("state:%x\n",state);
+                /*根据组id查询box号与通道*/
+                {
+                    if(afn_11_f3_group_ctrl((UINT8*)groupid_1, state) != APP_HANDLE_SUCCESS)
+                        printf("afn_11_f3_group_ctrl failed\n");
+                }
+
+                goto Finish;
+            }
+            if((rc != SQLITE_ROW) && (rc!= SQLITE_DONE) && (rc != SQLITE_OK)){
+                printf("step() return %s, number:%03d\n", "SQLITE_ERROR",rc);
+            }
+        }
+
+        /*普通任务年*/
+        {
+            
+            sprintf(sql,"select groupid,state from dal_cbt_clock where tasktype = %d and startdate = \"%s\";"\
+                ,TASK_TYPE_YEAR & TASK_TYPE_COMMON_MASK, currTime);
+            printf("sql:%s\n",sql);
+
+            if(sqlite3_prepare_v2(DCS003_db, sql, strlen(sql), &stmt, NULL) != SQLITE_OK)
+            {
+                printf( "sqlite3_prepare_v2:error %s\n", sqlite3_errmsg(DCS003_db));   
+                ret = APP_HANDLE_FAILED;
+                goto Finish; 
+            }
+
+            while(rc = sqlite3_step(stmt) == SQLITE_ROW) 
+            {  
+                groupid = sqlite3_column_text(stmt, 0);
+                if(groupid == NULL)
+                {
+                    printf("groupid NULL");
+                    continue;
+                }
+                /*组id转换*/
+                for(i = 0; i < 4; i++)
+                    groupid_1[i] = groupid[i+4] - '0';
+                
+                printf("groupid_1:%x,%x,%x,%x\n",groupid_1[0],groupid_1[1],groupid_1[2],groupid_1[3]);
+                state = sqlite3_column_int(stmt, 1);
+                printf("state:%x\n",state);
+                /*根据组id查询box号与通道*/
+                {
+                    if(afn_11_f3_group_ctrl((UINT8*)groupid_1, state) != APP_HANDLE_SUCCESS)
+                        printf("afn_11_f3_group_ctrl failed\n");
+                }
+
+                goto Finish;
+            }
+            if((rc != SQLITE_ROW) && (rc!= SQLITE_DONE) && (rc != SQLITE_OK)){
+                printf("step() return %s, number:%03d\n", "SQLITE_ERROR",rc);
+            }
+        }
+
+        /*普通任务月*/
+        {
+            
+            sprintf(sql,"select groupid,state from dal_cbt_clock where tasktype = %d and startdate = \"0%s\";"\
+                ,TASK_TYPE_MON & TASK_TYPE_COMMON_MASK, &currTime[1]);
+            printf("sql:%s\n",sql);
+
+            if(sqlite3_prepare_v2(DCS003_db, sql, strlen(sql), &stmt, NULL) != SQLITE_OK)
+            {
+                printf( "sqlite3_prepare_v2:error %s\n", sqlite3_errmsg(DCS003_db));   
+                ret = APP_HANDLE_FAILED;
+                goto Finish; 
+            }
+
+            while(rc = sqlite3_step(stmt) == SQLITE_ROW) 
+            {  
+                groupid = sqlite3_column_text(stmt, 0);
+                if(groupid == NULL)
+                {
+                    printf("groupid NULL");
+                    continue;
+                }
+                /*组id转换*/
+                for(i = 0; i < 4; i++)
+                    groupid_1[i] = groupid[i+4] - '0';
+                
+                printf("groupid_1:%x,%x,%x,%x\n",groupid_1[0],groupid_1[1],groupid_1[2],groupid_1[3]);
+                state = sqlite3_column_int(stmt, 1);
+                printf("state:%x\n",state);
+                /*根据组id查询box号与通道*/
+                {
+                    if(afn_11_f3_group_ctrl((UINT8*)groupid_1, state) != APP_HANDLE_SUCCESS)
+                        printf("afn_11_f3_group_ctrl failed\n");
+                }
+
+                goto Finish;
+            }
+            if((rc != SQLITE_ROW) && (rc!= SQLITE_DONE) && (rc != SQLITE_OK)){
+                printf("step() return %s, number:%03d\n", "SQLITE_ERROR",rc);
+            }
+        }
+
+        /*普通任务日*/
+        {
+            sprintf(sql,"select groupid,state from dal_cbt_clock where tasktype = %d and startdate = \"00%s\";"\
+                ,TASK_TYPE_DAY & TASK_TYPE_COMMON_MASK, &currTime[2]);
+            printf("sql:%s\n",sql);
+
+            if(sqlite3_prepare_v2(DCS003_db, sql, strlen(sql), &stmt, NULL) != SQLITE_OK)
+            {
+                printf( "sqlite3_prepare_v2:error %s\n", sqlite3_errmsg(DCS003_db));   
+                ret = APP_HANDLE_FAILED;
+                goto Finish; 
+            }
+
+            while(rc = sqlite3_step(stmt) == SQLITE_ROW) 
+            {  
+                groupid = sqlite3_column_text(stmt, 0);
+                if(groupid == NULL)
+                {
+                    printf("groupid NULL");
+                    continue;
+                }
+                /*组id转换*/
+                for(i = 0; i < 4; i++)
+                    groupid_1[i] = groupid[i+4] - '0';
+                
+                printf("groupid_1:%x,%x,%x,%x\n",groupid_1[0],groupid_1[1],groupid_1[2],groupid_1[3]);
+                state = sqlite3_column_int(stmt, 1);
+                printf("state:%x\n",state);
+                /*根据组id查询box号与通道*/
+                {
+                    if(afn_11_f3_group_ctrl((UINT8*)groupid_1, state) != APP_HANDLE_SUCCESS)
+                        printf("afn_11_f3_group_ctrl failed\n");
+                }
+
+                goto Finish;
+            }
+            if((rc != SQLITE_ROW) && (rc!= SQLITE_DONE) && (rc != SQLITE_OK)){
+                printf("step() return %s, number:%03d\n", "SQLITE_ERROR",rc);
+            }
+        }
+
+        /*普通任务周*/
+        {
+            sprintf(sql,"select groupid,state,startdate from dal_cbt_clock where tasktype = %d;"\
+                ,TASK_TYPE_WEEK & TASK_TYPE_COMMON_MASK);
+            printf("sql:%s\n",sql);
+
+            if(sqlite3_prepare_v2(DCS003_db, sql, strlen(sql), &stmt, NULL) != SQLITE_OK)
+            {
+                printf( "sqlite3_prepare_v2:error %s\n", sqlite3_errmsg(DCS003_db));   
+                ret = APP_HANDLE_FAILED;
+                goto Finish; 
+            }
+
+            while(rc = sqlite3_step(stmt) == SQLITE_ROW) 
+            {  
+                taskExecTime = sqlite3_column_text(stmt, 2);
+                if(taskExecTime == NULL)
+                {
+                    printf("taskExecTime NULL");
+                    continue;
+                }
+                printf("taskExecTime:%s\n",taskExecTime);
+                /*判断是否属于该周*/
+                if((taskExecTime[3] - '0') & ((1 << (currTime[3] - '0'))&0xff))
+                {
+                    if(strncmp(&taskExecTime[4], &currTime[4],2) == 0)
+                    {
+                        printf("同一周,同一时段\n");
+                        groupid = sqlite3_column_text(stmt, 0);
+                        if(groupid == NULL)
+                        {
+                            printf("groupid NULL");
+                            continue;
+                        }
+                        /*组id转换*/
+                        for(i = 0; i < 4; i++)
+                            groupid_1[i] = groupid[i+4] - '0';
+                        
+                        printf("groupid_1:%x,%x,%x,%x\n",groupid_1[0],groupid_1[1],groupid_1[2],groupid_1[3]);
+                        state = sqlite3_column_int(stmt, 1);
+                        printf("state:%x\n",state);
+                        /*根据组id查询box号与通道*/
+                        {
+                            if(afn_11_f3_group_ctrl((UINT8*)groupid_1, state) != APP_HANDLE_SUCCESS)
+                                printf("afn_11_f3_group_ctrl failed\n");
+                        }
+        
+                        goto Finish;
+                    }
+                }
+
+            }
+            if((rc != SQLITE_ROW) && (rc!= SQLITE_DONE) && (rc != SQLITE_OK))
+            {
+                printf("step() return %s, number:%03d\n", "SQLITE_ERROR",rc);
+            }
+        }
+
+        /*普通任务时*/
+        {
+            sprintf(sql,"select groupid,state from dal_cbt_clock where tasktype = %d and startdate = \"0000%s\";"\
+                ,TASK_TYPE_HOUR & TASK_TYPE_COMMON_MASK, &currTime[4]);
+            printf("sql:%s\n",sql);
+
+            if(sqlite3_prepare_v2(DCS003_db, sql, strlen(sql), &stmt, NULL) != SQLITE_OK)
+            {
+                printf( "sqlite3_prepare_v2:error %s\n", sqlite3_errmsg(DCS003_db));   
+                ret = APP_HANDLE_FAILED;
+                goto Finish; 
+            }
+
+            while(rc = sqlite3_step(stmt) == SQLITE_ROW) 
+            {  
+                groupid = sqlite3_column_text(stmt, 0);
+                if(groupid == NULL)
+                {
+                    printf("groupid NULL");
+                    continue;
+                }
+                /*组id转换*/
+                for(i = 0; i < 4; i++)
+                    groupid_1[i] = groupid[i+4] - '0';
+
+                printf("groupid_1:%x,%x,%x,%x\n",groupid_1[0],groupid_1[1],groupid_1[2],groupid_1[3]);
+                state = sqlite3_column_int(stmt, 1);
+                printf("state:%x\n",state);
+                /*根据组id查询box号与通道*/
+                {
+                    if(afn_11_f3_group_ctrl((UINT8*)groupid_1, state) != APP_HANDLE_SUCCESS)
+                        printf("afn_11_f3_group_ctrl failed\n");
+                }
+
+                goto Finish;
+            }
+            if((rc != SQLITE_ROW) && (rc!= SQLITE_DONE) && (rc != SQLITE_OK)){
+                printf("step() return %s, number:%03d\n", "SQLITE_ERROR",rc);
+            }
         }
 
     }
@@ -368,10 +785,10 @@ int afn_11_f2_ctrl_table(sMt11f2_u* d)
 	printf("afn_11_f2_ctrl_table\n");
 
 	int i,j,k,rc,ret = APP_HANDLE_SUCCESS;
-	char startdate[20] = {0};
-	char ucAddress[20] = {0};
+	unsigned char startdate[20] = {0};
+	unsigned char ucAddress[20] = {0};
 	char* state = NULL;
-	char* sql =	"insert or replace into dal_cbt_clock(id,groupid,startdate,state,percent)values(NULL,?,?,?,?);";	
+	char* sql =	"insert or replace into dal_cbt_clock(id,groupid,startdate,state,percent,tasktype)values(NULL,?,?,?,?,?);";	
 	sqlite3_stmt* stmt = NULL;
 
 	if(NULL == d){
@@ -395,16 +812,17 @@ int afn_11_f2_ctrl_table(sMt11f2_u* d)
 	printf("任务格式:%02X \
 			任务类型:%X \
 			任务长度:%x \
-			年:%X 月:%X 	日:%X \
+			年:%X 月:%X 	日:%X 周:%x\
 			持续时间:%X \
 			时段数据块总数: %X\n",d->ucTaskFormat, d->ucTaskType, \
 								 d->ucTaskLen, d->sT.ucYY, d->sT.ucMM, \
-								 d->sT.ucDD, d->LastTime, d->ucTimeNum);
+								 d->sT.ucDD,d->sT.ucWW, d->LastTime, d->ucTimeNum);
 	{
-		/*添加年月日*/
+		/*添加年月日周*/
 		startdate[0] = d->sT.ucYY +'0';
 		startdate[1] = d->sT.ucMM + '0';
 		startdate[2] = d->sT.ucDD + '0';
+        startdate[3] = d->sT.ucWW + '0';
 	}
 	for(i = 0; i < d->ucTimeNum; i++)
 	{
@@ -414,17 +832,13 @@ int afn_11_f2_ctrl_table(sMt11f2_u* d)
 				",i,d->Time[i].Min, d->Time[i].Hour, d->Time[i].Status, d->Time[i].Light);
 		{
 			/*时*/
-			startdate[3] = d->Time[i].Hour + '0';
+			startdate[4] = d->Time[i].Hour + '0';
 			/*分*/
-			startdate[4] = d->Time[i].Min + '0';
+			startdate[5] = d->Time[i].Min + '0';
         }
 
 		{
-			/*开关状态*/
-			if(d->Time[i].Status == 0x00)
-				state = "OFF";
-			else
-				state = "ON";
+            state = d->Time[i].Status;
 		}
 
 		printf("控制参数块数:%X\n", d->ucDataNum);
@@ -444,9 +858,13 @@ int afn_11_f2_ctrl_table(sMt11f2_u* d)
 			printf("\n");
 			{
 	            sqlite3_bind_text(stmt, 1, ucAddress, -1, NULL);
+                printf("startdate:%x,%x,%x,%x,%x,%x\n",startdate[0],startdate[1],startdate[2],startdate[3],\
+                    startdate[4],startdate[5]);
 	            sqlite3_bind_text(stmt, 2, startdate, -1, NULL);
-	            sqlite3_bind_text(stmt, 3, state, -1, NULL);
+	            //sqlite3_bind_text(stmt, 3, state, -1, NULL);
+                sqlite3_bind_int(stmt, 3, state);
 	            sqlite3_bind_int(stmt, 4, d->Time[i].Light);
+                sqlite3_bind_int(stmt, 5, d->ucTaskType);
 	            rc = sqlite3_step(stmt);   
 			    printf("step() return %s, number:%03d\n", rc == SQLITE_DONE ? "SQLITE_DONE": rc == SQLITE_ROW ? "SQLITE_ROW" : "SQLITE_ERROR",rc);
 			    if((rc != SQLITE_ROW) && (rc!= SQLITE_DONE)){
@@ -886,6 +1304,7 @@ static int cmp( const void *a , const void *b )
       return *(UINT16 *)a - *(UINT16 *)b;
 }
 
+/*将pn加入到groupInfo中*/
 static void app_groupInfo_pack(UINT16 d, char* groupInfo)
 {
     int i, num;
@@ -950,6 +1369,7 @@ static void app_groupInfo_pack(UINT16 d, char* groupInfo)
 
 }
 
+/*从groupInfo中取出pn*/
 int app_groupInfo_unpack(UINT16* d, char* groupInfo)
 {
     int i, num;
@@ -976,6 +1396,7 @@ int app_groupInfo_unpack(UINT16* d, char* groupInfo)
 
     return num;
 }
+
 
 
 
