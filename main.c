@@ -16129,12 +16129,12 @@ extern int tcp_client_connect(void);
 extern void socket_client_poll(void);
 extern void app_test_step(int step, void* data);
 extern int afn_11_f2_ctrl_period(void);
+extern void test_group(void);
 int main(int argc, char *argv[])
 {
     static int retryTimes = 3;
     pthread_t t1,t2;
-
-    afn_11_f2_ctrl_period();
+    test_group();
     /*数据库初始化*/
     app_sql_init();
     /*创建数据库*/

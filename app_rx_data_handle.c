@@ -12,6 +12,7 @@ extern sqlite3 *DCS003_db;
 static int UINT8_to_ascii(int d, char* buf);
 static void app_groupInfo_pack(UINT16 d, char* groupInfo);
 static int afn_11_f3_group_ctrl(UINT8* groupid, UINT8 state);
+static int app_groupInfo_pn_delete(UINT16 d, char* groupInfo);
 /*AFN:0x01*******************************************************************************/
 /*硬件初始化*/
 void afn_1_f1_hard_init_handle(void)
@@ -1397,6 +1398,210 @@ int app_groupInfo_unpack(UINT16* d, char* groupInfo)
     return num;
 }
 
+/*删除groupInfo中的Pn*/
+static int app_groupInfo_pn_delete(UINT16 d, char* groupInfo)
+{
+    int i;
+    int j;
+    int num;
+    int deleteFlag = 0;
 
+    UINT16 pn[255] = {0};
 
+    num = groupInfo[0];
+    if(0 == num)
+    {
+        printf("no Pn to delete!\n");
+        return;
+    }else{
+        num -= '0';
+    }
 
+    printf("groupInfo长度:%d,排序:%s\n", num, groupInfo);
+    /*取出已有的Pn*/
+    {
+        printf("pn:");
+        for(i = 0,j=0; i < num ; i++)
+        {
+            if(*(UINT16*)&groupInfo[i*2 + 2] != (d+'0'))
+            {
+                pn[j] = *(UINT16*)&groupInfo[i*2 + 2];
+                j++;
+                printf(" %03d,",pn[i]-'0');
+            }else{
+                deleteFlag = 1;
+            }
+            
+        }
+        printf("\n");
+    }
+    /*重新计算groupInfo中的pn*/
+    {
+        num = j;
+        /*更新pn个数*/
+        groupInfo[0] = (num & 0xff)+'0';
+    }
+
+    /*组装排序完成的groupInfo*/
+    {
+        for(i = 0; i < num; i++)
+        {
+            memcpy(&groupInfo[i*2 + 2], (UINT8*)&pn[i], 2);
+            printf("groupInfoNew:%02X\n",groupInfo[i*2 + 2]-'0');       
+        }
+    }
+
+    return deleteFlag;
+
+}
+
+/*删除测量点号*/
+static int afn_04_f13_delete_pn(UINT16 pn)
+{
+    int           ret            = APP_HANDLE_SUCCESS;
+    int           rc             = 0;
+    char*         groupid        = NULL;
+    char          sql[300]       = {0};
+    char*         sql_1          = NULL;
+    char*         groupInfo      = NULL;
+    sqlite3_stmt* stmt           = NULL;
+    sqlite3_stmt* stmt_1         = NULL;
+
+    /*删除表dp中的测量点相关信息*/
+    {
+        sprintf(sql,"delete from dal_cbt_dp where dp = %04d;",pn);
+        printf("sql:%s\n",sql);
+        if(sqlite3_prepare_v2(DCS003_db, sql, strlen(sql), &stmt, NULL) != SQLITE_OK){
+            printf( "sqlite3_prepare_v2:error %s\n", sqlite3_errmsg(DCS003_db));   
+            ret = APP_HANDLE_FAILED;
+            goto Finish; 
+        }
+
+        rc = sqlite3_step(stmt);   
+        if((rc != SQLITE_ROW) && (rc!= SQLITE_DONE)){
+            printf("step() return %s, number:%03d\n", "SQLITE_ERROR",rc);
+        }
+
+        if(stmt != NULL)
+            sqlite3_finalize(stmt);
+    }
+
+    /*从表dal_cbt_group删除groupInfo中的Pn*/
+    {
+        sql_1 = "select groupInfo, id from dal_cbt_group";
+        printf("sql:%s\n",sql_1);
+        if(sqlite3_prepare_v2(DCS003_db, sql_1, strlen(sql_1), &stmt_1, NULL) != SQLITE_OK){
+            printf( "sqlite3_prepare_v2:error %s\n", sqlite3_errmsg(DCS003_db));   
+            ret = APP_HANDLE_FAILED;
+            goto Finish; 
+        }
+
+        while(rc = sqlite3_step(stmt_1) == SQLITE_ROW) 
+        {  
+            groupInfo = sqlite3_column_text(stmt_1, 0);
+            if(groupInfo == NULL)
+            {
+                printf("groupInfo NULL\n");
+                continue;
+            }
+            groupid = sqlite3_column_text(stmt_1, 1);
+            if(groupid == NULL)
+            {
+                printf("groupid NULL\n");
+                continue;
+            }
+
+            if(app_groupInfo_pn_delete(pn, groupInfo) == 1)
+            /*group表有内容要更新*/
+            {
+                sprintf(sql, "update dal_cbt_group set groupInfo = \"%s\" where id = \"%s\";",groupInfo, groupid);
+                printf("sql:%s\n",sql);
+                if(sqlite3_prepare_v2(DCS003_db, sql, strlen(sql), &stmt, NULL) != SQLITE_OK)
+                {
+                    printf( "sqlite3_prepare_v2:error %s\n", sqlite3_errmsg(DCS003_db));   
+                    ret = APP_HANDLE_FAILED;
+                    goto Finish; 
+                }
+                rc = sqlite3_step(stmt);
+                if((rc != SQLITE_ROW) && (rc!= SQLITE_DONE)){
+                    printf("step() return %s, number:%03d\n", "SQLITE_ERROR",rc);
+                }
+
+                if(stmt != NULL)
+                    sqlite3_finalize(stmt);
+            }
+        }
+        if((rc != SQLITE_ROW) && (rc!= SQLITE_DONE) && (rc!= SQLITE_OK)){
+            printf("step() return %s, number:%03d\n", "SQLITE_ERROR",rc);
+        }
+
+        if(stmt_1 != NULL)
+            sqlite3_finalize(stmt_1);   
+    }
+
+    Finish:
+    // if(stmt != NULL)
+    //     sqlite3_finalize(stmt);      
+    // if(stmt_1 != NULL)
+    //     sqlite3_finalize(stmt_1);      
+    return ret;
+}
+
+/*删除组*/
+static int afn_04_f13_delete_group(char* group)
+{
+    int           ret            = APP_HANDLE_SUCCESS;
+    int           rc             = 0;
+    char          sql[300]       = {0};
+    sqlite3_stmt* stmt           = NULL;
+
+    /*删除表group中的组信息*/
+    
+    sprintf(sql,"delete from dal_cbt_group where id = \"%s\";",group);
+    printf("sql:%s\n",sql);
+    if(sqlite3_prepare_v2(DCS003_db, sql, strlen(sql), &stmt, NULL) != SQLITE_OK){
+        printf( "sqlite3_prepare_v2:error %s\n", sqlite3_errmsg(DCS003_db));   
+        ret = APP_HANDLE_FAILED;
+        goto Finish; 
+    }
+
+    rc = sqlite3_step(stmt);   
+    if((rc != SQLITE_ROW) && (rc!= SQLITE_DONE) && (rc!= SQLITE_OK)){
+        printf("step() return %s, number:%03d\n", "SQLITE_ERROR",rc);
+    }
+
+    if(stmt != NULL)
+        sqlite3_finalize(stmt);
+    
+    Finish:
+     
+    return ret;
+}
+
+/*删除日控时段的配置*/
+static afn_11_f2_delete_config(char* startdate, int type)
+{
+
+}
+
+#if 1
+void test_group(void)
+{
+    int i;
+    // UINT16 data[10] = {101,102,103,105,104,109,110,107,106};
+    // char data_1[10] = {0};
+
+    // for(i = 0; i < 10; i++)
+    //     app_groupInfo_pack(data[i],&data_1);
+
+    // printf("delete...\n");
+    // app_groupInfo_pn_delete(102,data_1);
+    // printf("删除测量点\n");
+     app_sql_open();    
+    // afn_04_f13_delete_pn(110);
+    
+    char* group = "0006";
+    afn_04_f13_delete_group(group);
+    app_sql_close();
+}
+#endif
