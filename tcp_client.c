@@ -196,7 +196,7 @@ static void client_rx_cb(int clientFd)
 }
 
 
-void socket_client_send(UINT8* data, UINT16* len)
+void socket_client_send(UINT8* data, UINT16 len)
 {
 	int rtn;
 

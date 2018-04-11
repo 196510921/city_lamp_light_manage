@@ -12534,7 +12534,7 @@ eMtErr test_pack_afn11df2_m2s()
 
 
     pscmPacket->sData[0].uApp.std_11f2.ucTaskFormat = 0x1105;
-    pscmPacket->sData[0].uApp.std_11f2.ucTaskType = 0x05;
+    pscmPacket->sData[0].uApp.std_11f2.ucTaskType = 0x35;
     pscmPacket->sData[0].uApp.std_11f2.ucTaskLen = 0x1207;
     pscmPacket->sData[0].uApp.std_11f2.sT.ucYY = 00;
     pscmPacket->sData[0].uApp.std_11f2.sT.ucMM = 00;
@@ -16134,7 +16134,7 @@ int main(int argc, char *argv[])
 {
     static int retryTimes = 3;
     pthread_t t1,t2;
-    test_group();
+    //test_group();
     /*数据库初始化*/
     app_sql_init();
     /*创建数据库*/

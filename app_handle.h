@@ -14,7 +14,12 @@ enum {
 #define TASK_TYPE_WEEK    		0x16
 #define TASK_TYPE_HOUR    		0x17
 
-#define TASK_TYPE_COMMON_MASK  0x0F
+#define TASK_TYPE_COMMON_MASK   0x0F
+#define TASK_TYPE_DELETE_MASK   0x30
+
+#define SQL_GROUP_DEL           0x50
+#define SQL_GROUP_PN_DEL        0x51
+#define SQL_PN_DEL              0x00
 
 eMtErr pack_afn00f01(UINT8 afn);
 eMtErr pack_afn02f01(void);
@@ -40,6 +45,7 @@ void set_current_usPn(UINT16 usPn);
 UINT16 get_current_usPn(void);
 int afn_11_f2_ctrl_table(sMt11f2_u* d);
 
+/*app_common*/
 int app_groupInfo_unpack(UINT16* d, char* groupInfo);
 #endif //_APP_HANDLE_H_
 
