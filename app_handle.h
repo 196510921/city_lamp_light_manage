@@ -7,7 +7,7 @@ enum {
 	APP_HANDLE_SUCCESS
 }app_handle_state_t;
 
-
+/*日控制时段相关*/
 #define TASK_TYPE_YEAR    		0x13
 #define TASK_TYPE_MON     		0x14
 #define TASK_TYPE_DAY     		0x15
@@ -17,9 +17,14 @@ enum {
 #define TASK_TYPE_COMMON_MASK   0x0F
 #define TASK_TYPE_DELETE_MASK   0x30
 
+/*组删除、测量点删除、组内测量点删除*/
 #define SQL_GROUP_DEL           0x50
 #define SQL_GROUP_PN_DEL        0x51
 #define SQL_PN_DEL              0x00
+
+/*04f3组信息配置相关*/
+#define AFN_04_F3_GROUP_CONFIG  0x02
+
 
 eMtErr pack_afn00f01(UINT8 afn);
 eMtErr pack_afn02f01(void);

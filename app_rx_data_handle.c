@@ -15,6 +15,8 @@ static int afn_11_f3_group_ctrl(UINT8* groupid, UINT8 state);
 static int app_groupInfo_pn_delete(UINT16 d, char* groupInfo);
 static int afn_11_f2_delete_config(char* startdate, int type);
 static int afn_04_f13_delete_pn(UINT16 pn);
+static int afn_04_f13_delete_group(char* group);
+static int afn_04f3_group_config_handle(UINT8* d, char* group);
 /*AFN:0x01*******************************************************************************/
 /*硬件初始化*/
 void afn_1_f1_hard_init_handle(void)
@@ -56,7 +58,7 @@ void afn_1_f5_update_handle(void)
 
 /*AFN:0x04*******************************************************************************/
 /*终端上行通信端口通信参数设置*/
-int afn_04_f1_ctrl_table(sMtAfn04F13* d)
+int afn_04_f1_ctrl_table(sMtTmlUpCfg* d)
 {   
     printf("afn_04_f1_ctrl_table\n");
     char sql[300]      = {0};
@@ -89,8 +91,7 @@ int afn_04_f1_ctrl_table(sMtAfn04F13* d)
             goto Finish;
         }
 
-        sprintf(sql,"update dal_cbt_ecbox set reSendTimes = %d,outtime = %d,heartBeatTime=%d"\
-            ,reSendTimes, outtime, heartBeatTime);
+        sprintf(sql,"update dal_cbt_ecbox set reSendTimes = ?,outtime = ?,heartBeatTime = ?");
         printf("sql:%s\n",sql);
 
         if(sqlite3_prepare_v2(DCS003_db, sql, strlen(sql), &stmt, NULL) != SQLITE_OK)
@@ -98,6 +99,14 @@ int afn_04_f1_ctrl_table(sMtAfn04F13* d)
             printf( "sqlite3_prepare_v2:error %s\n", sqlite3_errmsg(DCS003_db));   
             ret = APP_HANDLE_FAILED;
             goto Finish; 
+        }
+
+        sqlite3_bind_int(stmt,1,reSendTimes);
+        sqlite3_bind_int(stmt,2,outtime);
+        sqlite3_bind_int(stmt,3,heartBeatTime);
+        rc = sqlite3_step(stmt);   
+        if((rc != SQLITE_ROW) && (rc!= SQLITE_DONE)){
+            printf("step() return %s, number:%03d\n", "SQLITE_ERROR",rc);
         }
 
     }
@@ -114,36 +123,68 @@ int afn_04_f3_ctrl_table(sMtMasterIpPort* d)
 {
     printf("afn_04_f3_ctrl_table\n");
 
-    char sql[300]      = {0};
-    int  ret           = APP_HANDLE_SUCCESS;
-    int  rc            = 0;
-    int  reSendTimes   = 0;
-    int  outtime       = 0;
-    int  heartBeatTime = 0;    
-    sqlite3_stmt* stmt = NULL;  
+    char  sql[300]      = {0};
+    char  group[5]      = {0};
+    int   ret           = APP_HANDLE_SUCCESS;
+    int   rc            = 0;
+    int   i             = 0;
+    UINT8 apnType       = 0;
+    UINT8 Pn[64]        = {0};
+    sqlite3_stmt* stmt  = NULL;  
 
     printf("主ip版本 = %d\n", d->ulMainVersion);
-    printf("主用IP地址 = %03d,%03d,%03d,%03d\n", d->ucMainIP[0],d->ucMainIP[1],d->ucMainIP[2],d->ucMainIP[3]);
+    printf("主用IP地址 = %03d,%03d,%03d,%03d\n", *((UINT8*)&d->ulMainIP),\
+                                                *((UINT8*)&d->ulMainIP+1),\
+                                                *((UINT8*)&d->ulMainIP+2),\
+                                                *((UINT8*)&d->ulMainIP+3));
     printf("主端口地址 = %d\n", d->usMainPort);
     printf("备用ip版本 = %d\n", d->ulBackVersion);
-    printf("备用IP地址 = %03d,%03d,%03d,%03d\n", d->ucBackIP[0],d->ucBackIP[1],d->ucBackIP[2],d->ucBackIP[3]);
+    printf("主用IP地址 = %03d,%03d,%03d,%03d\n", *((UINT8*)&d->ulBackIP),\
+                                                *((UINT8*)&d->ulBackIP+1),\
+                                                *((UINT8*)&d->ulBackIP+2),\
+                                                *((UINT8*)&d->ulBackIP+3));
     printf("备用端口地址 = %d\n", d->usBackPort);
 
+    printf("APN类型:%x\n",d->ucascAPN[0]);
+    printf("APN 组id:%x,%x,%x,%x\n",d->ucascAPN[1],d->ucascAPN[2],d->ucascAPN[3],d->ucascAPN[4]);
+
     {
-        reSendTimes   = psTmlUpCfg->ucReSendTimes;
-        outtime       = psTmlUpCfg->usTmWaitTimeoutS;
-        heartBeatTime = psTmlUpCfg->ucHeartBeat;
+        apnType = d->ucascAPN[0];
+        /*数据库中组信息*/
+        for(i = 0; i < 4; i++)
+        {
+            group[i] = d->ucascAPN[1 + i] + '0';
+        }
+
+    }
+
+    rc = app_sql_open();
+    if(rc != APP_HANDLE_SUCCESS){
+        ret = APP_HANDLE_FAILED;
+        goto Finish;
+    }
+
+    /*判断是否为配置组信息*/
+    {
+        if(apnType == AFN_04_F3_GROUP_CONFIG)
+        {
+            /*pn通道配置低32字节*/
+            memcpy(Pn, d->virUserName, 32);
+            /*pn通道配置高32字节*/
+            if(d->virUserPw != 0x00)
+            {
+                memcpy(Pn+32, d->virUserPw, 32);
+            }
+            printf("04f3配置组信息\n");
+
+            afn_04f3_group_config_handle(Pn, group);
+
+            goto Finish;
+        }
     }
     /*更新数据库dal_cbt_ecbox*/
     {
-        rc = app_sql_open();
-        if(rc != APP_HANDLE_SUCCESS){
-            ret = APP_HANDLE_FAILED;
-            goto Finish;
-        }
-
-        sprintf(sql,"update dal_cbt_ecbox set reSendTimes = %d,outtime = %d,heartBeatTime=%d"\
-            ,reSendTimes, outtime, heartBeatTime);
+        sprintf(sql,"update dal_cbt_ecbox set ip = ?,port = ?,bakip = ?,bakport = ?;");
         printf("sql:%s\n",sql);
 
         if(sqlite3_prepare_v2(DCS003_db, sql, strlen(sql), &stmt, NULL) != SQLITE_OK)
@@ -153,6 +194,14 @@ int afn_04_f3_ctrl_table(sMtMasterIpPort* d)
             goto Finish; 
         }
 
+        sqlite3_bind_int(stmt,1,d->ulMainIP);
+        sqlite3_bind_int(stmt,2,d->usMainPort);
+        sqlite3_bind_int(stmt,3,d->ulBackIP);
+        sqlite3_bind_int(stmt,4,d->usBackPort);
+        rc = sqlite3_step(stmt);   
+        if((rc != SQLITE_ROW) && (rc!= SQLITE_DONE)){
+            printf("step() return %s, number:%03d\n", "SQLITE_ERROR",rc);
+        }
     }
 
     Finish:
@@ -166,7 +215,7 @@ int afn_04_f3_ctrl_table(sMtMasterIpPort* d)
 int afn_04_f13_ctrl_table(sMtAfn04F13* d)
 {
 	printf("afn_04_f13_ctrl_table\n");
-    #if 1
+    
     int i, rc,ret = APP_HANDLE_SUCCESS;
     char* sql = NULL;
     char sql_1[300] = {0};
@@ -212,6 +261,13 @@ int afn_04_f13_ctrl_table(sMtAfn04F13* d)
     printf("经度标识:%X,度：%X,分:%X,秒:%X\n",d->PosLat.Flag,d->PosLat.Degree,\
         d->PosLat.Min,d->PosLat.Sec);
 
+    /*sqlite open*/
+    rc = app_sql_open();
+    if(rc != APP_HANDLE_SUCCESS){
+        ret = APP_HANDLE_FAILED;
+        goto Finish;
+    }
+
     switch(d->Port)
     {
         case SQL_GROUP_DEL:
@@ -240,12 +296,7 @@ int afn_04_f13_ctrl_table(sMtAfn04F13* d)
         break;
     }
 
-    {   /*sqlite open*/
-        rc = app_sql_open();
-        if(rc != APP_HANDLE_SUCCESS){
-            ret = APP_HANDLE_FAILED;
-            goto Finish;
-        }
+    {  
          /*插入dal_cbt_dp*/
         {
             sql = "insert or replace into dal_cbt_dp(id,dp,dpType,dpNature,dpSign,port,portType \
@@ -281,8 +332,6 @@ int afn_04_f13_ctrl_table(sMtAfn04F13* d)
             sqlite3_bind_text(stmt, 11, (char*)&d->PosLat, 5, NULL);
 
             rc = sqlite3_step(stmt);   
-            printf("step() return %s, number:%03d\n", rc == SQLITE_DONE ? \
-                "SQLITE_DONE": rc == SQLITE_ROW ? "SQLITE_ROW" : "SQLITE_ERROR",rc);
             if((rc != SQLITE_ROW) && (rc!= SQLITE_DONE)){
                 printf("step() return %s, number:%03d\n", "SQLITE_ERROR",rc);
             }
@@ -314,82 +363,16 @@ int afn_04_f13_ctrl_table(sMtAfn04F13* d)
             if(stmt != NULL)
                 sqlite3_finalize(stmt);
         }
-        /*插入dal_cbt_group*/
-        {
-            /*获取已有的groupInfo*/
-            {
-                sprintf(sql_1,"select groupInfo from dal_cbt_group where id = \"%s\";",  Group);
-                printf("sql_1:%s",sql_1);
-                if(sqlite3_prepare_v2(DCS003_db, sql_1, strlen(sql_1), &stmt, NULL) != SQLITE_OK){
-                    printf( "sqlite3_prepare_v2:error %s\n", sqlite3_errmsg(DCS003_db));   
-                    ret = APP_HANDLE_FAILED;
-                    goto Finish; 
-                }
-
-                rc = sqlite3_step(stmt);   
-                if((rc != SQLITE_ROW) && (rc!= SQLITE_DONE)){
-                    printf("step() return %s, number:%03d\n", "SQLITE_ERROR",rc);
-                }
-
-                groupInfoOld = sqlite3_column_text(stmt, 0);
-                if(NULL == groupInfoOld){
-                    // printf("groupInfoOld NULL\n");
-                    // ret = APP_HANDLE_FAILED;
-                    // goto Finish;
-                }else{
-                    printf("groupInfoOld:%x,%x\n",groupInfoOld[0],groupInfoOld[1]);
-                    memcpy((UINT8*)groupInfoNew, (UINT8*)groupInfoOld, groupInfoOld[0]*2);
-                }
-                if(stmt != NULL)
-                    sqlite3_finalize(stmt);
-
-            }
-            /*拼接新的groupInfo到表group*/
-            {
-                #if 1
-                sql = "insert or replace into dal_cbt_group(id,groupInfo)values(?,?)";
-                if(sqlite3_prepare_v2(DCS003_db, sql, strlen(sql), &stmt, NULL) != SQLITE_OK){
-                    printf( "sqlite3_prepare_v2:error %s\n", sqlite3_errmsg(DCS003_db));   
-                    ret = APP_HANDLE_FAILED;
-                    goto Finish; 
-                }
-                /*id*/
-                sqlite3_bind_text(stmt, 1, Group, 4, NULL);
-                /*groupInfo*/
-                printf("new usPn:%03d\n",usPn);
-                app_groupInfo_pack(usPn, groupInfoNew);
-                printf("groupInfoNew num:%d\n", groupInfoNew[0]-'0');
-                for(i = 0; i < groupInfoNew[0]-'0'; i++)
-                {
-                    printf("%c,", groupInfoNew[i*2+2]);
-                }
-                printf("\n");
-                sqlite3_bind_text(stmt, 2, (char*)groupInfoNew, (groupInfoNew[0]-'0')*2 + 2, NULL);
-                //sqlite3_bind_text(stmt, 2, (char*)groupInfoNew, 4, NULL);
-                //sqlite3_bind_text(stmt, 2, "1234", 4, NULL);
-
-                rc = sqlite3_step(stmt);   
-                printf("step() return %s, number:%03d\n", rc == SQLITE_DONE ? \
-                    "SQLITE_DONE": rc == SQLITE_ROW ? "SQLITE_ROW" : "SQLITE_ERROR",rc);
-                if((rc != SQLITE_ROW) && (rc!= SQLITE_DONE) && (rc != SQLITE_OK)){
-                    printf("step() return %s, number:%03d\n", "SQLITE_ERROR",rc);
-                }
-
-                if(stmt != NULL)
-                    sqlite3_finalize(stmt);
-                #endif
-            }
-        }
+        
 
     }
 
 	Finish:
     // if(stmt != NULL)
     //     sqlite3_finalize(stmt);
-     app_sql_close();
+    app_sql_close();
 
 	return ret;
-    #endif
 } 
 
 int afn_05_f31_clock(sMtUserClock* d)
@@ -1474,39 +1457,37 @@ static void app_groupInfo_pack(UINT16 d, char* groupInfo)
     num = groupInfo[0];
     if(0 == num)
     {
-        groupInfo[0] = 1 + '0';
-        groupInfo[1] = '0';
-        d = d + '0';
+        groupInfo[0] = 1;
+        groupInfo[1] = 0;
+        d = d;
         memcpy(&groupInfo[2], (UINT8*)&d, 2);
         return;
-    }else{
-        num -= '0';
     }
 
-    printf("groupInfo长度:%d,排序:%s\n", num, groupInfo);
+    printf("groupInfo长度:%d\n", num);
     /*取出已有的Pn*/
     {
         printf("pn:");
         for(i = 0; i < num ; i++)
         {
-            if(*(UINT16*)&groupInfo[i*2 + 2] == (d+'0'))
+            if(*(UINT16*)&groupInfo[i*2 + 2] == d)
             {
-                printf("Pn重复：%03d\n",d+'0');
+                printf("Pn重复：%03d\n",d);
                 return;
             }
             pn[i] = *(UINT16*)&groupInfo[i*2 + 2];
-            printf(" %03d,",pn[i]-'0');
+            printf(" %03d,",pn[i]);
         }
         printf("\n");
     }
     /*加入传入的新Pn*/
     {
         printf("new d:%03d\n",d);
-        pn[i] = d + '0';
+        pn[i] = d;
         printf("new Pn[i]:%03d\n",pn[i]);
         num+=1;
         /*更新pn个数*/
-        groupInfo[0] = (num & 0xff)+'0';
+        groupInfo[0] = (num & 0xff);
     }
     /*排序*/
     {
@@ -1514,7 +1495,7 @@ static void app_groupInfo_pack(UINT16 d, char* groupInfo)
         printf("sort pn:");
         for(i = 0; i < num; i++)
         {
-            printf(" %03d,",pn[i] - '0');
+            printf(" %03d,",pn[i]);
         }
         printf("\n");
     }
@@ -1523,7 +1504,7 @@ static void app_groupInfo_pack(UINT16 d, char* groupInfo)
         for(i = 0; i < num; i++)
         {
             memcpy(&groupInfo[i*2 + 2], (UINT8*)&pn[i], 2);
-            printf("groupInfoNew:%02X\n",groupInfo[i*2 + 2]-'0');       
+            printf("groupInfoNew:%02X\n",groupInfo[i*2 + 2]);       
         }
     }
 
@@ -1537,16 +1518,14 @@ int app_groupInfo_unpack(UINT16* d, char* groupInfo)
     UINT16 pn[255] = {0};
 
     num = groupInfo[0];
-    if(num >0)
-        num-='0';
-    printf("groupInfo长度:%d,排序:%s\n", num, groupInfo);
+    printf("groupInfo长度:%d\n", num);
     
     /*取出已有的Pn*/
     {
         printf("get pn:");
         for(i = 0; i < num; i++)
         {
-            pn[i] = *(UINT16*)&groupInfo[i*2+2] - '0';
+            pn[i] = *(UINT16*)&groupInfo[i*2+2];
             printf(" %03d,",pn[i]);
         }
         printf("\n");
@@ -1572,21 +1551,19 @@ static int app_groupInfo_pn_delete(UINT16 d, char* groupInfo)
     {
         printf("no Pn to delete!\n");
         return;
-    }else{
-        num -= '0';
     }
 
-    printf("groupInfo长度:%d,排序:%s\n", num, groupInfo);
+    printf("groupInfo长度:%d\n", num);
     /*取出已有的Pn*/
     {
         printf("pn:");
         for(i = 0,j=0; i < num ; i++)
         {
-            if(*(UINT16*)&groupInfo[i*2 + 2] != (d+'0'))
+            if(*(UINT16*)&groupInfo[i*2 + 2] != d)
             {
                 pn[j] = *(UINT16*)&groupInfo[i*2 + 2];
                 j++;
-                printf(" %03d,",pn[i]-'0');
+                printf(" %03d,",pn[i]);
             }else{
                 deleteFlag = 1;
             }
@@ -1598,7 +1575,7 @@ static int app_groupInfo_pn_delete(UINT16 d, char* groupInfo)
     {
         num = j;
         /*更新pn个数*/
-        groupInfo[0] = (num & 0xff)+'0';
+        groupInfo[0] = (num & 0xff);
     }
 
     /*组装排序完成的groupInfo*/
@@ -1606,7 +1583,7 @@ static int app_groupInfo_pn_delete(UINT16 d, char* groupInfo)
         for(i = 0; i < num; i++)
         {
             memcpy(&groupInfo[i*2 + 2], (UINT8*)&pn[i], 2);
-            printf("groupInfoNew:%02X\n",groupInfo[i*2 + 2]-'0');       
+            printf("groupInfoNew:%02X\n",groupInfo[i*2 + 2]);       
         }
     }
 
@@ -1774,6 +1751,84 @@ static int afn_11_f2_delete_config(char* startdate, int type)
     return ret;
 }
 
+/*04f3配置组信息处理*/
+static int afn_04f3_group_config_handle(UINT8* d, char* group)
+{
+    printf("afn_04f3_group_config_handle\n");
+
+    char*          sql     = NULL; 
+    UINT16         pn[512] = {0};
+    UINT16         num     = 0;
+    int            ret     = APP_HANDLE_SUCCESS;
+    int            rc      = 0;
+    int            i       = 0;
+    int            j       = 0;
+    sqlite3_stmt*  stmt    = NULL;
+    
+    /*转换Pn*/
+    {
+        /*终端通道pn*/
+        for(i = 0; i < 64; i++)
+        {
+            //判断该字节是否有有效pn
+            if(d[i] == 0x00)
+                continue;
+            printf("d[i]:%x\n",d[i]);
+            for(j = 0; j < 8; j++)
+            {
+                /*有效pn*/
+                if((d[i] >> j) & 0x01)
+                {
+                    if(i < 62)
+                    {
+                        /*存入终端有效测量点号*/
+                        pn[num + 1] = (UINT16)((i * 8 + j) + 100);
+                        printf("终端有效pn:%03d\n",pn[num+1]);
+                        num++;
+                    }
+                    else
+                    {
+                        /*存入集控器有效测量点号*/
+                        pn[num + 1] = (UINT16)(((i - 62) * 8 + j) + 2032);
+                        printf("集控器有效pn:%03d\n",pn[num+1]);   
+                        num++;
+                    }
+                }
+            }
+        }
+    }
+    /*存入pn数量*/
+    {
+        pn[0] = num;
+    }
+
+    {
+        sql = "insert or replace into dal_cbt_group(id,groupInfo)values(?,?)";
+        printf("sql:%s\n",sql);
+        if(sqlite3_prepare_v2(DCS003_db, sql, strlen(sql), &stmt, NULL) != SQLITE_OK){
+            printf( "sqlite3_prepare_v2:error %s\n", sqlite3_errmsg(DCS003_db));   
+            ret = APP_HANDLE_FAILED;
+            goto Finish; 
+        }
+        /*id*/
+        sqlite3_bind_text(stmt, 1, group, -1, NULL);
+        /*groupInfo*/
+        sqlite3_bind_text(stmt, 2, (char*)pn, num*2 + 2, NULL);
+
+        rc = sqlite3_step(stmt);   
+        if((rc != SQLITE_ROW) && (rc!= SQLITE_DONE) && (rc != SQLITE_OK)){
+            printf("step() return %s, number:%03d\n", "SQLITE_ERROR",rc);
+        }
+
+        if(stmt != NULL)
+            sqlite3_finalize(stmt);
+    }
+
+    Finish:
+    
+    return ret;
+}
+
 #if 1
 void test_group(void)
 {
@@ -1797,7 +1852,7 @@ void test_group(void)
 #endif
 
 
-#if 1
+#if 0
 int package_handle(UINT8* package, UINT16 length)
 {
 
@@ -1839,4 +1894,169 @@ void data_test(int length, UINT8* data)
 }
 #endif
 
+#if 0
+/*将pn加入到groupInfo中*/
+static void app_groupInfo_pack(UINT16 d, char* groupInfo)
+{
+    int i, num;
+
+    UINT16 pn[255] = {0};
+
+    num = groupInfo[0];
+    if(0 == num)
+    {
+        groupInfo[0] = 1 + '0';
+        groupInfo[1] = '0';
+        d = d + '0';
+        memcpy(&groupInfo[2], (UINT8*)&d, 2);
+        return;
+    }else{
+        num -= '0';
+    }
+
+    printf("groupInfo长度:%d,排序:%s\n", num, groupInfo);
+    /*取出已有的Pn*/
+    {
+        printf("pn:");
+        for(i = 0; i < num ; i++)
+        {
+            if(*(UINT16*)&groupInfo[i*2 + 2] == (d+'0'))
+            {
+                printf("Pn重复：%03d\n",d+'0');
+                return;
+            }
+            pn[i] = *(UINT16*)&groupInfo[i*2 + 2];
+            printf(" %03d,",pn[i]-'0');
+        }
+        printf("\n");
+    }
+    /*加入传入的新Pn*/
+    {
+        printf("new d:%03d\n",d);
+        pn[i] = d + '0';
+        printf("new Pn[i]:%03d\n",pn[i]);
+        num+=1;
+        /*更新pn个数*/
+        groupInfo[0] = (num & 0xff)+'0';
+    }
+    /*排序*/
+    {
+        qsort(pn, num, sizeof(pn[0]), cmp);
+        printf("sort pn:");
+        for(i = 0; i < num; i++)
+        {
+            printf(" %03d,",pn[i] - '0');
+        }
+        printf("\n");
+    }
+    /*组装排序完成的groupInfo*/
+    {
+        for(i = 0; i < num; i++)
+        {
+            memcpy(&groupInfo[i*2 + 2], (UINT8*)&pn[i], 2);
+            printf("groupInfoNew:%02X\n",groupInfo[i*2 + 2]-'0');       
+        }
+    }
+
+}
+#endif
+#if 0
+/*从groupInfo中取出pn*/
+int app_groupInfo_unpack(UINT16* d, char* groupInfo)
+{
+    int i, num;
+
+    UINT16 pn[255] = {0};
+
+    num = groupInfo[0];
+    if(num >0)
+        num-='0';
+    printf("groupInfo长度:%d,排序:%s\n", num, groupInfo);
+    
+    /*取出已有的Pn*/
+    {
+        printf("get pn:");
+        for(i = 0; i < num; i++)
+        {
+            pn[i] = *(UINT16*)&groupInfo[i*2+2] - '0';
+            printf(" %03d,",pn[i]);
+        }
+        printf("\n");
+    }
+
+    memcpy((UINT8*)d, (UINT8*)pn, num*2);
+
+    return num;
+}
+#endif
+#if 0
+/*插入dal_cbt_group*/
+        {   
+
+            /*获取已有的groupInfo*/
+            {
+                sprintf(sql_1,"select groupInfo from dal_cbt_group where id = \"%s\";",  Group);
+                printf("sql_1:%s",sql_1);
+                if(sqlite3_prepare_v2(DCS003_db, sql_1, strlen(sql_1), &stmt, NULL) != SQLITE_OK){
+                    printf( "sqlite3_prepare_v2:error %s\n", sqlite3_errmsg(DCS003_db));   
+                    ret = APP_HANDLE_FAILED;
+                    goto Finish; 
+                }
+
+                rc = sqlite3_step(stmt);   
+                if((rc != SQLITE_ROW) && (rc!= SQLITE_DONE)){
+                    printf("step() return %s, number:%03d\n", "SQLITE_ERROR",rc);
+                }
+
+                groupInfoOld = sqlite3_column_text(stmt, 0);
+                if(NULL == groupInfoOld){
+                    // printf("groupInfoOld NULL\n");
+                    // ret = APP_HANDLE_FAILED;
+                    // goto Finish;
+                }else{
+                    printf("groupInfoOld:%x,%x\n",groupInfoOld[0],groupInfoOld[1]);
+                    memcpy((UINT8*)groupInfoNew, (UINT8*)groupInfoOld, groupInfoOld[0]*2);
+                }
+                if(stmt != NULL)
+                    sqlite3_finalize(stmt);
+
+            }
+            /*拼接新的groupInfo到表group*/
+            {
+                
+                sql = "insert or replace into dal_cbt_group(id,groupInfo)values(?,?)";
+                if(sqlite3_prepare_v2(DCS003_db, sql, strlen(sql), &stmt, NULL) != SQLITE_OK){
+                    printf( "sqlite3_prepare_v2:error %s\n", sqlite3_errmsg(DCS003_db));   
+                    ret = APP_HANDLE_FAILED;
+                    goto Finish; 
+                }
+                /*id*/
+                sqlite3_bind_text(stmt, 1, Group, 4, NULL);
+                /*groupInfo*/
+                printf("new usPn:%03d\n",usPn);
+                app_groupInfo_pack(usPn, groupInfoNew);
+                printf("groupInfoNew num:%d\n", groupInfoNew[0]-'0');
+                for(i = 0; i < groupInfoNew[0]-'0'; i++)
+                {
+                    printf("%c,", groupInfoNew[i*2+2]);
+                }
+                printf("\n");
+                sqlite3_bind_text(stmt, 2, (char*)groupInfoNew, (groupInfoNew[0]-'0')*2 + 2, NULL);
+                //sqlite3_bind_text(stmt, 2, (char*)groupInfoNew, 4, NULL);
+                //sqlite3_bind_text(stmt, 2, "1234", 4, NULL);
+
+                rc = sqlite3_step(stmt);   
+                printf("step() return %s, number:%03d\n", rc == SQLITE_DONE ? \
+                    "SQLITE_DONE": rc == SQLITE_ROW ? "SQLITE_ROW" : "SQLITE_ERROR",rc);
+                if((rc != SQLITE_ROW) && (rc!= SQLITE_DONE) && (rc != SQLITE_OK)){
+                    printf("step() return %s, number:%03d\n", "SQLITE_ERROR",rc);
+                }
+
+                if(stmt != NULL)
+                    sqlite3_finalize(stmt);
+            
+            }
+
+        }
+#endif
 

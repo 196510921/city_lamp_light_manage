@@ -3527,9 +3527,20 @@ eMtErr test_pack_afn04f3()
     pscmPacket->sData[0].uApp.sTmIpPort.ulBackVersion = 0x01;
     pscmPacket->sData[0].uApp.sTmIpPort.ulBackIP = 0x11223344;
     pscmPacket->sData[0].uApp.sTmIpPort.usBackPort = 0x0010;
-    memcpy(pscmPacket->sData[0].uApp.sTmIpPort.ucascAPN,"12345678912345678",16);
-    memcpy(pscmPacket->sData[0].uApp.sTmIpPort.virUserName,"99999999998888888888777777777766",32);
-    memcpy(pscmPacket->sData[0].uApp.sTmIpPort.virUserPw,"55555555554444444444333333333322",32);
+
+    UINT8 apn[16] = {0x01,0x01,0x02,0x03,0x04,0x00,0x00,0x00,\
+                    0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
+    memcpy(pscmPacket->sData[0].uApp.sTmIpPort.ucascAPN,apn,16);
+    UINT8 Pn_1[32] = {0xFF,0xFF,0xFF,0xFF,0x0F,0x00,0x00,0x00,\
+                     0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,\
+                    0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,\
+                    0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
+    UINT8 Pn_2[32] = {0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,\
+                     0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,\
+                    0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,\
+                    0x00,0x00,0x00,0x00,0x00,0x00,0xFF,0xFF};
+    memcpy(pscmPacket->sData[0].uApp.sTmIpPort.virUserName,Pn_1,32);
+    memcpy(pscmPacket->sData[0].uApp.sTmIpPort.virUserPw,Pn_2,32);
 
 	
     /* 4 调用函数 */
@@ -3545,11 +3556,6 @@ eMtErr test_pack_afn04f3()
     return MT_OK;
 
 }
-
-
-
-
-
 
 /*****************************************************************************
  函 数 名  : test_pack_afn04f10
@@ -12635,12 +12641,12 @@ eMtErr test_pack_afn11df3_m2s()
     pscmPacket->usDataNum = 1;
     pscmPacket->sData[0].eCmd  = CMD_AFN_11_F3;
     pscmPacket->sData[0].bApp  = TRUE;
-    pscmPacket->sData[0].usPN  = 1;
+    pscmPacket->sData[0].usPN  = 0;
 
 
 
     pscmPacket->sData[0].uApp.std_11f3.ucTaskFormat = 0x1105;
-    pscmPacket->sData[0].uApp.std_11f3.ucTaskType = 0x06;
+    pscmPacket->sData[0].uApp.std_11f3.ucTaskType = 0x01;
     pscmPacket->sData[0].uApp.std_11f3.ucTaskLen = 0x000e;
     pscmPacket->sData[0].uApp.std_11f3.ucData[0].Time.ucYY = 0x01;
     pscmPacket->sData[0].uApp.std_11f3.ucData[0].Time.ucMM = 0x02;
@@ -12661,8 +12667,9 @@ eMtErr test_pack_afn11df3_m2s()
     pscmPacket->sData[0].uApp.std_11f3.ucData[1].Light = 0x06;
 
     pscmPacket->sData[0].uApp.std_11f3.ucNum = 0x0002;
-    pscmPacket->sData[0].uApp.std_11f3.ucPara[0].ucOperate =0x09;
-    memcpy(pscmPacket->sData[0].uApp.std_11f3.ucPara[0].ucAddress,"12345678",7);
+    pscmPacket->sData[0].uApp.std_11f3.ucPara[0].ucOperate =0x01;
+    UINT8 group[8] = {0,0,0,0,1,2,3,4};
+    memcpy(pscmPacket->sData[0].uApp.std_11f3.ucPara[0].ucAddress,group,8);
     memcpy(pscmPacket->sData[0].uApp.std_11f3.ucPara[0].ucKey,"1234567891234567891234567899876",31);
 
     pscmPacket->sData[0].uApp.std_11f3.ucPara[1].ucOperate =0x08;
@@ -16124,7 +16131,7 @@ void heartbeat_timeout(void)
     }
 }
 
-#if 1
+#if 0
 extern int tcp_client_connect(void);
 extern void socket_client_poll(void);
 extern void app_test_step(int step, void* data);
