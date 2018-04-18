@@ -2,10 +2,11 @@
 #define _APP_HANDLE_H_
 #include "qgdw_3761_api.h"
 
-enum {
+typedef enum {
 	APP_HANDLE_FAILED = 0,
 	APP_HANDLE_SUCCESS
 }app_handle_state_t;
+
 
 /*日控制时段相关*/
 #define TASK_TYPE_YEAR    		0x13
@@ -34,7 +35,7 @@ eMtErr pack_afn0cf02_s2m_auto(void);
 eMtErr pack_afn02f3(void);
 
 eMtErr pack_afn0cf02_s2m_auto(void);
-eMtErr pack_afn0cf08_s2m();
+eMtErr pack_afn0cf08_s2m(int pn, int n, int* event);
 eMtErr pack_afn0af1_s2m(void);
 eMtErr pack_afn0af3_s2m(void);
 eMtErr pack_afn0af13_s2m(void);

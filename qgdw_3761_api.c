@@ -3064,7 +3064,7 @@ eMtErr emt_dadt_to_pnfn(sMtDaDt* psDaDt, sMtPnFn* psPnFn)
         return MT_ERR_NULL;
     }
 
-    #if 0
+    #if 1
     #ifdef MT_DBG
     DEBUG("[in]emt_dadt_to_pnfn()");
     DEBUG("ucDA1 = 0x%X", psDaDt->ucDA1);
@@ -40866,6 +40866,7 @@ eMtErr emtLitePack(smtLitePack* psPack, UINT16* pusLen, UINT8* pOutBuf)
             #ifdef MT_DBG
             DEBUG("emtLitePack() emt_pnfn_to_dadt() failed %d %s!", eRet, smtGetErr(eRet));
             #endif
+            MT_FREE(pSeq2Cs);
             return eRet;
         }
 

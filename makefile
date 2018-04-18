@@ -34,6 +34,7 @@ OTHER_CSRC  =
 OTHER_ASRC  = 
 CSRC        = qgdw_3761_api.c con3761adp.c fmprint.c tcp_client.c app_handle.c \
 			  timeout_handle.c app_heartbeat.c app_sql.c sqlite3.c app_rx_data_handle.c \
+			  app_common.c\
 			  main.c 
 
 ASRC        = 

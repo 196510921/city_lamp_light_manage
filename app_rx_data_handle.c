@@ -206,9 +206,9 @@ int afn_04_f3_ctrl_table(sMtMasterIpPort* d)
     }
 
     Finish:
-    app_sql_close();
     if(stmt != NULL)
         sqlite3_finalize(stmt);
+    app_sql_close();
     return ret;
 }
 
@@ -447,7 +447,6 @@ int afn_11_f2_ctrl_period(void)
             goto Finish;
         }
 
-        
         /*特定任务年*/
         {
             {
@@ -495,6 +494,8 @@ int afn_11_f2_ctrl_period(void)
             if((rc != SQLITE_ROW) && (rc!= SQLITE_DONE) && (rc != SQLITE_OK)){
                 printf("step() return %s, number:%03d\n", "SQLITE_ERROR",rc);
             }
+            if(stmt != NULL)
+                sqlite3_finalize(stmt);
         }
 
         /*特定任务月*/
@@ -544,6 +545,8 @@ int afn_11_f2_ctrl_period(void)
             if((rc != SQLITE_ROW) && (rc!= SQLITE_DONE) && (rc != SQLITE_OK)){
                 printf("step() return %s, number:%03d\n", "SQLITE_ERROR",rc);
             }
+            if(stmt != NULL)
+                sqlite3_finalize(stmt);
         }
 
         /*特定任务周*/
@@ -617,6 +620,8 @@ int afn_11_f2_ctrl_period(void)
             {
                 printf("step() return %s, number:%03d\n", "SQLITE_ERROR",rc);
             }
+            if(stmt != NULL)
+                sqlite3_finalize(stmt);
         }
 
         /*特定任务日*/
@@ -666,6 +671,8 @@ int afn_11_f2_ctrl_period(void)
             if((rc != SQLITE_ROW) && (rc!= SQLITE_DONE) && (rc != SQLITE_OK)){
                 printf("step() return %s, number:%03d\n", "SQLITE_ERROR",rc);
             }
+            if(stmt != NULL)
+                sqlite3_finalize(stmt);
         }
 
 
@@ -716,6 +723,8 @@ int afn_11_f2_ctrl_period(void)
             if((rc != SQLITE_ROW) && (rc!= SQLITE_DONE) && (rc != SQLITE_OK)){
                 printf("step() return %s, number:%03d\n", "SQLITE_ERROR",rc);
             }
+            if(stmt != NULL)
+                sqlite3_finalize(stmt);
         }
 
         /*普通任务年*/
@@ -765,6 +774,8 @@ int afn_11_f2_ctrl_period(void)
             if((rc != SQLITE_ROW) && (rc!= SQLITE_DONE) && (rc != SQLITE_OK)){
                 printf("step() return %s, number:%03d\n", "SQLITE_ERROR",rc);
             }
+            if(stmt != NULL)
+                sqlite3_finalize(stmt);
         }
 
         /*普通任务月*/
@@ -814,6 +825,8 @@ int afn_11_f2_ctrl_period(void)
             if((rc != SQLITE_ROW) && (rc!= SQLITE_DONE) && (rc != SQLITE_OK)){
                 printf("step() return %s, number:%03d\n", "SQLITE_ERROR",rc);
             }
+            if(stmt != NULL)
+                sqlite3_finalize(stmt);
         }
 
         /*普通任务周*/
@@ -885,6 +898,8 @@ int afn_11_f2_ctrl_period(void)
             {
                 printf("step() return %s, number:%03d\n", "SQLITE_ERROR",rc);
             }
+            if(stmt != NULL)
+                sqlite3_finalize(stmt);
         }
 
         /*普通任务日*/
@@ -935,6 +950,8 @@ int afn_11_f2_ctrl_period(void)
             if((rc != SQLITE_ROW) && (rc!= SQLITE_DONE) && (rc != SQLITE_OK)){
                 printf("step() return %s, number:%03d\n", "SQLITE_ERROR",rc);
             }
+            if(stmt != NULL)
+                sqlite3_finalize(stmt);
         }
 
         /*普通任务时*/
@@ -984,6 +1001,8 @@ int afn_11_f2_ctrl_period(void)
             if((rc != SQLITE_ROW) && (rc!= SQLITE_DONE) && (rc != SQLITE_OK)){
                 printf("step() return %s, number:%03d\n", "SQLITE_ERROR",rc);
             }
+            if(stmt != NULL)
+                sqlite3_finalize(stmt);
         }
 
     }
@@ -1063,6 +1082,8 @@ int afn_11_f2_ctrl_table(sMt11f2_u* d)
             if(d->ucTaskType > TASK_TYPE_DELETE_MASK)
             {
                 afn_11_f2_delete_config(startdate, d->ucTaskType);
+                // if(sqlite3_exec(DCS003_db,"delete from dal_cbt_clock",0,0,&zErrMsg) != SQLITE_OK)
+                //     printf("11_f2_delete_config failed\n");
                 continue;
             }
         }
@@ -1120,14 +1141,17 @@ static int afn_11_f3_group_ctrl(UINT8* groupid, UINT8 state)
 {
     printf("afn_11_f3_group_ctrl\n");
  
-    int i,rc,len,ret = APP_HANDLE_SUCCESS;
-    char sql[300] = {0};
-    char* groupInfo = NULL;
-    char groupid_1[5] = {0};
-    UINT16 pn[255] = {0};
-    UINT8* box = NULL;
-    UINT8 channelNumber;
-    sqlite3_stmt* stmt = NULL;
+    int           i            = 0;
+    int           rc           = 0;
+    int           len          = 0;
+    int           ret          = APP_HANDLE_SUCCESS;
+    char          sql[300]     = {0};
+    char*         groupInfo    = NULL;
+    char          groupid_1[5] = {0};
+    UINT16        pn[255]      = {0};
+    UINT8*        box          = NULL;
+    UINT8         channelNumber= 0;
+    sqlite3_stmt* stmt         = NULL;
     /*debug信息*/
     {
         printf("分组地址: \n");
@@ -1150,8 +1174,6 @@ static int afn_11_f3_group_ctrl(UINT8* groupid, UINT8 state)
         }
 
         rc = sqlite3_step(stmt);   
-        printf("step() return %s, number:%03d\n", rc == SQLITE_DONE ? \
-            "SQLITE_DONE": rc == SQLITE_ROW ? "SQLITE_ROW" : "SQLITE_ERROR",rc);
         if((rc != SQLITE_ROW) && (rc!= SQLITE_DONE)){
             printf("step() return %s, number:%03d\n", "SQLITE_ERROR",rc);
         }
@@ -1160,13 +1182,14 @@ static int afn_11_f3_group_ctrl(UINT8* groupid, UINT8 state)
         if(NULL == groupInfo){
             printf("groupInfo NULL\n");
             ret = APP_HANDLE_FAILED;
-            goto Finish;
+            //goto Finish;
+        }else{
+            /*将group表中的信息转换成pn*/
+            len = app_groupInfo_unpack(pn, groupInfo);
         }
-        /*将group表中的信息转换成pn*/
-        len = app_groupInfo_unpack(pn, groupInfo);
-
         if(stmt != NULL)
             sqlite3_finalize(stmt);
+        
         /*根据pn查询box号,通道号*/
         {
             for(i = 0; i < len; i++)
@@ -1555,7 +1578,7 @@ static void app_groupInfo_pack(UINT16 d, char* groupInfo)
     {
         groupInfo[0] = 1;
         groupInfo[1] = 0;
-        d = d;
+        d = 1;
         memcpy(&groupInfo[2], (UINT8*)&d, 2);
         return;
     }
@@ -1882,12 +1905,12 @@ static int afn_11_f2_delete_config(char* startdate, int type)
 
     int rc             = 0;
     int ret            = APP_HANDLE_SUCCESS;
-    char sql[300]      = {0};
+    char* sql          = NULL;
     sqlite3_stmt* stmt = NULL;
     /*删除任务*/
     {
-        sprintf(sql,"delete from dal_cbt_clock where tasktype = %d and startdate = \"%s\";"\
-            ,type, startdate);//,type - TASK_TYPE_DELETE_MASK, startdate);
+        //sql = "delete from dal_cbt_clock where tasktype = ? and startdate = ?;";
+        sql = "delete from dal_cbt_clock;";
         printf("sql:%s\n",sql);
 
         if(sqlite3_prepare_v2(DCS003_db, sql, strlen(sql), &stmt, NULL) != SQLITE_OK)
@@ -1896,6 +1919,9 @@ static int afn_11_f2_delete_config(char* startdate, int type)
             ret = APP_HANDLE_FAILED;
             goto Finish; 
         }
+
+        //sqlite3_bind_int(stmt, 1, type - TASK_TYPE_DELETE_MASK);
+        //sqlite3_bind_text(stmt, 2, startdate, -1, NULL);
 
         rc = sqlite3_step(stmt);
         if((rc != SQLITE_ROW) && (rc!= SQLITE_DONE) && (rc != SQLITE_OK))
@@ -1943,15 +1969,21 @@ static int afn_04f3_group_config_handle(UINT8* d, char* group)
                     if(i < 62)
                     {
                         /*存入终端有效测量点号*/
-                        //pn[num + 1] = (UINT16)((i * 8 + j) + 100);
-                        pn[num + 1] = (UINT16)((i * 8 + j)) + 1;
+                        if(((UINT16)((i * 8 + j)) + 1) != 496){  
+                            pn[num + 1] = (UINT16)((i * 8 + j)) + 1;
+                        }
+                        else
+                        {
+                            pn[num + 1] = 2032;   
+                        }
+
                         printf("终端有效pn:%03d\n",pn[num+1]);
                         num++;
                     }
                     else
                     {
                         /*存入集控器有效测量点号*/
-                        pn[num + 1] = (UINT16)(((i - 62) * 8 + j) + 2032);
+                        pn[num + 1] = (UINT16)(((i - 62) * 8 + j) + 2033);
                         printf("集控器有效pn:%03d\n",pn[num+1]);   
                         num++;
                     }
@@ -1991,26 +2023,6 @@ static int afn_04f3_group_config_handle(UINT8* d, char* group)
     return ret;
 }
 
-#if 1
-void test_group(void)
-{
-    int i;
-    // UINT16 data[10] = {101,102,103,105,104,109,110,107,106};
-    // char data_1[10] = {0};
 
-    // for(i = 0; i < 10; i++)
-    //     app_groupInfo_pack(data[i],&data_1);
-
-    // printf("delete...\n");
-    // app_groupInfo_pn_delete(102,data_1);
-    // printf("删除测量点\n");
-     app_sql_open();    
-    // afn_04_f13_delete_pn(110);
-    
-    char* group = "0006";
-    afn_04_f13_delete_group(group);
-    app_sql_close();
-}
-#endif
 
 

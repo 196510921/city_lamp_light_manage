@@ -2,7 +2,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#include <time.h>
 #include "sqlite3.h"
+#include "app_common.h"
 #include "app_handle.h"
 #include "con3761adp.h"
 #include "qgdw_3761_api.h"
@@ -287,15 +289,17 @@ eMtErr pack_afn02f3(void)
 }
 
 /*终端时间标志状态*/
-eMtErr pack_afn0cf08_s2m()
+eMtErr pack_afn0cf08_s2m(int pn, int n, int* event)
 {
-     eCmErr eRet;
-    UINT16 usBuflen = 0;
-    UINT8 g_ucPackMem[PACK_MEM_SIZE];
-    UINT8 g_ucOutBuf[OUT_BUF_LEN];
+    eCmErr eRet;
+    UINT16  usBuflen = 0;
+    UINT8   g_ucPackMem[PACK_MEM_SIZE];
+    UINT8   g_ucOutBuf[OUT_BUF_LEN];
     smtPack *pscmPacket = (smtPack*)g_ucPackMem;
-    INT32 i;
-  
+    INT32   i;
+    INT32   j;
+    INT32   eventNum = 0;
+
     /* 2 环境初始化 */
     sCmInit  sInit;
     //sInit.eRole = MT_ROLE_CONTOR;
@@ -310,6 +314,7 @@ eMtErr pack_afn0cf08_s2m()
     
     /* 3 封装参数 */
     memcpy(pscmPacket->sAddress.acRegionCode, "1100", 4);
+    //memcpy(pscmPacket->sAddress.acRegionCode, ReGinonCode, 4);
     pscmPacket->sAddress.usTAddress = 1;
     pscmPacket->sAddress.bTeamAddr  = FALSE;
     pscmPacket->sAddress.ucMAddress = 1;
@@ -326,26 +331,20 @@ eMtErr pack_afn0cf08_s2m()
     pscmPacket->usDataNum = 1;
     pscmPacket->sData[0].eCmd  = CMD_AFN_C_F8_TML_EVNT_FLAG;
     pscmPacket->sData[0].bApp  = TRUE;
-    pscmPacket->sData[0].usPN  = 20;
+    pscmPacket->sData[0].usPN  = pn;
 
     for(i = 0;i < MT_AFN0CF08_ERC_MAX;i++)
     {
         pscmPacket->sData[0].uApp.sTmlErcSta.bErc[i] = FALSE;
     }
-    pscmPacket->sData[0].uApp.sTmlErcSta.bErc[5]  = TRUE;
-    pscmPacket->sData[0].uApp.sTmlErcSta.bErc[4] = TRUE;
-    pscmPacket->sData[0].uApp.sTmlErcSta.bErc[3] = TRUE;
-    pscmPacket->sData[0].uApp.sTmlErcSta.bErc[2] = TRUE;
-    pscmPacket->sData[0].uApp.sTmlErcSta.bErc[1] = TRUE;
-    pscmPacket->sData[0].uApp.sTmlErcSta.bErc[0]  = TRUE;
-    
-    pscmPacket->sData[0].uApp.sTmlErcSta.bErc[37]  = TRUE;
-    pscmPacket->sData[0].uApp.sTmlErcSta.bErc[36] = TRUE;
-    pscmPacket->sData[0].uApp.sTmlErcSta.bErc[35] = TRUE;
-    pscmPacket->sData[0].uApp.sTmlErcSta.bErc[34] = TRUE;
-    pscmPacket->sData[0].uApp.sTmlErcSta.bErc[33] = TRUE;
-    pscmPacket->sData[0].uApp.sTmlErcSta.bErc[32]  = TRUE;
-
+    /*上报有效事件*/
+    for(j = 0; j < n; j++)
+    {
+        if(event[j] <= MT_AFN0CF08_ERC_MAX){
+            eventNum = event[j] - 1;
+            pscmPacket->sData[0].uApp.sTmlErcSta.bErc[eventNum] = TRUE;
+        }
+    }
     /* 4 调用函数 */
     eRet = emtPack(pscmPacket, &usBuflen, (UINT8*)g_ucOutBuf);
     if(eRet != MT_OK)
@@ -809,40 +808,47 @@ eMtErr pack_afn0af15_s2m(void)
 *****************************************************************************/
 eMtErr pack_afn0cf01_s2m_analog()
 {
+    printf("pack_afn0cf01_s2m_analog\n");
     /*1 定义变量*/ 
-    eCmErr eRet;
-    int    i = 0;
-    int    rc = 0;
-    int    ret = APP_HANDLE_SUCCESS;
-    UINT16 usPN = 0;
-    UINT16 usBuflen = 0;
-    UINT8  anaglogNum = 0;
-    UINT8  g_ucPackMem[PACK_MEM_SIZE];
-    UINT8  g_ucOutBuf[OUT_BUF_LEN];
-    UINT8 dpOffset;
-    UINT8 timeOffset;
-    UINT8 voltageOffset;
-    UINT8 currentOffset;
-    UINT8 activePowerOffset;
-    UINT8 reactivePowerOffset;
-    UINT8 powerFactorOffset;
-    UINT8 opticalControlOffset;
-    UINT8 swicthStateOffset;
-    UINT8 apparentPowerOffset;
-    UINT8 lampOnTimeOffset;
-    UINT8 leakageCurrentOffset;
-    UINT8 activeEnergyOffset;
-    UINT8 positiveActiveEnergyOffset;
-    UINT8 reverseActiveEnergyOffset;
-    UINT8 reactiveEnergyOffset;
-    UINT8 positiveReactiveEnergyOffset;
-    UINT8 reverseReactiveEnergyOffset;
-    UINT8 apparentEnergyOffset;
-    UINT8 terminatePowerOffset;
+    eCmErr         eRet                         = 0;
+    int            i                            = 0;
+    int            rc                           = 0;
+    int            ret                          = APP_HANDLE_SUCCESS;
+    UINT16         usPN                         = 0;
+    UINT16         usBuflen                     = 0;
+    UINT8          anaglogNum                   = 0;
+    UINT8          g_ucPackMem[PACK_MEM_SIZE]   = {0};
+    UINT8          g_ucOutBuf[OUT_BUF_LEN]      = {0};
+    UINT8          dpOffset                     = 0;
+    UINT8          timeOffset                   = 0;
+    UINT8          voltageOffset                = 0;
+    UINT8          currentOffset                = 0;
+    UINT8          activePowerOffset            = 0;
+    UINT8          reactivePowerOffset          = 0; 
+    UINT8          powerFactorOffset            = 0;
+    UINT8          opticalControlOffset         = 0;
+    UINT8          swicthStateOffset            = 0;
+    UINT8          apparentPowerOffset          = 0;
+    UINT8          lampOnTimeOffset             = 0;
+    UINT8          leakageCurrentOffset         = 0;
+    UINT8          activeEnergyOffset           = 0;
+    UINT8          positiveActiveEnergyOffset   = 0;
+    UINT8          reverseActiveEnergyOffset    = 0;
+    UINT8          reactiveEnergyOffset         = 0;
+    UINT8          positiveReactiveEnergyOffset = 0;
+    UINT8          reverseReactiveEnergyOffset  = 0;
+    UINT8          apparentEnergyOffset         = 0;
+    UINT8          terminatePowerOffset         = 0;
+    UINT8          year                         = 0;
+    UINT8          month                        = 0;
+    UINT8          day                          = 0;
+    UINT8          hour                         = 0;
+    UINT8          min                          = 0;
 
-    char   sql[500] = {0};
-    sqlite3_stmt* stmt = NULL;
-    sCmPacket*    pscmPacket = (sCmPacket*)g_ucPackMem;
+    char*          sql                          = NULL;
+    char*          time                         = NULL;
+    sqlite3_stmt*  stmt                         = NULL;
+    sCmPacket*     pscmPacket                   = (sCmPacket*)g_ucPackMem;
    
     /* 2 环境初始化 */
     sCmInit  sInit;
@@ -905,7 +911,7 @@ eMtErr pack_afn0cf01_s2m_analog()
             terminatePowerOffset = 59;
         }
 
-        sprintf(sql,\
+        sql = \
         "select \
             dp, \
             time, \
@@ -925,7 +931,7 @@ eMtErr pack_afn0cf01_s2m_analog()
             reverseReactiveEnergyA,reverseReactiveEnergyB,reverseReactiveEnergyC,reverseReactiveEnergyALL, \
             apparentEnergyA,apparentEnergyB,apparentEnergyC,apparentEnergyALL, \
             terminatePowerA,terminatePowerB,terminatePowerC,terminatePowerALL \
-        from dal_cbt_simulate_ec where dp = %d;",usPN);
+        from dal_cbt_simulate_ec where dp = ?;";
 
         printf("sql:%s\n",sql);
         if(sqlite3_prepare_v2(DCS003_db, sql, strlen(sql), &stmt, NULL) != SQLITE_OK)
@@ -935,16 +941,22 @@ eMtErr pack_afn0cf01_s2m_analog()
             goto Finish; 
         }
 
+        sqlite3_bind_int(stmt,1,usPN);
+
         rc = sqlite3_step(stmt);   
         if((rc != SQLITE_ROW) && (rc!= SQLITE_DONE)){
             printf("step() return %s, number:%03d\n", "SQLITE_ERROR",rc);
         }
 
         anaglogNum = 4;
+        /*模拟量路数*/
+        pscmPacket->sCmdData[0].uAppData.sTmAnalog.anaglogNum = anaglogNum;
         for(i = 0; i < anaglogNum; i++)
         {   /*终端停上电*/
             pscmPacket->sCmdData[0].uAppData.sTmAnalog.TPower[i] = \
-            sqlite3_column_int(stmt, terminatePowerOffset + i);    
+            sqlite3_column_int(stmt, terminatePowerOffset + i);
+            printf("terminatePower:%d,value:%d\n",\
+                i,pscmPacket->sCmdData[0].uAppData.sTmAnalog.TPower[i]);    
         }
 
     }
@@ -973,7 +985,7 @@ eMtErr pack_afn0cf01_s2m_analog()
             apparentEnergyOffset = 18;
         }
 
-        sprintf(sql,\
+        sql = 
         "select \
             dp, \
             time, \
@@ -994,7 +1006,7 @@ eMtErr pack_afn0cf01_s2m_analog()
             positiveReactiveEnergy, \
             reverseReactiveEnergy, \
             apparentEnergy \
-        from dal_cbt_simulate_dp where dp = %d;",usPN);
+        from dal_cbt_simulate_dp where dp = ?;";
 
         printf("sql:%s\n",sql);
         if(sqlite3_prepare_v2(DCS003_db, sql, strlen(sql), &stmt, NULL) != SQLITE_OK)
@@ -1004,75 +1016,128 @@ eMtErr pack_afn0cf01_s2m_analog()
             goto Finish; 
         }
 
+        sqlite3_bind_int(stmt,1,usPN);
+
+        rc = sqlite3_step(stmt);   
+        if((rc != SQLITE_ROW) && (rc!= SQLITE_DONE)){
+            printf("step() return %s, number:%03d\n", "SQLITE_ERROR",rc);
+        }
+
         anaglogNum = 1;
         /*模拟量路数*/
         pscmPacket->sCmdData[0].uAppData.sTmAnalog.anaglogNum = anaglogNum;
         //开关灯状态
         pscmPacket->sCmdData[0].uAppData.sTmAnalog.state = \
         sqlite3_column_int(stmt, swicthStateOffset);
+        printf("swicthState:%d\n",\
+                pscmPacket->sCmdData[0].uAppData.sTmAnalog.state);
         /*累计开灯时间*/
         pscmPacket->sCmdData[0].uAppData.sTmAnalog.Time = \
         sqlite3_column_double(stmt, lampOnTimeOffset);
+        printf("lampOnTime:%f\n",\
+                pscmPacket->sCmdData[0].uAppData.sTmAnalog.Time);
         /*漏电流*/
         pscmPacket->sCmdData[0].uAppData.sTmAnalog.Lc[0] = \
         sqlite3_column_double(stmt, leakageCurrentOffset);
-        
+        printf("leakageCurrent:%f\n",\
+                pscmPacket->sCmdData[0].uAppData.sTmAnalog.Lc[0]);
     }
 
+    /*p0/pn共同部分，差异在anaglogNum数量为4/1*/
     for(i = 0; i < anaglogNum; i++)
     {
         //sqlite3_column_double();
         /*当前电压*/
         pscmPacket->sCmdData[0].uAppData.sTmAnalog.fU[i] = \
         sqlite3_column_double(stmt, voltageOffset + i);
+        printf("voltage:%d,value:%f\n",\
+                i,pscmPacket->sCmdData[0].uAppData.sTmAnalog.fU[i]);
         /*2路当前电流*/
         pscmPacket->sCmdData[0].uAppData.sTmAnalog.fI[i] = \
         sqlite3_column_double(stmt, currentOffset + i);
+        printf("current:%d,value:%f\n",\
+                i,pscmPacket->sCmdData[0].uAppData.sTmAnalog.fI[i]);
         /*2路当前有功功率*/
         pscmPacket->sCmdData[0].uAppData.sTmAnalog.fP[i] = \
         sqlite3_column_double(stmt, activePowerOffset + i);
+        printf("activePower:%d,value:%f\n",\
+                i,pscmPacket->sCmdData[0].uAppData.sTmAnalog.fP[i]);
         /*2路当前无功功率*/
         pscmPacket->sCmdData[0].uAppData.sTmAnalog.fQ[i] = \
         sqlite3_column_double(stmt, reactivePowerOffset + i);
+        printf("reactivePower:%d,value:%f\n",\
+                i,pscmPacket->sCmdData[0].uAppData.sTmAnalog.fQ[i]);
         /*2路当前功率因数*/
         pscmPacket->sCmdData[0].uAppData.sTmAnalog.fPf[i] = \
         sqlite3_column_double(stmt, powerFactorOffset + i);
+        printf("powerFactor:%d,value:%f\n",\
+                i,pscmPacket->sCmdData[0].uAppData.sTmAnalog.fPf[i]);
         /*2路当前光控值*/
         pscmPacket->sCmdData[0].uAppData.sTmAnalog.fLc[i] = \
         sqlite3_column_double(stmt, opticalControlOffset + i);
+        printf("opticalControl:%d,value:%f\n",\
+                i,pscmPacket->sCmdData[0].uAppData.sTmAnalog.fLc[i]);
         /*当前视在功率*/
         pscmPacket->sCmdData[0].uAppData.sTmAnalog.fS[i] = \
         sqlite3_column_double(stmt, apparentPowerOffset + i);
+        printf("apparentPower:%d,value:%f\n",\
+                i,pscmPacket->sCmdData[0].uAppData.sTmAnalog.fS[i]);
         /*有功能量寄存器*/
         pscmPacket->sCmdData[0].uAppData.sTmAnalog.EP[i] = \
         sqlite3_column_double(stmt, activeEnergyOffset + i);
+        printf("activeEnergy:%d,value:%f\n",\
+                i,pscmPacket->sCmdData[0].uAppData.sTmAnalog.EP[i]);
         /*正向有功能量寄存器*/
         pscmPacket->sCmdData[0].uAppData.sTmAnalog.PosEP[i] = \
         sqlite3_column_double(stmt, positiveActiveEnergyOffset + i);
+        printf("positiveActiveEnergy:%d,value:%f\n",\
+                i,pscmPacket->sCmdData[0].uAppData.sTmAnalog.PosEP[i]);
         /*反向有功能量寄存器*/
         pscmPacket->sCmdData[0].uAppData.sTmAnalog.NegEP[i] = \
         sqlite3_column_double(stmt, reverseActiveEnergyOffset + i);
+        printf("reverseActiveEnergy:%d,value:%f\n",\
+                i,pscmPacket->sCmdData[0].uAppData.sTmAnalog.NegEP[i]);
         /*无功能量寄存器*/
         pscmPacket->sCmdData[0].uAppData.sTmAnalog.EQ[i] = \
         sqlite3_column_double(stmt, reactiveEnergyOffset + i);
+        printf("reactiveEnergy:%d,value:%f\n",\
+                i,pscmPacket->sCmdData[0].uAppData.sTmAnalog.EQ[i]);
         /*正向无功能量寄存器*/
         pscmPacket->sCmdData[0].uAppData.sTmAnalog.PosEQ[i] = \
         sqlite3_column_double(stmt, positiveReactiveEnergyOffset + i);
+        printf("positiveReactiveEnergy:%d,value:%f\n",\
+                i,pscmPacket->sCmdData[0].uAppData.sTmAnalog.PosEQ[i]);
         /*反向无功能量寄存器*/
         pscmPacket->sCmdData[0].uAppData.sTmAnalog.NegEQ[i] = \
         sqlite3_column_double(stmt, reverseReactiveEnergyOffset + i);
+        printf("reverseReactiveEnergy:%d,value:%f\n",\
+                i,pscmPacket->sCmdData[0].uAppData.sTmAnalog.NegEQ[i]);
         /*视在能量寄存器*/
         pscmPacket->sCmdData[0].uAppData.sTmAnalog.ES[i] = \
         sqlite3_column_double(stmt, apparentEnergyOffset + i);
+        printf("apparentEnergy:%d,value:%f\n",\
+                i,pscmPacket->sCmdData[0].uAppData.sTmAnalog.ES[i]);
     }
 
     {
+        time = sqlite3_column_text(stmt, timeOffset);
+        printf("模拟量采集时间:%s,%x%x,%x%x,%x%x,%x%x,%x%x\n",\
+            time,time[0],time[1],time[2],time[3],time[4],time[5],time[6],time[7],time[8],time[9]);
+        {
+            year  = text_2_hex(time[0]) * 16 + text_2_hex(time[1]);
+            month = text_2_hex(time[2]) * 16 + text_2_hex(time[3]);
+            day   = text_2_hex(time[4]) * 16 + text_2_hex(time[5]);
+            hour  = text_2_hex(time[6]) * 16 + text_2_hex(time[7]);
+            min   = text_2_hex(time[8]) * 16 + text_2_hex(time[9]);
+            printf("%d年 %d月 %d日 %d时 %d分\n",year, month, day, hour, min);
+        }
+
         /*抄读时间*/
-        pscmPacket->sCmdData[0].uAppData.sTmAnalog.sReadTime.ucYY = 18;
-        pscmPacket->sCmdData[0].uAppData.sTmAnalog.sReadTime.ucMM = 3;
-        pscmPacket->sCmdData[0].uAppData.sTmAnalog.sReadTime.ucDD = 21;
-        pscmPacket->sCmdData[0].uAppData.sTmAnalog.sReadTime.ucHH = 16;
-        pscmPacket->sCmdData[0].uAppData.sTmAnalog.sReadTime.ucmm = 12;
+        pscmPacket->sCmdData[0].uAppData.sTmAnalog.sReadTime.ucYY = year;
+        pscmPacket->sCmdData[0].uAppData.sTmAnalog.sReadTime.ucMM = month;
+        pscmPacket->sCmdData[0].uAppData.sTmAnalog.sReadTime.ucDD = day;
+        pscmPacket->sCmdData[0].uAppData.sTmAnalog.sReadTime.ucHH = hour;
+        pscmPacket->sCmdData[0].uAppData.sTmAnalog.sReadTime.ucmm = min;
 
     }
     /* 4 调用函数 */
@@ -1117,6 +1182,8 @@ eMtErr pack_afn0cf02_s2m_auto(void)
    UINT16 usBuflen = 0;
    UINT8 g_ucPackMem[PACK_MEM_SIZE];
    UINT8 g_ucOutBuf[OUT_BUF_LEN];
+   time_t now;
+   struct tm* timenow;
    sCmPacket *pscmPacket = (sCmPacket*)g_ucPackMem;
    
 
@@ -1136,6 +1203,8 @@ eMtErr pack_afn0cf02_s2m_auto(void)
   
     //pscmPacket = &packdata->pscmPacket;
 
+    time(&now);
+    timenow = localtime(&now);
     
 #if 1
     /* 3 封装参数 */
@@ -1152,13 +1221,13 @@ eMtErr pack_afn0cf02_s2m_auto(void)
     pscmPacket->sCmdData[0].usPN  = 0;
 
     // app
-    pscmPacket->sCmdData[0].uAppData.sTmlClock.ucYear = 18;
-    pscmPacket->sCmdData[0].uAppData.sTmlClock.ucMonth = 3;
+    pscmPacket->sCmdData[0].uAppData.sTmlClock.ucYear = timenow->tm_year - 100;
+    pscmPacket->sCmdData[0].uAppData.sTmlClock.ucMonth = timenow->tm_mon + 1;
     //pscmPacket->sCmdData[0].uAppData.sTmlClock.ucWeek = 3;
-    pscmPacket->sCmdData[0].uAppData.sTmlClock.ucDay = 21;
-    pscmPacket->sCmdData[0].uAppData.sTmlClock.ucHour = 13;
-    pscmPacket->sCmdData[0].uAppData.sTmlClock.ucMinute = 13;
-    pscmPacket->sCmdData[0].uAppData.sTmlClock.ucSecond = 13;
+    pscmPacket->sCmdData[0].uAppData.sTmlClock.ucDay = timenow->tm_mday;
+    pscmPacket->sCmdData[0].uAppData.sTmlClock.ucHour = timenow->tm_hour;
+    pscmPacket->sCmdData[0].uAppData.sTmlClock.ucMinute =  timenow->tm_min;
+    pscmPacket->sCmdData[0].uAppData.sTmlClock.ucSecond = timenow->tm_sec;
    
 #endif
     /* 4 调用函数 */
@@ -1279,7 +1348,7 @@ void app_req_handle(UINT16 eCmd, void* d)
             pack_afn0cf02_s2m_auto();
         break;
         case CMD_AFN_C_F8_TML_EVNT_FLAG:
-            pack_afn0cf08_s2m();
+            //pack_afn0cf08_s2m();
         break;
         case CMD_AFN_A_F1_TML_UP_CFG:
             pack_afn0af1_s2m();

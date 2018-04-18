@@ -22,6 +22,7 @@
 #include <getopt.h>
 #include <stdarg.h>
 #include <pthread.h>
+// #include <mcheck.h>
 #include "con3761adp.h"
 #include "fmprint.h"
 #include <math.h>
@@ -11061,7 +11062,7 @@ eMtErr test_pack_afn0cf01_m2s_analog()
     pscmPacket->usDataNum = 1;
     pscmPacket->sData[0].eCmd  = CMD_AFN_C_F1_ANALOG_DATA;
     pscmPacket->sData[0].bApp  = FALSE;
-    pscmPacket->sData[0].usPN  = 1;
+    pscmPacket->sData[0].usPN  = 0;
     
 
     /* 4 调用函数 */
@@ -16126,7 +16127,7 @@ void heartbeat_timeout(void)
     while(1){
         app_heartbeat();
         app_timeout_handle();
-        afn_11_f2_ctrl_period();
+        //afn_11_f2_ctrl_period();
         sleep(1);
     }
 }
@@ -16141,10 +16142,16 @@ int main(int argc, char *argv[])
 {
     static int retryTimes = 3;
     pthread_t t1,t2;
-    //test_group();
+    
     /*数据库初始化*/
     app_sql_init();
-    /*创建数据库*/
+
+    {
+        int pn = 0;
+        int n = 2;
+        int event[2] = {MT_ERC_6_PCTRL_SWITCH,MT_ERC_9_ELEC_EXCP};
+        pack_afn0cf08_s2m(pn, n, event);
+    }
     //表已提前建好
     //app_sql_create();
     /*TCP connect*/
